@@ -187,7 +187,7 @@ Compare **at least two** models. A strong design compares one unsupervised and o
 **Justify your choice** in the paper: unsupervised models match the real world (labels are rare and attacks change), supervised models show the best-case performance when labels exist.
 
 ### Data splitting — avoid leakage
-- [ ] **Temporal split:** train on earlier months, validate on the next months, test on the last months (never randomly shuffle across time). Each split must contain malicious days from every scenario. Exact rule: [TEAM_PLAN.md §5.3](TEAM_PLAN.md#53-data-split-rule-temporal)
+- [ ] **Temporal split:** train on earlier months, validate on the next months, test on the last months (never randomly shuffle across time). Each split must contain malicious days from every scenario. Exact rule: [TEAM_PLAN.md §5.3](../Tasks/TEAM_PLAN.md#53-data-split-rule-temporal)
 - [ ] For the **unseen-anomaly** test, hold out all users of one scenario from training entirely (leave-one-scenario-out), so the model can't memorize those users
 - [ ] Scale features with `StandardScaler` fit on **training data only**
 - [ ] For supervised models, handle imbalance with `class_weight='balanced'` / `scale_pos_weight`, or SMOTE on the **training set only**
@@ -296,7 +296,7 @@ Use **IEEE conference format** (two-column, ~6–10 pages; check with the instru
 
 ## Timeline
 
-**Submission: Fri Nov 20, 2026.** The phases above run **in parallel** across the three team members, not one after another. The dated plan is in [TEAM_PLAN.md](TEAM_PLAN.md) (milestones) and in [Supriye.md](Supriye.md), [Arva.md](Arva.md) and [Ayo.md](Ayo.md) (day-by-day tasks).
+**Submission: Fri Nov 20, 2026.** The phases above run **in parallel** across the three team members, not one after another. The dated plan is in [TEAM_PLAN.md](../Tasks/TEAM_PLAN.md) (milestones) and in [Supriye.md](../Tasks/Supriye.md), [Arva.md](../Tasks/Arva.md) and [Ayo.md](../Tasks/Ayo.md) (day-by-day tasks).
 
 | Dates | Phases in progress |
 |---|---|

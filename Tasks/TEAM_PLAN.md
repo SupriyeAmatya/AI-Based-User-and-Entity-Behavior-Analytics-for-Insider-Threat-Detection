@@ -19,7 +19,7 @@
 3. Each personal file has:
    - a **day-by-day timeline** (date → task ID → short description), and
    - **task cards** with the goal, numbered steps, and a **"Done when"** checklist. A task is only finished when every "Done when" item is true.
-4. Tick tasks off in your own file and push the change, so the team can see progress.
+4. Tick tasks off in your own file (`Tasks/<Name>.md`). Commit the change on the branch you're working on, so the team sees progress when it merges ([Section 14](#14-git-workflow--branching-pulling-and-pushing)).
 5. If you are going to miss a hand-off date, tell the team **as soon as you know**, not on the day.
 
 ---
@@ -162,12 +162,16 @@ ROC-AUC and PR-AUC need no threshold.
 
 Need a change in someone else's file? Open a GitHub Issue and assign the owner. Don't edit it directly.
 
-### 5.9 Git workflow
-1. `main` must always run. Never push broken code to `main`.
-2. Work on a personal branch: `supriye/<topic>`, `arva/<topic>`, `ayo/<topic>`.
-3. Merge through a **pull request**; one teammate skims it before merging.
-4. **Never commit data** (`data/` and `results/scores/` are in `.gitignore`). Share large files through the team's shared drive and post the link in chat.
-5. Commit small and often, with clear messages, e.g. `Add USB features to features.py`.
+One agreed exception: Arva adds the "Run the prototype" section to `README.md` (task A23) through a pull request that Supriye reviews.
+
+### 5.9 Git rules (full how-to in [Section 14](#14-git-workflow--branching-pulling-and-pushing))
+1. `main` must always run. **Nobody pushes directly to `main`**; every change goes through a pull request (PR) with one reviewer.
+2. One branch per task: `<name>/<TaskID>-<short-description>`, e.g. `arva/A6-autoencoder`. Each person's branches are listed in their own file.
+3. Pull `main` every morning; push your branch every evening.
+4. **Code goes through Git; data goes through the shared drive.** Never commit data, score files or trained models (`.gitignore` blocks them; see 14.1).
+5. Commit messages start with the task ID, e.g. `S10: add login features`.
+6. A **code hand-off counts as delivered only when its PR is merged** into `main` and announced in chat.
+7. **Code freeze Wed Nov 18:** after that, only bug fixes are merged.
 
 ### 5.10 Feature-table freeze rule
 After v1 (Sun Nov 8) the feature table is **frozen**. Only bugs that change results are fixed, released as `features_v1_1.parquet` **no later than Tue Nov 10, 12:00**, and announced in chat. After that, no feature changes.
@@ -402,3 +406,236 @@ Each personal file lists extra human-only tasks for that role.
 | A scenario has too few test insiders | Fewer than ~3 insiders in test | Report per-scenario results with that caveat; rely on LOSO for that scenario |
 | Teammate unavailable (illness etc.) | Missed stand-up and hand-off | Their code and notes are on GitHub; the other two split the remaining tasks by priority (required > optional) |
 | Running behind overall | M3 (Wed Nov 11) missed | Drop optional items first: One-Class SVM, dashboard, LANL extension, second recent paper. Never drop: 2 unsupervised + 2 supervised models, the LOSO experiment, FP/FN analysis, case studies |
+| `main` is broken or a merge goes wrong | Code that worked yesterday fails after `git pull` | Tell the team at once; nobody merges until it's fixed. Find the bad PR on GitHub and click **Revert**; that adds a new PR that undoes it. Never force-push to `main` |
+| A PR waits for review and blocks a hand-off | No review 3 hours after posting a hand-off PR | Ping the reviewer in chat; if still nothing, the third teammate reviews it instead |
+
+---
+
+## 14. Git Workflow — Branching, Pulling and Pushing
+
+**Repository:** `https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection` (owner: Supriye)
+
+**What goes where:**
+
+| Through Git (GitHub) | Through the shared drive | In Overleaf |
+|---|---|---|
+| Code (`src/`, `app/`), notebooks, `requirements.txt`, README, the `Tasks/` and `Guide/` files, small result tables (`results/tables/*.csv`), figures (`results/figures/`), literature notes (`paper/lit_notes/`) | Raw CERT/LANL data, Parquet files, feature tables, score files (`results/scores/`), trained models (`models/`) | The paper itself |
+
+### 14.1 One-time setup (by Thu Oct 29)
+
+**Supriye (repo owner):**
+1. On GitHub: **Settings → Collaborators → Add people** → add Arva and Ayo (they must accept the email invite).
+2. **Settings → Branches → Add branch protection rule** for `main`: tick **"Require a pull request before merging"** with **1 approval**. Branch protection on a *private* repo needs GitHub Pro, which is free with the GitHub Student Developer Pack. If it isn't available, the team enforces the rule by agreement.
+3. Add the `.gitignore` below on your first branch (`supriye/S2-setup`, task S2).
+
+**Arva and Ayo:** clone the repo into a folder of your choice:
+```bash
+git clone https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection.git
+```
+```bash
+cd AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection
+```
+
+**Everyone:** tell Git who you are (use the email on your GitHub account):
+```bash
+git config user.name "Your Name"
+```
+```bash
+git config user.email "you@example.com"
+```
+
+**`.gitignore` (committed by Supriye in S2):**
+```
+# Data and large outputs: share through the shared drive instead
+data/
+results/scores/
+models/
+*.parquet
+*.tar.bz2
+*.gz
+# Environments and caches
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+```
+
+### 14.2 Branch rules
+- **Name:** `<name>/<TaskID>-<short-description>`, lower-case words joined by hyphens, e.g. `supriye/S9-features-v0`, `arva/A6-autoencoder`, `ayo/Y4-thresholds`.
+- **Always start a branch from the latest `main`.**
+- **Keep branches short:** merge within 1–3 days. Long-lived branches cause conflicts.
+- **Only edit files you own** (5.8). This matters most for notebooks (`.ipynb`), whose merge conflicts are very hard to fix.
+- **Literature and paper notes** go on one `<name>/notes` branch per person, merged once by Fri Nov 13.
+
+### 14.3 Daily routine
+
+**Every morning — get everyone's merged work:**
+```bash
+git checkout main
+```
+```bash
+git pull origin main
+```
+
+**Start a new task** (creates the branch from the `main` you just pulled):
+```bash
+git checkout -b arva/A6-autoencoder
+```
+
+**Continue an existing branch and bring in teammates' merged work:**
+```bash
+git checkout arva/A6-autoencoder
+```
+```bash
+git pull origin main
+```
+
+**Save work** (several times a day). Always run `git status` first and check that no data, score or model file is listed. Never run `git add .` without looking.
+```bash
+git status
+```
+```bash
+git add src/models_unsupervised.py notebooks/03a_unsupervised_models.ipynb
+```
+```bash
+git commit -m "A6: add autoencoder training loop"
+```
+
+**Push every evening** (this is also your backup). The first push of a new branch needs `-u`; after that `git push` is enough:
+```bash
+git push -u origin arva/A6-autoencoder
+```
+
+### 14.4 Finishing a branch — the pull request (PR)
+1. On your branch, bring in the latest `main` (`git pull origin main`), fix any conflicts (14.5), re-run your notebook with **Restart & Run All**, and push.
+2. On GitHub, click **"Compare & pull request"**. Base: `main` ← compare: your branch. Title: `A6: Autoencoder`. Description:
+   ```
+   Tasks: A6
+   What changed:
+   How to test: (the command or notebook to run)
+   Hand-off for: (who needs this, or "none")
+   ```
+3. Assign the **reviewer** from 14.6, and post the PR link in chat. If it's a hand-off, say so.
+4. **Reviewer:** get the branch and test it:
+   ```bash
+   git fetch origin
+   ```
+   ```bash
+   git checkout arva/A6-autoencoder
+   ```
+   Run the "How to test" step, go through the checklist below, then click **Approve** or **Request changes** on GitHub.
+5. **Author:** click **"Squash and merge"**, then **"Delete branch"**.
+6. **Author:** clean up locally. `-D` is needed because squash-merged branches look "unmerged" to Git:
+   ```bash
+   git checkout main
+   ```
+   ```bash
+   git pull origin main
+   ```
+   ```bash
+   git branch -D arva/A6-autoencoder
+   ```
+7. Post "merged" in chat. Everyone who depends on it runs `git pull origin main`.
+
+**Reviewer checklist:**
+- [ ] It runs, following "How to test"
+- [ ] It follows the formats in 5.1 / 5.2 / 5.5
+- [ ] No data, score, model files or personal paths (`C:\Users\...`) are committed
+- [ ] Notebooks run top to bottom
+- [ ] Only the author's own files changed (5.8)
+
+**Review speed:** within 12 hours; **within 3 hours** for PRs marked as a hand-off.
+
+### 14.5 Merge conflicts
+If `git pull origin main` says **CONFLICT**:
+1. Run `git status` to see the conflicted files.
+2. Open each file and find the blocks marked `<<<<<<<`, `=======` and `>>>>>>>`. Keep the correct lines and delete the markers.
+3. Mark it resolved and finish the merge:
+   ```bash
+   git add src/the_file_you_fixed.py
+   ```
+   ```bash
+   git commit
+   ```
+   ```bash
+   git push
+   ```
+4. If the conflict is in **someone else's file or in a notebook**, don't guess. Cancel the merge with `git merge --abort` and ask the file's owner in chat.
+
+**Never:** `git push --force` to `main`, delete someone else's branch, or commit straight to `main`.
+
+### 14.6 Who reviews whom
+Rule: **the person who will use the code reviews it**, because they test that it works for them.
+
+| Author | Kind of branch | Reviewer |
+|---|---|---|
+| Supriye | Setup, data loading, labels, features, baselines, LANL | Arva (Ayo for `S2-setup`) |
+| Supriye | Ablation, final README | Ayo |
+| Arva | Synthetic data, unsupervised models, tuning, results, case studies | Ayo |
+| Arva | Risk scoring, pipeline, final models, dashboard, README run section, fixes | Supriye |
+| Ayo | `evaluate.py`, `explain.py`, LOSO, comparison, SHAP, FP/FN | Arva |
+| Ayo | Supervised models, final tuned models, verification | Supriye |
+| Anyone | `<name>/notes` | Any teammate (quick skim) |
+
+### 14.7 Milestone tags (Supriye)
+After each milestone's PRs are merged, Supriye tags `main`, so anyone can get the exact code of that point later with `git checkout <tag>`:
+```bash
+git checkout main
+```
+```bash
+git pull origin main
+```
+```bash
+git tag -a m1-features-v0 -m "M1: feature table v0 code"
+```
+```bash
+git push origin m1-features-v0
+```
+
+| Tag | When | After merging |
+|---|---|---|
+| `m0-setup` | Sat Oct 31 | `supriye/S2-setup`, `supriye/S5-data-loader` |
+| `m1-features-v0` | Tue Nov 3 | `supriye/S9-features-v0` |
+| `m2-features-v1` | Sun Nov 8 | `supriye/S17-baselines-v1` |
+| `m3-all-scores` | Wed Nov 11 | `arva/A15-final-models`, `ayo/Y14-final-models`, `ayo/Y16-loso-results` |
+| `analysis-done` | Sat Nov 14 | `arva/A18-prototype-cases`, `ayo/Y18-shap-fpfn` |
+| `final-submission` | Thu Nov 19 | `supriye/S33-final` (last merge) |
+
+### 14.8 Branch calendar — everyone's branches in one view
+
+| Merge by | Branch | Owner | Tasks | Reviewer | Unblocks |
+|---|---|---|---|---|---|
+| Thu Oct 29 | `supriye/S2-setup` | Supriye | S2 | Ayo | Everyone's environment |
+| Thu Oct 29 | `arva/A3-synthetic` | Arva | A3 | Ayo | Ayo's Y7 |
+| Sat Oct 31 | `supriye/S5-data-loader` | Supriye | S4, S5 | Arva | **M0** |
+| Sun Nov 1 | `ayo/Y3-evaluate` | Ayo | Y3–Y6 | Arva | Arva's A9; Supriye's S22 |
+| Sun Nov 1 | `arva/A7-risk-scoring` | Arva | A7 | Supriye | — |
+| Mon Nov 2 | `arva/A4-unsupervised-models` | Arva | A4, A5, A6, A8 | Ayo | — |
+| Mon Nov 2 | `supriye/S6-labels-eda` | Supriye | S6, S7, S8 | Arva | Split dates for everyone |
+| Tue Nov 3 | `supriye/S9-features-v0` | Supriye | S9 | Arva | **M1**: Arva's A9, Ayo's Y8 |
+| Wed Nov 4 | `arva/A9-v0-tuning` | Arva | A9, A10 | Ayo | — |
+| Thu Nov 5 | `ayo/Y7-supervised-models` | Ayo | Y7–Y10 | Supriye | — |
+| Fri Nov 6 | `ayo/Y11-explain` | Ayo | Y11 | Arva | Arva's A12, A19 |
+| Fri Nov 6 | `arva/A11-pipeline` | Arva | A11, A12 | Supriye | — |
+| Sat Nov 7 | `supriye/S10-behavior-features` | Supriye | S10–S16 | Arva | — |
+| Sat Nov 7 | `ayo/Y12-loso` | Ayo | Y12 | Arva | — |
+| Sat Nov 7 | `arva/A13-ocsvm` *(optional)* | Arva | A13 | Ayo | — |
+| Sun Nov 8 | `supriye/S17-baselines-v1` | Supriye | S17–S20 | Arva | **M2**: Arva's A15, Ayo's Y14 |
+| Tue Nov 10, 12:00 | `supriye/S21-v1-fixes` *(only if needed)* | Supriye | S21 | Arva | — |
+| Tue Nov 10 | `arva/A15-final-models` | Arva | A15, A16 | Supriye | Supriye's S22 |
+| Tue Nov 10 | `ayo/Y14-final-models` | Ayo | Y14, Y15 | Supriye | Supriye's S22 |
+| Wed Nov 11 | `supriye/S22-ablation` | Supriye | S22 | Ayo | — |
+| Wed Nov 11 | `supriye/S24-lanl` *(stretch)* | Supriye | S24 | Arva | Arva's A18 step 4 |
+| Wed Nov 11 | `arva/A17-results` | Arva | A17 | Ayo | Ayo's Y17 |
+| Wed Nov 11 | `ayo/Y16-loso-results` | Ayo | Y16 | Arva | **M3** |
+| Thu Nov 12 | `ayo/Y17-comparison` | Ayo | Y17 | Arva | Results walkthrough |
+| Fri Nov 13 | `supriye/notes`, `arva/notes`, `ayo/notes` | Each person | Literature + paper notes | Any teammate | — |
+| Sat Nov 14 | `arva/A18-prototype-cases` | Arva | A18, A19 | Ayo | — |
+| Sat Nov 14 | `ayo/Y18-shap-fpfn` | Ayo | Y18, Y20 | Arva | — |
+| Sat Nov 14 | `arva/A21-dashboard` *(optional)* | Arva | A21 | Supriye | — |
+| Mon Nov 16 | `arva/A23-readme-run` | Arva | A23 | Supriye | — |
+| Tue Nov 17 | `arva/A24-fresh-clone-fixes` *(if needed)* | Arva | A24 | Supriye | — |
+| Tue Nov 17 | `ayo/Y23-verify` | Ayo | Y23 | Supriye | — |
+| Wed Nov 18 | **Code freeze** — bug fixes only from here | | | | |
+| Thu Nov 19 | `arva/A26-final-fixes`, `ayo/Y25-final-fixes` *(if needed)* | Arva, Ayo | A26, Y25 | Supriye | — |
+| Thu Nov 19 | `supriye/S33-final` | Supriye | S33, S34 | Ayo | `final-submission` tag |

@@ -41,8 +41,49 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 | Paper sections IV-C, IV-D, V, VI-B | Arva, Ayo | Sun Nov 15 |
 | Paper sections VI-A, VI-C, VIII | Arva, Ayo | Mon Nov 16 (M4) |
 
-## 3. Files You Own
-`src/data_loader.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py` (stretch), `notebooks/01_eda.ipynb`, `notebooks/02_feature_engineering.ipynb`, `docs/feature_dictionary.md`, `README.md`, `requirements.txt`, `paper/`
+## 3. Files You Own & Your Git Branches
+
+**Files you own:** `src/data_loader.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py` (stretch), `notebooks/01_eda.ipynb`, `notebooks/02_feature_engineering.ipynb`, `docs/feature_dictionary.md`, `README.md`, `requirements.txt`, `.gitignore`, `paper/`
+
+**As repo owner you also:** add the collaborators and branch protection (S2), create the milestone tags (TEAM_PLAN 14.7), and make the final code archive (S34). If `main` ever breaks, you lead the fix (TEAM_PLAN Section 13).
+
+### Your branches
+How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pushing). A code hand-off counts as delivered only once its PR is **merged** and announced in chat.
+
+| Branch | Tasks | Create on | Open PR | Merge by | Reviewer | Then tag |
+|---|---|---|---|---|---|---|
+| `supriye/S2-setup` | S2 | Wed Oct 28 | Thu Oct 29 | Thu Oct 29 | Ayo | — |
+| `supriye/S5-data-loader` | S4, S5 | Fri Oct 30 | Sat Oct 31 | Sat Oct 31 | Arva | `m0-setup` |
+| `supriye/S6-labels-eda` | S6, S7, S8 (incl. split dates in TEAM_PLAN 5.3) | Sun Nov 1 | Mon Nov 2 | Mon Nov 2 | Arva | — |
+| `supriye/S9-features-v0` | S9 | Tue Nov 3 | Tue Nov 3 (hand-off) | Tue Nov 3 | Arva | `m1-features-v0` |
+| `supriye/S10-behavior-features` | S10–S16 | Wed Nov 4 | Fri Nov 6 (night) | Sat Nov 7 (morning) | Arva | — |
+| `supriye/S17-baselines-v1` | S17–S19, S20 steps 1–2 (the Mon walkthrough needs no code) | Sat Nov 7 (after merging S10) | Sun Nov 8 (hand-off) | Sun Nov 8 | Arva | `m2-features-v1` |
+| `supriye/S21-v1-fixes` *(only if needed)* | S21 | Tue Nov 10 | Tue Nov 10 (hand-off) | Tue Nov 10, 12:00 | Arva | — |
+| `supriye/S24-lanl` *(stretch)* | S24 | Tue Nov 10 | Wed Nov 11 | Wed Nov 11 | Arva | — |
+| `supriye/S22-ablation` | S22 | Wed Nov 11 | Wed Nov 11 | Wed Nov 11 | Ayo | `m3-all-scores` (once Ayo's `Y16-loso-results` is also merged) |
+| `supriye/notes` | S-LIT1–3 notes | Mon Nov 9 | Fri Nov 13 | Fri Nov 13 | Any teammate | — |
+| — | — | — | — | Sat Nov 14 | — | `analysis-done` (after Arva's `A18-prototype-cases` and Ayo's `Y18-shap-fpfn` merge) |
+| `supriye/S33-final` | S33, S34 (README results, last fixes) | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Ayo | `final-submission` |
+
+You also **review** Arva's `A7`, `A11`, `A15`, `A21`, `A23`, `A24`, `A26` branches and Ayo's `Y7`, `Y14`, `Y23`, `Y25` branches. Dates are in the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). The `A15` and `Y14` reviews on Tue Nov 10 are hand-offs **you** need for the ablation, so review them quickly.
+
+### When to pull `main`
+Every morning, plus right after these merges. If you're on a branch, run `git pull origin main` on it.
+
+| When | After merge of | Why you need it |
+|---|---|---|
+| Sun Nov 1 | `ayo/Y3-evaluate` | `evaluate.py` |
+| Tue Nov 10 (evening) | `arva/A15-final-models`, `ayo/Y14-final-models` | Tuned models for the ablation (S22) |
+| Wed Nov 11 / Sat Nov 14 | The PRs listed for `m3-all-scores` / `analysis-done` | So the tag marks the right commit |
+| Thu Nov 19 | Everyone's final fixes | Before `S33-final` and the fresh-clone test |
+
+### Shared drive, not Git
+Upload these and post the link in chat. They count as delivered together with the matching merged code (e.g. M1 = `features_v0.parquet` on the drive **and** `supriye/S9-features-v0` merged):
+- CERT Parquet files (Sat Oct 31)
+- `features_v0.parquet` (Tue Nov 3)
+- `features_v1.parquet` (Sun Nov 8)
+- `features_v1_1.parquet` (only if needed, Tue Nov 10, 12:00)
+- `lanl_features.parquet` (stretch)
 
 ---
 
@@ -93,16 +134,21 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 
 ### S2 · Wed Oct 28 – Thu Oct 29 · Repository, environment and writing tools
 **Goal:** a shared setup that works the same on all three laptops.
-1. Create a GitHub repo; add Arva and Ayo as collaborators.
-2. Create the folder structure from [README.md](README.md) (empty folders need a `.gitkeep` file).
-3. Create `.gitignore` containing at least: `data/`, `results/scores/`, `.venv/`, `__pycache__/`, `.ipynb_checkpoints/`.
-4. Create a virtual environment and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit`.
-5. Run `pip freeze > requirements.txt` and commit it.
-6. Create the **Overleaf** project from the IEEE conference template with empty sections I–VIII; invite Arva and Ayo.
-7. Create a **Zotero group library**; invite Arva and Ayo.
-8. Commit the planning `.md` files.
+1. The GitHub repo already exists (`SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection`) with the planning files in its first commit. On GitHub, **add Arva and Ayo as collaborators** and **turn on branch protection for `main`** (TEAM_PLAN 14.1).
+2. Create your first branch. Any uncommitted edits in your folder come along to the new branch, so they get committed there:
+   ```bash
+   git checkout -b supriye/S2-setup
+   ```
+3. Create the folder structure from [README.md](../README.md) (empty folders need a `.gitkeep` file, or Git won't track them).
+4. Create `.gitignore` with **exactly** the content in TEAM_PLAN 14.1.
+5. Create a virtual environment and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit`.
+6. Run `pip freeze > requirements.txt`.
+7. `git status` → check that `.venv/` is **not** listed → `git add` the folders, `.gitignore`, `requirements.txt` and the planning files → commit `S2: project structure, gitignore, requirements` → `git push -u origin supriye/S2-setup`.
+8. Open a PR, assign **Ayo** as reviewer, and merge on Thu Oct 29 after approval (TEAM_PLAN 14.4).
+9. Create the **Overleaf** project from the IEEE conference template with empty sections I–VIII; invite Arva and Ayo.
+10. Create a **Zotero group library**; invite Arva and Ayo.
 
-**Done when:** Arva and Ayo have each cloned the repo and installed `requirements.txt` without errors, and both have accepted the Overleaf and Zotero invites.
+**Done when:** `supriye/S2-setup` is merged; Arva and Ayo have each cloned the repo and installed `requirements.txt` without errors; both have accepted the GitHub, Overleaf and Zotero invites.
 
 ### S3 · Thu Oct 29 · Run the kickoff meeting
 1. Share your screen with [TEAM_PLAN.md](TEAM_PLAN.md) and go through Sections 2–5 and 11–13.
@@ -439,14 +485,20 @@ Export the PDF **by 18:00**, post it in chat, and ask each teammate for comments
 
 ### S33 · Thu Nov 19 · Final read-through + README
 1. Lead the final read-through meeting; assign and apply the last fixes.
-2. Fill the **Results** section of [README.md](README.md) with the main comparison table.
+2. Fill the **Results** section of [README.md](../README.md) with the main comparison table.
 
 ### S34 · Thu Nov 19 · Fresh-clone test → submission-ready
-1. Clone the repo into a **new folder**, create a new virtual environment, and run `pip install -r requirements.txt`.
-2. Run the prototype (`python src/pipeline.py`) and `04_evaluation.ipynb` from top to bottom.
-3. Produce the final PDF and the code archive, exactly as the course requires.
+1. Merge `supriye/S33-final` (and any last `*-final-fixes` PRs from Arva and Ayo).
+2. Clone the repo into a **new folder**, create a new virtual environment, and run `pip install -r requirements.txt`.
+3. Copy the feature table from the shared drive into the clone's `data/processed/`. Run the prototype (`python src/pipeline.py`) and `04_evaluation.ipynb` from top to bottom.
+4. If both work, tag the final version (TEAM_PLAN 14.7) as `final-submission` and push the tag.
+5. Make the code archive from that tag. It contains exactly the committed code, with no data or local junk:
+   ```bash
+   git archive --format=zip -o submission-code.zip final-submission
+   ```
+6. Produce the final PDF from Overleaf. Check that both files meet the course's submission requirements.
 
-**Done when:** everything needed for submission is ready on Thu night.
+**Done when:** the `final-submission` tag is pushed, and the code archive and PDF are ready on Thu night.
 
 ### S35 · Fri Nov 20 · Submit
 Submit the paper and code. Post a confirmation (screenshot) in the group chat.

@@ -43,8 +43,42 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 | Per-scenario results, alert volume, timings | Arva | Wed Nov 11 |
 | Data-processing time | Supriye | Fri Nov 13 |
 
-## 3. Files You Own
-`src/models_supervised.py`, `src/evaluate.py`, `src/explain.py`, `notebooks/03b_supervised_models.ipynb`, `notebooks/04_evaluation.ipynb`
+## 3. Files You Own & Your Git Branches
+
+**Files you own:** `src/models_supervised.py`, `src/evaluate.py`, `src/explain.py`, `notebooks/03b_supervised_models.ipynb`, `notebooks/04_evaluation.ipynb`
+
+### Your branches
+How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pushing). A code hand-off counts as delivered only once its PR is **merged** and announced in chat. Commit (or `git stash`) before switching between branches.
+
+| Branch | Tasks | Create on | Open PR | Merge by | Reviewer |
+|---|---|---|---|---|---|
+| `ayo/notes` | Y-LIT1–4 notes, Y13 (T4 draft, section notes) | Wed Oct 28 | Fri Nov 13 | Fri Nov 13 | Any teammate |
+| `ayo/Y3-evaluate` | Y3, Y4, Y5, Y6 | Thu Oct 29 | Sun Nov 1 (hand-off) | Sun Nov 1 | Arva |
+| `ayo/Y7-supervised-models` | Y7, Y8, Y9, Y10 | Mon Nov 2 | Thu Nov 5 | Thu Nov 5 | Supriye |
+| `ayo/Y11-explain` | Y11 | Fri Nov 6 | Fri Nov 6 (hand-off) | Fri Nov 6 | Arva |
+| `ayo/Y12-loso` | Y12 | Sat Nov 7 | Sat Nov 7 | Sat Nov 7 | Arva |
+| `ayo/Y14-final-models` | Y14, Y15 | Mon Nov 9 | Tue Nov 10 (hand-off) | Tue Nov 10 | Supriye |
+| `ayo/Y16-loso-results` | Y16 | Wed Nov 11 | Wed Nov 11 | Wed Nov 11 | Arva |
+| `ayo/Y17-comparison` | Y17 | Thu Nov 12 | Thu Nov 12 | Thu Nov 12 | Arva |
+| `ayo/Y18-shap-fpfn` | Y18, Y20 | Fri Nov 13 | Sat Nov 14 | Sat Nov 14 | Arva |
+| `ayo/Y23-verify` | Y23 | Tue Nov 17 | Tue Nov 17 | Tue Nov 17 | Supriye |
+| `ayo/Y25-final-fixes` *(if needed)* | Y25 | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Supriye |
+
+You also **review** Supriye's `S2-setup` (Thu Oct 29), `S22-ablation` (Wed Nov 11) and `S33-final` (Thu Nov 19), and most of Arva's model branches. See the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view).
+
+### When to pull `main`
+Every morning, plus right after these merges. If you're on a branch, run `git pull origin main` on it.
+
+| When | After merge of | Why you need it |
+|---|---|---|
+| Thu Oct 29 | `supriye/S2-setup`, `arva/A3-synthetic` | `requirements.txt` → `pip install -r requirements.txt`; synthetic features for Y7 |
+| Tue Nov 3 | `supriye/S9-features-v0` | `get_model_matrix()` (pull it into `ayo/Y7-supervised-models`); download `features_v0.parquet` from the drive |
+| Sun Nov 8 / Mon Nov 9 morning | `supriye/S17-baselines-v1` | v1 code; download `features_v1.parquet` |
+| Tue Nov 10 | `supriye/S21-v1-fixes` (if any), `arva/A15-final-models` | v1.1 fixes; Arva's final model code. Also download Arva's score files from the drive |
+| Wed Nov 11 | `arva/A17-results` | Arva's per-scenario results, alert volume and timings (for Y17) |
+
+### Shared drive, not Git
+Upload the score files `results/scores/random_forest.parquet`, `xgboost.parquet` and the `*_loso_s*.parquet` files, and post the link in chat. The tables in `results/tables/` and figures in `results/figures/` **are** committed through Git.
 
 ---
 
@@ -86,11 +120,13 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 ## 5. Task Cards
 
 ### Y1 · Wed Oct 28 · Environment
-1. Clone the repo (or set up locally and pull later); create a virtual environment; `pip install -r requirements.txt`.
-2. Check that `import sklearn, xgboost, imblearn, shap` works.
-3. Read TEAM_PLAN.md fully before the kickoff, especially Sections 5, 10 and 11.
+1. Accept the GitHub invite from Supriye. Clone the repo and set your Git name and email, exactly as in TEAM_PLAN 14.1.
+2. Create a virtual environment inside the cloned folder (`.venv`). Install the packages listed in Supriye's S2 step 5 now; once `supriye/S2-setup` merges (Thu Oct 29), pull `main` and run `pip install -r requirements.txt` so your versions match the team's.
+3. Check that `import sklearn, xgboost, imblearn, shap` works.
+4. Create your `ayo/notes` branch for literature notes (`git checkout -b ayo/notes`).
+5. Read TEAM_PLAN.md fully before the kickoff, especially Sections 5, 10, 11 and 14.
 
-**Done when:** the imports work, and you have read TEAM_PLAN.md.
+**Done when:** the repo is cloned, the imports work, and you have read TEAM_PLAN.md.
 
 ### Y2 · Thu Oct 29 · Kickoff
 Lead the discussion of TEAM_PLAN **5.6 (thresholds)** and **10.2 (reporting protocol)**, so everyone agrees how models will be compared before any code is written.

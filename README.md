@@ -6,9 +6,9 @@
 
 | Planning document | What it contains |
 |---|---|
-| [TEAM_PLAN.md](TEAM_PLAN.md) | Work split, milestones, team rules, literature, models, tools, metrics, paper plan |
-| [Supriye.md](Supriye.md) / [Arva.md](Arva.md) / [Ayo.md](Ayo.md) | Each person's day-by-day tasks with step-by-step instructions |
-| [PROJECT_GUIDE.md](PROJECT_GUIDE.md) | Background and methodology guide for the whole project |
+| [TEAM_PLAN.md](Tasks/TEAM_PLAN.md) | Work split, milestones, team rules, literature, models, tools, metrics, paper plan |
+| [Supriye.md](Tasks/Supriye.md) / [Arva.md](Tasks/Arva.md) / [Ayo.md](Tasks/Ayo.md) | Each person's day-by-day tasks with step-by-step instructions |
+| [PROJECT_GUIDE.md](Guide/PROJECT_GUIDE.md) | Background and methodology guide for the whole project |
 
 ## Overview
 
@@ -42,9 +42,9 @@ Each user-day (or user-session) gets an **anomaly/risk score**. Suspicious cases
 | **CERT Insider Threat Dataset (r4.2)** — *primary* | Synthetic enterprise logs: logon, device (USB), file, email, HTTP, LDAP, psychometric | Malicious insiders listed per scenario | Insider-threat detection |
 | **LANL Comprehensive Cyber Security Events** — *stretch goal* | Real (de-identified) authentication, process, flow, DNS logs | Red-team compromise events | Compromised-account detection, authentication failures |
 
-CERT has no failed-login records, so authentication failures are only available through LANL; see [TEAM_PLAN.md §6](TEAM_PLAN.md#6-dataset-facts-everyone-should-know).
+CERT has no failed-login records, so authentication failures are only available through LANL; see [TEAM_PLAN.md §6](Tasks/TEAM_PLAN.md#6-dataset-facts-everyone-should-know).
 
-Raw data is **not** committed to this repository (it is several GB). See [TEAM_PLAN.md §6](TEAM_PLAN.md#6-dataset-facts-everyone-should-know) for download links and where to place the files.
+Raw data is **not** committed to this repository (it is several GB). See [TEAM_PLAN.md §6](Tasks/TEAM_PLAN.md#6-dataset-facts-everyone-should-know) for download links and where to place the files.
 
 ## Models
 
@@ -66,11 +66,13 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 ```
 .
 ├── README.md                 # This file
-├── PROJECT_GUIDE.md          # Step-by-step guide for completing the project
-├── TEAM_PLAN.md              # Work split, milestones, file formats, literature/models/tools/metrics
-├── Supriye.md                # Supriye's tasks and timeline (data, features, paper assembly)
-├── Arva.md                   # Arva's tasks and timeline (unsupervised models, risk scoring, prototype)
-├── Ayo.md                    # Ayo's tasks and timeline (supervised models, evaluation, explainability)
+├── Guide/
+│   └── PROJECT_GUIDE.md      # Step-by-step guide for completing the project
+├── Tasks/
+│   ├── TEAM_PLAN.md          # Work split, milestones, file formats, literature/models/tools/metrics
+│   ├── Supriye.md            # Supriye's tasks and timeline (data, features, paper assembly)
+│   ├── Arva.md               # Arva's tasks and timeline (unsupervised models, risk scoring, prototype)
+│   └── Ayo.md                # Ayo's tasks and timeline (supervised models, evaluation, explainability)
 ├── requirements.txt          # Python dependencies
 ├── data/
 │   ├── raw/                  # Original CERT / LANL files (not committed)

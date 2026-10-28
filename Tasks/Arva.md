@@ -41,8 +41,51 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 | `explain.py` (SHAP helper) | Ayo | Fri Nov 6 |
 | Feature table v1 | Supriye | Sun Nov 8 (M2) |
 
-## 3. Files You Own
-`src/synthetic.py`, `src/models_unsupervised.py`, `src/risk_scoring.py`, `src/pipeline.py`, `app/dashboard.py` (optional), `notebooks/03a_unsupervised_models.ipynb`, `notebooks/05_anomaly_investigation.ipynb`
+## 3. Files You Own & Your Git Branches
+
+**Files you own:** `src/synthetic.py`, `src/models_unsupervised.py`, `src/risk_scoring.py`, `src/pipeline.py`, `app/dashboard.py` (optional), `notebooks/03a_unsupervised_models.ipynb`, `notebooks/05_anomaly_investigation.ipynb`. Also the "Run the prototype" section of `README.md` (A23 only; README belongs to Supriye).
+
+### Your branches
+How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pushing). A code hand-off counts as delivered only once its PR is **merged** and announced in chat. Commit (or `git stash`) before switching between branches.
+
+| Branch | Tasks | Create on | Open PR | Merge by | Reviewer |
+|---|---|---|---|---|---|
+| `arva/notes` | A-LIT1–4 notes, A14 (F2 diagram, T4 draft, section notes) | Wed Oct 28 | Fri Nov 13 | Fri Nov 13 | Any teammate |
+| `arva/A3-synthetic` | A3 | Thu Oct 29 (after `supriye/S2-setup` merges) | Thu Oct 29 (hand-off) | Thu Oct 29 | Ayo |
+| `arva/A4-unsupervised-models` | A4, A5, A6, A8 | Fri Oct 30 | Mon Nov 2 | Mon Nov 2 | Ayo |
+| `arva/A7-risk-scoring` | A7 | Sun Nov 1 | Sun Nov 1 | Sun Nov 1 | Supriye |
+| `arva/A9-v0-tuning` | A9, A10 | Tue Nov 3 (after `supriye/S9-features-v0` merges) | Wed Nov 4 | Wed Nov 4 | Ayo |
+| `arva/A11-pipeline` | A11, A12 | Thu Nov 5 | Fri Nov 6 | Fri Nov 6 | Supriye |
+| `arva/A13-ocsvm` *(optional)* | A13 | Sat Nov 7 | Sat Nov 7 | Sat Nov 7 | Ayo |
+| `arva/A15-final-models` | A15, A16 | Mon Nov 9 | Tue Nov 10 (hand-off) | Tue Nov 10 | Supriye |
+| `arva/A17-results` | A17 | Wed Nov 11 | Wed Nov 11 (hand-off) | Wed Nov 11 | Ayo |
+| `arva/A18-prototype-cases` | A18, A19 | Thu Nov 12 | Sat Nov 14 | Sat Nov 14 | Ayo |
+| `arva/A21-dashboard` *(optional)* | A21 | Sat Nov 14 | Sat Nov 14 | Sat Nov 14 | Supriye |
+| `arva/A23-readme-run` | A23 | Mon Nov 16 | Mon Nov 16 | Mon Nov 16 | Supriye |
+| `arva/A24-fresh-clone-fixes` *(if needed)* | A24 | Tue Nov 17 | Tue Nov 17 | Tue Nov 17 | Supriye |
+| `arva/A26-final-fixes` *(if needed)* | A26 | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Supriye |
+
+You also **review** Supriye's `S5`, `S6`, `S9`, `S10`, `S17`, `S21`, `S24` branches and Ayo's `Y3`, `Y11`, `Y12`, `Y16`, `Y17`, `Y18` branches; see the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). Supriye's `S9` (Tue Nov 3) and `S17` (Sun Nov 8) are the data hand-offs your own work depends on, so review those within 3 hours.
+
+### When to pull `main`
+Every morning, plus right after these merges. If you're on a branch, run `git pull origin main` on it.
+
+| When | After merge of | Why you need it |
+|---|---|---|
+| Thu Oct 29 | `supriye/S2-setup` | Folder structure, `.gitignore`, `requirements.txt` → run `pip install -r requirements.txt` |
+| Sun Nov 1 | `ayo/Y3-evaluate` | `evaluate.py` (for A9, A10) |
+| Tue Nov 3 | `supriye/S9-features-v0` | `get_model_matrix()`; also download `features_v0.parquet` from the drive |
+| Fri Nov 6 | `ayo/Y11-explain` | `explain.py` (for A12, A19) |
+| Sun Nov 8 / Mon Nov 9 morning | `supriye/S17-baselines-v1` | v1 code; also download `features_v1.parquet` |
+| Tue Nov 10, 12:00 | `supriye/S21-v1-fixes` (if any) | v1.1 fixes; also download `features_v1_1.parquet` |
+| Wed Nov 11 | `supriye/S24-lanl` (stretch only) | LANL feature code for A18 step 4 |
+
+### Shared drive, not Git
+Upload these and post the link in chat:
+- Score files `results/scores/iforest.parquet`, `autoencoder.parquet`, `iforest_contam.parquet`, `autoencoder_contam.parquet` (+ `ocsvm.parquet`) → by Tue Nov 10.
+- Trained models in `models/`, only if a teammate asks. Otherwise `pipeline.py` retrains when the files are missing.
+
+The small CSV tables (`results/tables/`) and figures (`results/figures/`) **are** committed through Git.
 
 ---
 
@@ -84,11 +127,13 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 ## 5. Task Cards
 
 ### A1 · Wed Oct 28 · Environment
-1. Clone Supriye's repo once it exists (or set up locally and pull later); create a virtual environment; `pip install -r requirements.txt`.
-2. Check that `import torch, sklearn, shap` works. The CPU build of PyTorch is enough; no GPU is needed.
-3. Read TEAM_PLAN.md fully before the kickoff.
+1. Accept the GitHub invite from Supriye. Clone the repo and set your Git name and email, exactly as in TEAM_PLAN 14.1.
+2. Create a virtual environment inside the cloned folder (`.venv`). Install the packages listed in Supriye's S2 step 5 now; once `supriye/S2-setup` merges (Thu Oct 29), pull `main` and run `pip install -r requirements.txt` so your versions match the team's.
+3. Check that `import torch, sklearn, shap` works. The CPU build of PyTorch is enough; no GPU is needed.
+4. Create your `arva/notes` branch for literature notes (`git checkout -b arva/notes`).
+5. Read TEAM_PLAN.md fully before the kickoff, especially Sections 5 and 14.
 
-**Done when:** the imports work, and you have read TEAM_PLAN.md.
+**Done when:** the repo is cloned, the imports work, and you have read TEAM_PLAN.md.
 
 ### A2 · Thu Oct 29 · Kickoff
 Agree on: the score-file format (TEAM_PLAN 5.2), **"higher score = more suspicious"**, PyTorch vs. Keras, and the model names. Bring questions about anything unclear in this file.
@@ -294,7 +339,7 @@ Write in Overleaf, in your own words:
 ### A23 · Mon Nov 16 · VIII. Conclusion & Future Work + README → M4
 1. **Conclusion (~0.25 page):** answer the research question in 2–3 sentences, using the answer agreed at the walkthrough. Then summarize the main findings.
 2. **Future work:** sequence models such as LSTM (cite L5), graph-based detection (cite L8), streaming / real-time scoring, authentication-failure data (LANL), an analyst-feedback loop to reduce false positives.
-3. Add a **"Run the prototype"** section to [README.md](README.md) with the exact commands.
+3. Add a **"Run the prototype"** section to [README.md](../README.md) with the exact commands.
 
 **Done when:** VIII is in Overleaf and the README section is pushed. → **M4**
 
