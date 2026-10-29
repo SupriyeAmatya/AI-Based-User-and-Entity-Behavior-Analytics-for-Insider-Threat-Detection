@@ -1,15 +1,5 @@
 # AI-Based User and Entity Behavior Analytics (UEBA) for Insider Threat Detection
 
-**Course:** CSCI 561 – Computer Network and Security
-**Topic 7:** AI-Based User and Entity Behavior Analytics for Insider Threat Detection
-**Team:** Supriye, Arva, Ayo — **Submission:** Friday, November 20, 2026
-
-| Planning document | What it contains |
-|---|---|
-| [TEAM_PLAN.md](Tasks/TEAM_PLAN.md) | Work split, milestones, team rules, literature, models, tools, metrics, paper plan |
-| [Supriye.md](Tasks/Supriye.md) / [Arva.md](Tasks/Arva.md) / [Ayo.md](Tasks/Ayo.md) | Each person's day-by-day tasks with step-by-step instructions |
-| [PROJECT_GUIDE.md](Guide/PROJECT_GUIDE.md) | Background and methodology guide for the whole project |
-
 ## Overview
 
 This project builds and evaluates an AI/ML-based **User and Entity Behavior Analytics (UEBA)** prototype that learns what "normal" behavior looks like for each user and device, then flags significant deviations that may indicate:
