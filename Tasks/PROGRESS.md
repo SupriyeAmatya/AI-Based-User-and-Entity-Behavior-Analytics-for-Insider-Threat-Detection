@@ -1,6 +1,6 @@
 # Progress Tracker — Everyone's Tasks and Events
 
-**Last updated:** Tue Nov 3, 2026 · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
+**Last updated:** Tue Nov 3, 2026 (after merging PR #7) · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
 
 ## How to use this file
 - `[x]` = done: every "Done when" item of that task in the person's plan is true. `[ ]` = not done yet.
@@ -14,20 +14,21 @@
 
 ## 0. Snapshot
 
-- **Behind plan:** M0 (Sat Oct 31) and `evaluate.py` (Sun Nov 1) were late; **M1 (v0) is built today, Tue Nov 3**, but it only counts once its PRs are merged (Section 9).
+- **Behind plan:** M0 (Sat Oct 31) and `evaluate.py` (Sun Nov 1) were late. **All S1–S9 and Y3–Y6 code is merged into `main` (Tue Nov 3)**. M1 still needs v0 rebuilt with Supriye's confirmed values, plus Arva's and Ayo's confirmation (§9).
 - **Done by Claude, at Supriye's request (Nov 2–3):**
   - **Data:** CERT r4.2 downloaded and checksum-verified, converted to Parquet (32.8M rows, 1.2 GB), labels built: 70 insiders, 984 malicious user-days out of 330,268 (0.298%).
   - **Notebook and tables:** EDA notebook run end to end; v0 table built (100 users, 31,278 user-days, 252 malicious, every split × scenario covered).
   - **Ayo's `evaluate.py`** (Y3–Y6).
-  - **Tests:** all pass (Supriye's branch 9 + 1 skipped; Ayo's branch 6).
+  - **Tests:** 16/16 pass on `main` (with the data present; without it the 2 v0 smoke tests skip).
 - **Bugs found and fixed:**
   - **Before running** (self-review): duplicated `date` column, de-duplication on column subsets, nullable integers.
   - **On real data:** the archive is multi-stream bz2, which the first converter couldn't read; 14 senior staff have no department in LDAP.
 - **Environment:** on this laptop the project path is too long for Jupyter's install (Windows 260-character limit), so the environment lives at `%USERPROFILE%\.venvs\ueba`; the README explains it.
 - **Waiting on Supriye (human-only, Section 4 → "Decisions"):** after-hours hours, split dates, web keyword lists, EDA observations, label hand-check, and two new labeling questions (see S6, S14).
-- **Waiting on Ayo:** review `evaluate.py`, do the Y3 paper hand-check, review/merge per Section 9.
-- **Waiting on Arva:** A1–A8 aren't in the repo yet; v0 + `get_model_matrix()` + `evaluate.py` are ready for A9 once merged.
-- **GitHub:** only `SupriyeAmatya` and `Bizzlefresh` are collaborators, so one teammate still needs an invite. Reviewers are named in each PR description (Section 9).
+- **Waiting on Ayo:** read `evaluate.py` (now on `main`), do the Y3 paper hand-check, and do the post-merge reviews assigned in §9.
+- **Waiting on Arva:** A1–A8 aren't in the repo yet; v0 + `get_model_matrix()` + `evaluate.py` are on `main`, ready for A9. Also the post-merge reviews in §9.
+- **GitHub:** PRs #1–#7 are merged and every task branch is deleted; only `main` remains. **No PR had a GitHub review**, so the reviews in §9 are still open and are done after the merge. Only `SupriyeAmatya` and `Bizzlefresh` are collaborators, so one teammate still needs an invite.
+- **Everyone now:** `git checkout main`, then `git pull origin main`. New branches start from `main`; no more stacking.
 
 ---
 
@@ -38,7 +39,7 @@
   - [ ] Repo cloned by all 3 *(Arva, Ayo: status unknown)*
   - [ ] Everyone's environment installs from `requirements.txt`
   - [ ] CERT r4.2 Parquet files on the shared drive
-- [ ] **`evaluate.py` ready** (Sun Nov 1, Ayo): merged to `main`, tested on synthetic scores
+- [x] **`evaluate.py` ready** (Sun Nov 1, Ayo): merged to `main`, tested on synthetic scores. *Done Tue Nov 3 (PR #3, reached `main` via #7); Ayo's own review still open (§9)*
 - [ ] **Split dates final** (Mon Nov 2, Supriye): boundaries written into TEAM_PLAN 5.3
 - [ ] **M1 Feature table v0** (Tue Nov 3, Supriye): `features_v0.parquet` + `get_model_matrix()` load in Arva's and Ayo's code
 - [ ] **`explain.py` ready** (Fri Nov 6, Ayo)
@@ -73,7 +74,7 @@
 | [ ] | Thu Oct 29 | GitHub invites, `requirements.txt`, Overleaf + Zotero invites | Supriye → Arva, Ayo |
 | [ ] | Thu Oct 29 | `src/synthetic.py` | Arva → Ayo |
 | [ ] | Sat Oct 31 | CERT Parquet files on the shared drive | Supriye → Arva, Ayo |
-| [ ] | Sun Nov 1 | `src/evaluate.py` merged | Ayo → Arva, Supriye |
+| [x] | Sun Nov 1 | `src/evaluate.py` merged *(Nov 3)* | Ayo → Arva, Supriye |
 | [ ] | Mon Nov 2 | Final split dates (TEAM_PLAN 5.3) | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 3 | `features_v0.parquet` (drive) + `get_model_matrix()` (merged) | Supriye → Arva, Ayo |
 | [ ] | Fri Nov 6 | `src/explain.py` merged | Ayo → Arva |
@@ -268,16 +269,16 @@
 
 ## 7. Branches and pull requests (TEAM_PLAN 14.8)
 
-Tick when the PR is **merged** into `main`. Files Claude wrote today are listed under the branch they belong to, so they can be committed there.
+Tick when the PR is **merged** into `main`.
 
-**Merge order for the stacked branches (see Supriye.md §3):** S2 → (Y3, S5) → S6 → S9.
+**Nov 3:** PRs #3–#6 were merged into `supriye/S2-setup` after #1 had already merged it into `main` (the base branch wasn't deleted, so GitHub didn't move them). PR #7 then brought them into `main`. **Lesson:** delete a branch as soon as it's merged.
 
-- [ ] `supriye/S2-setup` (base `main`, reviewer Ayo). *Tests pass; pushed; PR open (§9).* `.gitignore`, folders, `src/config.py`, `scripts/download_cert.sh` (+ `requirements.txt` once the venv is built)
-- [ ] `supriye/plan-updates` (base `main`, any reviewer). *Pushed; PR open (§9).* `Tasks/PROGRESS.md` and the updated plans
-- [ ] `ayo/Y3-evaluate` (base `supriye/S2-setup`, reviewer Arva). *Tests pass; pushed; PR open (§9).* `src/evaluate.py`, `tests/test_evaluate.py`
-- [ ] `supriye/S5-data-loader` (base `supriye/S2-setup`, reviewer Arva). *Tests pass; pushed; PR open (§9).* `src/data_loader.py`
-- [ ] `supriye/S6-labels-eda` (base `supriye/S5-data-loader`, reviewer Arva). *Tests pass; pushed; PR open (§9).* `src/labels.py`, `tests/test_labels.py`, `notebooks/01_eda.ipynb` (executed), `results/tables/*.csv`, `results/figures/*`
-- [ ] `supriye/S9-features-v0` (base `supriye/S6-labels-eda`, reviewer Arva). *Tests pass; pushed; PR open (§9).* `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `tests/test_pipeline_mini.py`
+- [x] `supriye/S2-setup`: merged into `main` Nov 3 (PR #1), branch deleted. Review by Ayo still open (§9). `.gitignore`, folders, `src/config.py`, `scripts/download_cert.sh`, `requirements.txt`
+- [x] `supriye/plan-updates`: merged into `main` Nov 3 (PR #2), branch deleted. Review by any teammate still open (§9). `Tasks/PROGRESS.md` and the updated plans
+- [x] `ayo/Y3-evaluate`: merged into `main` Nov 3 (PR #3 → #7), branch deleted. Review by Arva still open (§9). `src/evaluate.py`, `tests/test_evaluate.py`
+- [x] `supriye/S5-data-loader`: merged into `main` Nov 3 (PR #4 → #7), branch deleted. Review by Arva still open (§9). `src/data_loader.py`
+- [x] `supriye/S6-labels-eda`: merged into `main` Nov 3 (PR #5 → #7), branch deleted. Review by Arva still open (§9). `src/labels.py`, `tests/test_labels.py`, `notebooks/01_eda.ipynb` (executed), `results/tables/*.csv`, `results/figures/*`
+- [x] `supriye/S9-features-v0`: merged into `main` Nov 3 (PR #6 → #7), branch deleted. Review by Arva still open (§9). `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `tests/test_pipeline_mini.py`
 - [ ] `arva/A3-synthetic` (reviewer Ayo, merge by Thu Oct 29)
 - [ ] `arva/A4-unsupervised-models` (reviewer Ayo, Mon Nov 2)
 - [ ] `arva/A7-risk-scoring` (reviewer Supriye, Sun Nov 1)
@@ -318,45 +319,57 @@ Tick when the PR is **merged** into `main`. Files Claude wrote today are listed 
 
 ## 9. Review and merge checkpoints (PRs opened Tue Nov 3)
 
-Work through the checkpoints **in order**: each one unblocks the next. Use **Squash and merge**, delete the branch, and post "merged" in chat. GitHub moves a stacked PR to `main` automatically when its base merges. Claude-written PRs need the **owner's** own read-through on top of the reviewer's check (TEAM_PLAN 12, rule 7).
+**Status Tue Nov 3:** all PRs below are **merged into `main`** (by `SupriyeAmatya`; #7 by Claude at Supriye's request), with **no GitHub review recorded**. The review items are still required. Do them now on `main`; anything that needs changing goes into a new PR from a new branch. Claude-written code also needs the **owner's** own read-through (TEAM_PLAN 12, rule 7).
 
-Reviewer GitHub accounts: only `Bizzlefresh` is a collaborator so far. Supriye invites the third teammate, then clicks "Request review" on each PR for the reviewer named below.
+For future PRs: Squash and merge, **delete the branch right after merging**, and post "merged" in chat.
+
+Reviewer GitHub accounts: only `Bizzlefresh` is a collaborator so far. Supriye invites the third teammate, so future PRs can request reviews on GitHub.
 
 ### Checkpoint 1: setup and plans (target Tue Nov 3)
-- [ ] **[PR #1](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/1)** `supriye/S2-setup` → `main` (S1, S2), reviewer **Ayo**
+- [x] **[PR #1](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/1)** `supriye/S2-setup` → `main` (S1, S2), reviewer **Ayo**
   - [ ] Supriye has read `src/config.py` and `scripts/download_cert.sh` and can explain them
   - [ ] Ayo: fresh `pip install -r requirements.txt` works on his machine
-  - [ ] Approved → merged
-- [ ] **[PR #2](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/2)** `supriye/plan-updates` → `main` (plans + this tracker), reviewer **any teammate**
+  - [x] Merged into `main` Tue Nov 3
+  - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
+- [x] **[PR #2](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/2)** `supriye/plan-updates` → `main` (plans + this tracker), reviewer **any teammate**
   - [ ] Each person has read their own `Tasks/<Name>.md` §3 and PROGRESS.md §0
-  - [ ] Approved → merged
+  - [x] Merged into `main` Tue Nov 3
+  - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
 - [ ] Everyone: `git checkout main` + `git pull origin main`
 
 ### Checkpoint 2: evaluation code and data loaders (target Tue Nov 3)
-- [ ] **[PR #3](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/3)** `ayo/Y3-evaluate` (S2 → `main` after checkpoint 1) (Y3–Y6), reviewer **Arva**
+- [x] **[PR #3](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/3)** `ayo/Y3-evaluate` (S2 → `main` after checkpoint 1) (Y3–Y6), reviewer **Arva**
   - [ ] Ayo has read every function in `evaluate.py` and can explain it
   - [ ] **Human-only:** Ayo's Y3 paper hand-check matches `threshold_metrics()`
   - [ ] Arva: `python -m pytest tests/test_evaluate.py` passes (6 tests)
-  - [ ] Approved → merged → milestone "`evaluate.py` ready" ticked in §1
-- [ ] **[PR #4](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/4)** `supriye/S5-data-loader` (S2 → `main`) (S4, S5), reviewer **Arva**
+  - [x] Merged (into `supriye/S2-setup`, then `main` via PR #7) → milestone "`evaluate.py` ready" ticked in §1
+  - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
+- [x] **[PR #4](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/4)** `supriye/S5-data-loader` (S2 → `main`) (S4, S5), reviewer **Arva**
   - [ ] Supriye has read `data_loader.py` and can explain it
   - [ ] Arva: tests pass; loads a table with `load_logon(users=[...])` from the shared-drive Parquet
-  - [ ] Approved → merged
+  - [x] Merged (into `supriye/S2-setup`, then `main` via PR #7)
+  - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
 - [ ] `data/` (Parquet + answers) uploaded to the shared drive and the link posted
 - [ ] Supriye tags **`m0-setup`** (TEAM_PLAN 14.7)
 
 ### Checkpoint 3: labels, EDA and split (target Tue Nov 3 – Wed Nov 4)
-- [ ] **[PR #5](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/5)** `supriye/S6-labels-eda` (S5 → `main`) (S6–S8), reviewer **Arva**
+- [x] **[PR #5](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/5)** `supriye/S6-labels-eda` (S5 → `main`) (S6–S8), reviewer **Arva**
   - [ ] Supriye has read `labels.py` and the notebook code and can explain them
   - [ ] **Human-only (Supriye):** Observation cells written; split dates confirmed and copied into TEAM_PLAN 5.3; 3 insiders hand-checked; hijacked-account labeling decided
   - [ ] Notebook re-run (Restart & Run All) if any decision changed a value
-  - [ ] Approved → merged → milestone "Split dates final" ticked in §1
+  - [x] Merged (into `supriye/S2-setup`, then `main` via PR #7)
+  - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
+  - [ ] Milestone "Split dates final" ticked in §1 (after Supriye's decision)
 
 ### Checkpoint 4: feature table v0 = M1 (target Wed Nov 4)
-- [ ] **[PR #6](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/6)** `supriye/S9-features-v0` (S6 → `main`) (S9), reviewer **Arva**
+- [x] **[PR #6](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/6)** `supriye/S9-features-v0` (S6 → `main`) (S9), reviewer **Arva**
   - [ ] Supriye has read `features.py` and the tests and can explain them
   - [ ] v0 rebuilt with the confirmed after-hours and split values (`python -m src.features v0`), uploaded to the drive
   - [ ] Arva: `get_model_matrix()` works in Arva's code; Ayo: the same in Ayo's code
-  - [ ] Approved → merged
+  - [x] Merged (into `supriye/S2-setup`, then `main` via PR #7)
+  - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
 - [ ] Supriye tags **`m1-features-v0`**; milestone M1 ticked in §1
 - [ ] Everyone pulls `main`. From here on, new branches start from `main` (no more stacking)
+
+### Catch-up merge
+- [x] **[PR #7](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/7)** `supriye/S2-setup` → `main`: brought #3–#6 into `main`. Squash-merged by Claude at Supriye's request, Tue Nov 3. 16/16 tests pass on `main`; `supriye/S2-setup` deleted afterwards
