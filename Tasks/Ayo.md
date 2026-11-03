@@ -54,7 +54,7 @@ On Mon Nov 2, Supriye asked Claude (AI) to write `evaluate.py`, because Supriye'
 
 - [ ] Read every function until you can explain it line by line (TEAM_PLAN 12, rule 7). Change anything you disagree with.
 - [ ] **Do the Y3 hand-check on paper yourself** (human-only): compute TP/FP/TN/FN for your own 10-row example and compare with `threshold_metrics()`.
-- [ ] Run `python -m pytest tests/test_evaluate.py` with the project `.venv`.
+- [ ] Run `python -m pytest tests/test_evaluate.py` with the project environment (6 tests; they passed on Nov 3).
 - [ ] Open the PR with base `supriye/S2-setup` (GitHub moves it to `main` once S2 merges); reviewer **Arva**.
 
 `evaluate.py` also contains `make_synthetic_scores()` (Y3 step 1), so Y7 can start before Arva's `synthetic.py` exists.
@@ -135,7 +135,7 @@ Upload the score files `results/scores/random_forest.parquet`, `xgboost.parquet`
 
 ### Y1 · Wed Oct 28 · Environment
 1. Accept the GitHub invite from Supriye. Clone the repo and set your Git name and email, exactly as in TEAM_PLAN 14.1.
-2. Create a virtual environment inside the cloned folder (`.venv`). Install the packages listed in Supriye's S2 step 5 now; once `supriye/S2-setup` merges (Thu Oct 29), pull `main` and run `pip install -r requirements.txt` so your versions match the team's.
+2. Create a **Python 3.13** virtual environment at a short path outside the repo, as in the README's Getting Started (e.g. `%USERPROFILE%\.venvs\ueba`). Inside a long project path, Jupyter's install hits the Windows path limit. Then `pip install -r requirements.txt` from `supriye/S2-setup` (or `main` once merged) so your versions match the team's.
 3. Check that `import sklearn, xgboost, imblearn, shap` works.
 4. Create your `ayo/notes` branch for literature notes (`git checkout -b ayo/notes`).
 5. Read TEAM_PLAN.md fully before the kickoff, especially Sections 5, 10, 11 and 14.

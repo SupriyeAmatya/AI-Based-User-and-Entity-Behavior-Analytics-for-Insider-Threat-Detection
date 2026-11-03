@@ -141,7 +141,7 @@ The small CSV tables (`results/tables/`) and figures (`results/figures/`) **are*
 
 ### A1 · Wed Oct 28 · Environment
 1. Accept the GitHub invite from Supriye. Clone the repo and set your Git name and email, exactly as in TEAM_PLAN 14.1.
-2. Create a virtual environment inside the cloned folder (`.venv`). Install the packages listed in Supriye's S2 step 5 now; once `supriye/S2-setup` merges (Thu Oct 29), pull `main` and run `pip install -r requirements.txt` so your versions match the team's.
+2. Create a **Python 3.13** virtual environment at a short path outside the repo, as in the README's Getting Started (e.g. `%USERPROFILE%\.venvs\ueba`). Inside a long project path, Jupyter's install hits the Windows path limit. Then `pip install -r requirements.txt` from `supriye/S2-setup` (or `main` once merged) so your versions match the team's.
 3. Check that `import torch, sklearn, shap` works. The CPU build of PyTorch is enough; no GPU is needed.
 4. Create your `arva/notes` branch for literature notes (`git checkout -b arva/notes`).
 5. Read TEAM_PLAN.md fully before the kickoff, especially Sections 5 and 14.

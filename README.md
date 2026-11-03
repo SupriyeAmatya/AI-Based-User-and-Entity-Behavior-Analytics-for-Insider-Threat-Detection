@@ -95,19 +95,25 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 
 ## Getting Started
 
+Use **Python 3.13**. On Windows, create the environment at a short path **outside** the project folder. If the project's folder path is long, Jupyter's install fails on the 260-character Windows path limit.
+
 ```bash
-python -m venv .venv
+python -m venv %USERPROFILE%\.venvs\ueba
 ```
 
 ```bash
-.venv\Scripts\activate
+%USERPROFILE%\.venvs\ueba\Scripts\activate
 ```
 
-(On macOS/Linux, activate with `source .venv/bin/activate` instead.)
+(On macOS/Linux: `python3 -m venv ~/.venvs/ueba`, then `source ~/.venvs/ueba/bin/activate`.)
 
 ```bash
 pip install -r requirements.txt
 ```
+
+Run everything from the repo root with that environment active, e.g. `python -m pytest tests`.
+
+**Data (not in Git):** `bash scripts/download_cert.sh` downloads CERT r4.2 (4.8 GB, resumable), and `python -m src.data_loader convert` converts it to Parquet. Or copy `data/` from the team's shared drive.
 
 ```bash
 jupyter notebook

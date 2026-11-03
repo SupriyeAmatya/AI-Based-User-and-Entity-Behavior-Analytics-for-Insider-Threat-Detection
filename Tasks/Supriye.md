@@ -88,6 +88,8 @@ These are human-only (TEAM_PLAN 12). The code runs with placeholder values so v0
 - [ ] **Web keyword lists** for S15 — from `results/tables/top100_web_domains.csv`.
 - [ ] **EDA observations** — the empty *Observation* cells in `notebooks/01_eda.ipynb` (S7).
 - [ ] **Hand-check labels** for 3 insiders against `data/raw/answers/` (S6 step 4).
+- [ ] **Hijacked supervisor accounts (found Nov 3):** in scenario 3, the sysadmin logs in *as the supervisor*. Right now those 20 malicious days are labeled on the supervisor accounts (`FAW0032`, `FBA0348`), which then count as insiders. Keep this compromised-account view, or move those days to the insider? Either way, mention it in III. Dataset.
+- [ ] **Which emails count as "sent" (S14, found Nov 3):** only 62.4% come from the user's own `dtaa.com` address; the rest look like personal webmail from the work PC. Count all, or only work-address emails?
 
 You also **review** Arva's `A7`, `A11`, `A15`, `A21`, `A23`, `A24`, `A26` branches and Ayo's `Y7`, `Y14`, `Y23`, `Y25` branches. Dates are in the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). The `A15` and `Y14` reviews on Tue Nov 10 are hand-offs **you** need for the ablation, so review them quickly.
 
@@ -167,7 +169,7 @@ Upload these and post the link in chat. They count as delivered together with th
    ```
 3. Create the folder structure from [README.md](../README.md) (empty folders need a `.gitkeep` file, or Git won't track them).
 4. Create `.gitignore` with **exactly** the content in TEAM_PLAN 14.1.
-5. Create a virtual environment and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit pytest`. The project `.venv` was built with **Python 3.13** (not the 3.11 in TEAM_PLAN 9); everyone should use 3.13 so `requirements.txt` installs the same versions.
+5. Create a **Python 3.13** virtual environment at a short path outside the repo (`python -m venv %USERPROFILE%\.venvs\ueba`; see the README) and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit pytest`. Inside this long project path, Jupyter's install fails on the Windows 260-character path limit (found Nov 3). Everyone uses 3.13 so `requirements.txt` installs the same versions.
 6. Run `pip freeze > requirements.txt`.
 7. `git status` → check that `.venv/` is **not** listed → `git add` the folders, `.gitignore`, `requirements.txt` and the planning files → commit `S2: project structure, gitignore, requirements` → `git push -u origin supriye/S2-setup`.
 8. Open a PR, assign **Ayo** as reviewer, and merge on Thu Oct 29 after approval (TEAM_PLAN 14.4).
@@ -228,7 +230,7 @@ Produce these outputs, each with a 1–2 sentence observation written by you und
 5. **Insider vs. normal comparison (figure F1):** for one insider per scenario, plot daily activity over time and mark the malicious period. Show one normal user from the same role next to them.
 6. Top 50 email recipient domains (to identify the company's own domain) and top 100 web domains (for the S15 keyword lists).
 
-**Run:** open `notebooks/01_eda.ipynb` with the project's `.venv` and choose Restart & Run All (~5–10 min; it streams the http log for item 6). The *Observation* cells are left empty for you.
+**Run:** open `notebooks/01_eda.ipynb` with the project environment and choose Restart & Run All (~5–10 min; it streams the http log for item 6). The *Observation* cells are left empty for you.
 
 **Done when:** all 6 outputs are in the notebook with your written observations, and figures are saved to `results/figures/`.
 

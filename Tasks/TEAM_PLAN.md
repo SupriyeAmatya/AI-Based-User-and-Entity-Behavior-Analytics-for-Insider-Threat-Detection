@@ -160,7 +160,7 @@ ROC-AUC and PR-AUC need no threshold.
 | `src/models_supervised.py`, `src/evaluate.py`, `src/explain.py`, `tests/test_evaluate.py` and their other tests | Ayo |
 | `README.md`, `requirements.txt`, `.gitignore`, `paper/` (assembly), `Tasks/`, `Guide/` | Supriye |
 
-Everyone imports paths and `RANDOM_STATE` from `src/config.py`; nobody hard-codes `data/...` paths. Run all code from the repo root with the project `.venv` (e.g. `python -m src.labels`), and the tests with `python -m pytest tests`.
+Everyone imports paths and `RANDOM_STATE` from `src/config.py`; nobody hard-codes `data/...` paths. Run all code from the repo root with the project environment active (Python 3.13 from `requirements.txt`, kept at a short path outside the repo such as `%USERPROFILE%\.venvs\ueba`; see the README) (e.g. `python -m src.labels`), and the tests with `python -m pytest tests`.
 
 Need a change in someone else's file? Open a GitHub Issue and assign the owner. Don't edit it directly.
 
@@ -288,7 +288,7 @@ Add each paper to the shared **Zotero** group library as you read it.
 
 | Tool | Purpose | Who |
 |---|---|---|
-| Python 3.13 | Language (the project `.venv` and `requirements.txt` were built with 3.13) | All |
+| Python 3.13 | Language (`requirements.txt` was built with 3.13; keep the environment outside the repo, see the README) | All |
 | pytest | Unit tests in `tests/` | All |
 | Pandas, NumPy, PyArrow | Data processing, Parquet I/O | All |
 | Scikit-learn | Isolation Forest, One-Class SVM, Random Forest, scaling, metrics | All |

@@ -1,6 +1,6 @@
 # Progress Tracker — Everyone's Tasks and Events
 
-**Last updated:** Mon Nov 2, 2026 · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
+**Last updated:** Tue Nov 3, 2026 · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
 
 ## How to use this file
 - `[x]` = done: every "Done when" item of that task in the person's plan is true. `[ ]` = not done yet.
@@ -14,16 +14,20 @@
 
 ## 0. Snapshot
 
-- **Behind plan:** M0 (Sat Oct 31) and `evaluate.py` (Sun Nov 1) were due before any code was in the repo. M1 (v0) is due **Tue Nov 3**.
-- **Done Mon Nov 2 (Claude, at Supriye's request):** Supriye's S2 skeleton and the code for S4–S9, plus Ayo's `evaluate.py` (Y3–Y6), each on its owner's branch (Section 7). Unit tests are included, plus an end-to-end test (`tests/test_pipeline_mini.py`) that runs S4→S9 on a miniature CERT archive. A self-review fixed 3 bugs before anything ran on real data.
-- **Paused at a checkpoint (Mon Nov 2, at Supriye's request).** Resume in this order:
-  1. **Dataset:** ~1.4 of 4.82 GB downloaded. Resume with `bash scripts/download_cert.sh` (on `supriye/S2-setup`); it continues where it stopped and checks the SHA-256. `answers.tar.bz2` is complete and its checksum matches.
-  2. **Environment:** `.venv` exists, but its packages were still downloading at the pause. If imports fail, re-run `.venv/Scripts/python -m pip install pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit pytest`, then `pip freeze > requirements.txt` on `supriye/S2-setup`.
-  3. **Tests not run yet:** run `python -m pytest tests` on `supriye/S9-features-v0` and on `ayo/Y3-evaluate`. Push those 5 code branches only after they pass (only `supriye/plan-updates` is pushed).
-  4. **Then:** `python -m src.data_loader convert` → `python -m src.labels` → run `notebooks/01_eda.ipynb` (still to be generated) → `python -m src.features v0`.
-- **Waiting on Supriye (human-only):** after-hours hours, split dates, web keyword lists, EDA observations, label hand-check. Placeholders sit in `src/config.py`, marked PROVISIONAL.
-- **Waiting on Ayo:** review `evaluate.py`, do the Y3 paper hand-check, open its PR.
-- **Waiting on Arva:** A1–A8 aren't in the repo yet; nothing of Arva's blocks Supriye's v0.
+- **Behind plan:** M0 (Sat Oct 31) and `evaluate.py` (Sun Nov 1) were late; **M1 (v0) is built today, Tue Nov 3**, but it only counts once its PRs are merged (Section 9).
+- **Done by Claude, at Supriye's request (Nov 2–3):**
+  - **Data:** CERT r4.2 downloaded and checksum-verified, converted to Parquet (32.8M rows, 1.2 GB), labels built: 70 insiders, 984 malicious user-days out of 330,268 (0.298%).
+  - **Notebook and tables:** EDA notebook run end to end; v0 table built (100 users, 31,278 user-days, 252 malicious, every split × scenario covered).
+  - **Ayo's `evaluate.py`** (Y3–Y6).
+  - **Tests:** all pass (Supriye's branch 9 + 1 skipped; Ayo's branch 6).
+- **Bugs found and fixed:**
+  - **Before running** (self-review): duplicated `date` column, de-duplication on column subsets, nullable integers.
+  - **On real data:** the archive is multi-stream bz2, which the first converter couldn't read; 14 senior staff have no department in LDAP.
+- **Environment:** on this laptop the project path is too long for Jupyter's install (Windows 260-character limit), so the environment lives at `%USERPROFILE%\.venvs\ueba`; the README explains it.
+- **Waiting on Supriye (human-only, Section 4 → "Decisions"):** after-hours hours, split dates, web keyword lists, EDA observations, label hand-check, and two new labeling questions (see S6, S14).
+- **Waiting on Ayo:** review `evaluate.py`, do the Y3 paper hand-check, review/merge per Section 9.
+- **Waiting on Arva:** A1–A8 aren't in the repo yet; v0 + `get_model_matrix()` + `evaluate.py` are ready for A9 once merged.
+- **GitHub:** only `SupriyeAmatya` and `Bizzlefresh` are collaborators, so one teammate still needs an invite. Reviewers are named in each PR description (Section 9).
 
 ---
 
@@ -91,15 +95,13 @@
 ## 4. Supriye
 
 ### Week 0
-- [ ] **S1** (Wed Oct 28) Download CERT r4.2
-  - [x] Download started from KiltHub: `r4.2.tar.bz2` (4.82 GB), `answers.tar.bz2`, README, checksums **(Claude)**
-  - [x] Resumable parallel download script `scripts/download_cert.sh` **(Claude)**
-  - [x] `answers.tar.bz2`, README and checksums downloaded; answers SHA-256 OK
-  - [ ] `r4.2.tar.bz2` finished (paused at ~1.4 / 4.82 GB) and SHA-256 matches
+- [x] **S1** (Wed Oct 28) Download CERT r4.2 **(Claude, done Nov 3)**
+  - [x] Resumable parallel download script `scripts/download_cert.sh`
+  - [x] `r4.2.tar.bz2` (4.82 GB) and `answers.tar.bz2` downloaded; both SHA-256 checksums match
 - [ ] **S2** (Wed Oct 28 – Thu Oct 29) Repository, environment and writing tools
   - [x] Folder structure, `.gitignore` (TEAM_PLAN 14.1), `src/config.py` committed on `supriye/S2-setup` **(Claude)**
-  - [ ] `.venv` built and `requirements.txt` from `pip freeze` committed on `supriye/S2-setup`
-  - [ ] Arva and Ayo added as collaborators; branch protection on `main` (GitHub settings, Supriye)
+  - [x] Environment built (Python 3.13, at `%USERPROFILE%\.venvs\ueba`, because the repo path is too long for Windows) and `requirements.txt` pinned on `supriye/S2-setup` **(Claude)**
+  - [ ] Both teammates added as collaborators (only `Bizzlefresh` so far) + branch protection on `main` (GitHub settings, Supriye)
   - [ ] Overleaf project (IEEE template) + Zotero group library created; invites sent
   - [ ] PR merged (reviewer Ayo); Arva and Ayo cloned and installed `requirements.txt`
 - [ ] **S3** (Thu Oct 29) Run the kickoff meeting. *Status unknown*
@@ -107,37 +109,40 @@
   - [ ] Section 5 decisions written into TEAM_PLAN and pushed
 - [ ] **S4** (Fri Oct 30) Convert CSVs to Parquet
   - [x] Streaming converter `python -m src.data_loader convert` on `supriye/S5-data-loader` **(Claude)**
-  - [ ] Run on the downloaded archive; rows and date ranges in `data/parquet/manifest.json`
-  - [ ] Parquet files uploaded to the shared drive
+  - [x] Run on the real archive: 5 logs, 32,770,222 rows, Jan 2 2010 – May 17 2011 (`data/parquet/manifest.json`, `results/tables/dataset_files.csv`) **(Claude)**
+  - [ ] `data/` (raw answers, parquet, processed) uploaded to the shared drive (Supriye)
 - [ ] **S5** (Sat Oct 31) Data loaders and cleaning → M0
   - [x] Loaders `load_logon()` … `load_insiders()`, `iter_http_batches()`, cleaning report **(Claude)**
-  - [ ] Cleaning report produced (table 2 of `notebooks/01_eda.ipynb`)
-  - [ ] PR merged (reviewer Arva) → tag `m0-setup`
+  - [x] Cleaning report produced: no duplicates or missing keys in any log (`results/tables/cleaning_report.csv`) **(Claude)**
+  - [ ] PRs for S2 and S5 merged (reviewers Ayo, Arva) → tag `m0-setup` (Section 9)
 
 ### Week 1
 - [ ] **S6** (Sun Nov 1) Ground-truth labels + insider timeline
   - [x] `python -m src.labels`: labels, insider timeline and the step-4 checks, on `supriye/S6-labels-eda` **(Claude)**
-  - [ ] Run: `data/processed/labels.parquet` + `results/tables/insider_timeline.csv`
+  - [x] Run: 70 insiders (30/30/10), matching `insiders.csv`; 7,323 malicious records; all inside each insider's start–end; 986 malicious user-days **(Claude)**
   - [ ] **Human-only:** hand-check 3 insiders against `data/raw/answers/` (Supriye)
+  - [ ] **Decision (Supriye):** 50 scenario-3 records happen on the *supervisor's* account (the sysadmin logs in as them), so 20 malicious days are labeled on accounts `FAW0032` and `FBA0348`, which count as `insider = 1`. Keep this (compromised-account view) or move those days to the insider?
 - [ ] **S7** (Sun Nov 1 – Mon Nov 2) EDA notebook `notebooks/01_eda.ipynb`
   - [x] Notebook `notebooks/01_eda.ipynb` with items 1–6 written **(Claude)**
-  - [ ] Notebook run top to bottom; figures in `results/figures/`, tables in `results/tables/`
+  - [x] Run top to bottom (10/10 cells, no errors); 4 figures incl. F1 in `results/figures/`, 7 tables in `results/tables/` **(Claude)**
   - [ ] **Human-only:** Observation cells written (Supriye)
 - [ ] **S8** (Sun Nov 1 – Mon Nov 2) Decide the train/val/test split
   - [x] Default 60/15/25 proposal + split check (`results/tables/split_check.csv`) **(Claude)**
+  - [x] The plan's default (train ≤ 2010-10-31, val ≤ 2011-01-31) passes: every split has every scenario. Thinnest cell: scenario 3 in test, 2 insiders and 4 days **(Claude)**
   - [ ] **Human-only:** Supriye decides `TRAIN_END` / `VAL_END` in `src/config.py` (now PROVISIONAL: 2010-10-31 / 2011-01-31)
   - [ ] Final dates written into TEAM_PLAN 5.3 and announced
 - [ ] **S9** (Tue Nov 3) Feature table v0 + `get_model_matrix()` → M1
   - [x] `python -m src.features v0` + `get_model_matrix()` + tests, on `supriye/S9-features-v0` **(Claude)**
-  - [ ] `features_v0.parquet` built (with the confirmed after-hours and split values) and uploaded to the drive
-  - [ ] PR merged (reviewer Arva) → tag `m1-features-v0`; Arva and Ayo confirm it loads in their code
+  - [x] `features_v0.parquet` built with the PROVISIONAL values: 100 users (20 insiders, 7/7/6 per scenario), 31,278 user-days, 252 malicious, every split × scenario covered; smoke tests pass with `evaluate.py` **(Claude)**
+  - [ ] Rebuilt once Supriye confirms after-hours + split, then uploaded to the drive
+  - [ ] PRs merged (reviewer Arva) → tag `m1-features-v0`; Arva and Ayo confirm it loads in their code
 - [ ] **S10** (Wed Nov 4) Login features
 - [ ] **S11** (Wed Nov 4) Activity-time features. **Human-only:** decide after hours from the EDA hour plot and write the reason in the feature dictionary
 - [ ] **S12** (Thu Nov 5) USB device features
 - [ ] **S13** (Thu Nov 5) File features
-- [ ] **S14** (Fri Nov 6) Email features
+- [ ] **S14** (Fri Nov 6) Email features. **Decision (Supriye):** only 62.4% of emails come from the user's own `dtaa.com` address; the rest look like personal webmail sent from the work PC. Count all of them as "sent", or only work-address ones?
 - [ ] **S15** (Thu Nov 5 – Fri Nov 6) Web-usage features. **Human-only:** build the job / leak / cloud / hack keyword lists from `results/tables/top100_web_domains.csv`
-- [ ] **S16** (Sat Nov 7) Organizational context (no "days until leaving" feature)
+- [ ] **S16** (Sat Nov 7) Organizational context (no "days until leaving" feature). Note: 14 senior staff have no LDAP department; `ldap_context()` uses their functional unit instead (already in v0)
 - [ ] **S17** (Sat Nov 7) Per-user baselines `z_user_*` + figure F3
 - [ ] **S18** (Sun Nov 8) Peer-group baselines `z_peer_*` + novelty flags `new_*`
 - [ ] **S19** (Sun Nov 8) Validation and leakage checks (5 checks; check 4 is a hand check, human-only)
@@ -221,12 +226,10 @@
 - [ ] **Y3** (Thu Oct 29) Synthetic scores + core metrics
   - [x] `make_synthetic_scores()`, `threshold_metrics()`, `ranking_metrics()` + tests on `ayo/Y3-evaluate` **(Claude)**
   - [ ] **Human-only:** Ayo's own 10-row hand check on paper
-- [ ] **Y4** (Fri Oct 30) Thresholds + `evaluate_file()` + `compare_files()`
-  - [x] Code + tests **(Claude)**
-- [ ] **Y5** (Sat Oct 31) ROC, PR, confusion and score-distribution plots
-  - [x] Code + tests **(Claude)**
+- [x] **Y4** (Fri Oct 30) Thresholds + `evaluate_file()` + `compare_files()`: code + tests pass on synthetic scores **(Claude)**
+- [x] **Y5** (Sat Oct 31) ROC, PR, confusion and score-distribution plots: all 4 render on synthetic scores **(Claude)**
 - [ ] **Y6** (Sun Nov 1) Detection delay + user-level recall → share `evaluate.py`
-  - [x] Code + tests **(Claude)**
+  - [x] Code + tests (6/6 pass); also verified on the real v0 table **(Claude)**
   - [ ] Ayo reads and understands all of `evaluate.py`; PR opened (base `supriye/S2-setup`, reviewer Arva) and merged
   - [ ] Arva and Supriye confirm they can import and run it
 
@@ -269,12 +272,12 @@ Tick when the PR is **merged** into `main`. Files Claude wrote today are listed 
 
 **Merge order for the stacked branches (see Supriye.md §3):** S2 → (Y3, S5) → S6 → S9.
 
-- [ ] `supriye/S2-setup` (base `main`, reviewer Ayo). *Committed locally Nov 2, not pushed until its tests pass.* `.gitignore`, folders, `src/config.py`, `scripts/download_cert.sh` (+ `requirements.txt` once the venv is built)
-- [ ] `supriye/plan-updates` (base `main`, any reviewer). *Pushed Nov 2, PR not opened.* `Tasks/PROGRESS.md` and the updated plans
-- [ ] `ayo/Y3-evaluate` (base `supriye/S2-setup`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/evaluate.py`, `tests/test_evaluate.py`
-- [ ] `supriye/S5-data-loader` (base `supriye/S2-setup`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/data_loader.py`
-- [ ] `supriye/S6-labels-eda` (base `supriye/S5-data-loader`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/labels.py`, `tests/test_labels.py` (+ `notebooks/01_eda.ipynb` and its tables/figures after the run)
-- [ ] `supriye/S9-features-v0` (base `supriye/S6-labels-eda`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `tests/test_pipeline_mini.py`
+- [ ] `supriye/S2-setup` (base `main`, reviewer Ayo). *Tests pass; pushed Nov 3; PR opened (Section 9).* `.gitignore`, folders, `src/config.py`, `scripts/download_cert.sh` (+ `requirements.txt` once the venv is built)
+- [ ] `supriye/plan-updates` (base `main`, any reviewer). *Pushed; PR opened (Section 9).* `Tasks/PROGRESS.md` and the updated plans
+- [ ] `ayo/Y3-evaluate` (base `supriye/S2-setup`, reviewer Arva). *Tests pass; pushed Nov 3; PR opened (Section 9).* `src/evaluate.py`, `tests/test_evaluate.py`
+- [ ] `supriye/S5-data-loader` (base `supriye/S2-setup`, reviewer Arva). *Tests pass; pushed Nov 3; PR opened (Section 9).* `src/data_loader.py`
+- [ ] `supriye/S6-labels-eda` (base `supriye/S5-data-loader`, reviewer Arva). *Tests pass; pushed Nov 3; PR opened (Section 9).* `src/labels.py`, `tests/test_labels.py`, `notebooks/01_eda.ipynb` (executed), `results/tables/*.csv`, `results/figures/*`
+- [ ] `supriye/S9-features-v0` (base `supriye/S6-labels-eda`, reviewer Arva). *Tests pass; pushed Nov 3; PR opened (Section 9).* `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `tests/test_pipeline_mini.py`
 - [ ] `arva/A3-synthetic` (reviewer Ayo, merge by Thu Oct 29)
 - [ ] `arva/A4-unsupervised-models` (reviewer Ayo, Mon Nov 2)
 - [ ] `arva/A7-risk-scoring` (reviewer Supriye, Sun Nov 1)
