@@ -4,6 +4,7 @@ The fake archive has the same layout, file names, columns and date format as r4.
 8 users, one insider per scenario, weekly activity from Jan 2010 to May 2011, and each insider
 has malicious days in all three splits so the split check can pass.
 """
+import bz2
 import csv
 import io
 import tarfile
@@ -71,7 +72,8 @@ def _make_archives(raw):
                    "department", "team", "supervisor"]
     ldap_rows = [[u, u, f"{u.lower()}@dtaa.com", "ITAdmin" if u in ("CCC0003", "HHH0008") else "Salesman",
                   "1", "fu", "dept", "team", "boss"] for u in USERS]
-    with tarfile.open(raw / "r4.2.tar.bz2", "w:bz2") as tar:
+    plain = io.BytesIO()
+    with tarfile.open(fileobj=plain, mode="w") as tar:
         _add(tar, "r4.2/file.csv", _csv(file_, base + ["filename", "content"]))
         for month in months:
             _add(tar, f"r4.2/LDAP/{month}.csv", _csv(ldap_rows, ldap_header))
@@ -82,6 +84,11 @@ def _make_archives(raw):
         _add(tar, "r4.2/email.csv", _csv(email, base + ["to", "cc", "bcc", "from", "size",
                                                         "attachments", "content"]))
         _add(tar, "r4.2/http.csv", _csv(http, base + ["url", "content"]))
+    # Like the real r4.2.tar.bz2 (made by a parallel compressor): several bz2 streams back to back.
+    data = plain.getvalue()
+    pieces = [data[i:i + 50_000] for i in range(0, len(data), 50_000)]
+    assert len(pieces) > 2
+    (raw / "r4.2.tar.bz2").write_bytes(b"".join(bz2.compress(p) for p in pieces))
 
     insiders = [["4.1", 1, "r4.1-1.csv", "ZZZ9999", "01/01/2010 00:00:00", "01/02/2010 00:00:00"]]
     for user, scenario in INSIDERS.items():
