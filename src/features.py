@@ -73,10 +73,13 @@ def ldap_context(keys: pd.DataFrame) -> pd.DataFrame:
     """role and department for each (user, date) row of `keys`, from that month's LDAP snapshot.
 
     Users missing from a month (e.g. after leaving) keep their last known values.
+    14 senior staff (vice presidents, administrative assistants) have no department in LDAP;
+    they get their functional unit instead, or "(none)", so peer groups always have a value.
     Returns a frame aligned row-by-row with `keys`.
     """
     ldap = load_ldap()
-    ldap = ldap[ldap["user_id"].isin(keys["user"].unique())]
+    ldap = ldap[ldap["user_id"].isin(keys["user"].unique())].copy()
+    ldap["department"] = ldap["department"].fillna(ldap["functional_unit"]).fillna("(none)")
     ldap = (ldap[["user_id", "month", "role", "department"]]
             .rename(columns={"user_id": "user"}).sort_values("month"))
     left = pd.DataFrame({"row": np.arange(len(keys)), "user": keys["user"].to_numpy(),
@@ -88,14 +91,29 @@ def ldap_context(keys: pd.DataFrame) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- feature table v0 (S9)
 def sample_v0_users(labels: pd.DataFrame, all_users, seed=RANDOM_STATE):
-    """~V0_N_INSIDERS insiders spread over the 3 scenarios + V0_N_NORMAL random normal users."""
+    """~V0_N_INSIDERS insiders spread over the 3 scenarios + V0_N_NORMAL random normal users.
+
+    Within each scenario, one insider with malicious days in every split it can cover is taken
+    first, so train, val and test all get malicious rows for every scenario where that is possible;
+    the rest are random.
+    """
     rng = np.random.default_rng(seed)
+    labels = labels.assign(split=assign_split(labels["day"]).to_numpy())
     by_scenario = labels.groupby("scenario")["user"].unique()
     per_scenario = np.array_split(np.arange(V0_N_INSIDERS), len(by_scenario))
     insiders = []
     for (scenario, users), share in zip(by_scenario.items(), per_scenario):
         take = min(len(share), len(users))
-        insiders += list(rng.choice(sorted(users), size=take, replace=False))
+        chosen = []
+        for split in ("test", "val", "train"):  # rarest split first
+            in_split = labels.loc[(labels["scenario"] == scenario) & (labels["split"] == split), "user"]
+            have = labels.loc[labels["user"].isin(chosen) & (labels["split"] == split)]
+            if len(chosen) < take and have.empty and not in_split.empty:
+                pool = sorted(set(in_split) - set(chosen))
+                chosen.append(rng.choice(pool))
+        rest = sorted(set(users) - set(chosen))
+        chosen += list(rng.choice(rest, size=take - len(chosen), replace=False))
+        insiders += chosen
     normal_pool = sorted(set(all_users) - set(labels["user"]))
     normal = list(rng.choice(normal_pool, size=V0_N_NORMAL, replace=False))
     return sorted(insiders), sorted(normal)
