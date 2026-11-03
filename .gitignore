@@ -1,0 +1,12 @@
+# Data and large outputs: share through the shared drive instead
+data/
+results/scores/
+models/
+*.parquet
+*.tar.bz2
+*.gz
+# Environments and caches
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
