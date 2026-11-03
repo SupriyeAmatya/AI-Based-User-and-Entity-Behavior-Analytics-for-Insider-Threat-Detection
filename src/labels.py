@@ -73,7 +73,7 @@ def insider_timeline(labels: pd.DataFrame) -> pd.DataFrame:
 
 def assign_split(dates, train_end=TRAIN_END, val_end=VAL_END) -> pd.Series:
     """train if date <= train_end, val if date <= val_end, else test (TEAM_PLAN 5.3)."""
-    dates = pd.to_datetime(pd.Series(dates))
+    dates = pd.to_datetime(pd.Series(dates)).dt.normalize()  # compare calendar days, not times
     split = pd.Series("test", index=dates.index)
     split[dates <= pd.Timestamp(val_end)] = "val"
     split[dates <= pd.Timestamp(train_end)] = "train"

@@ -5,7 +5,7 @@ from src.labels import assign_split, check_split, propose_split, split_is_valid
 
 
 def test_assign_split():
-    split = assign_split(pd.to_datetime(["2010-10-31", "2010-11-01", "2011-01-31", "2011-02-01"]),
+    split = assign_split(pd.to_datetime(["2010-10-31 23:59", "2010-11-01", "2011-01-31", "2011-02-01"]),
                          "2010-10-31", "2011-01-31")
     assert split.tolist() == ["train", "val", "val", "test"]
 
