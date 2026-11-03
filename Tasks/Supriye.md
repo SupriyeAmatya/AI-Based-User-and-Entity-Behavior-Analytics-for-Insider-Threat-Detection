@@ -154,6 +154,8 @@ Upload these and post the link in chat. They count as delivered together with th
 2. Save them in `data/raw/` (which will be git-ignored).
 3. Check you have ≥ 40 GB of free disk space.
 
+**Run:** `bash scripts/download_cert.sh` from the repo root (on `supriye/S2-setup`). KiltHub limits each connection to ~0.4 MB/s, so the script fetches the archive in 16 parallel parts, can be stopped and re-run to resume, and checks both SHA-256 checksums at the end.
+
 **Done when:** both archives are fully downloaded, and the file sizes match the website.
 
 ### S2 · Wed Oct 28 – Thu Oct 29 · Repository, environment and writing tools

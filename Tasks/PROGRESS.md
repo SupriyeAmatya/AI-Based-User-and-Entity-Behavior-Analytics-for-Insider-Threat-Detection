@@ -15,8 +15,12 @@
 ## 0. Snapshot
 
 - **Behind plan:** M0 (Sat Oct 31) and `evaluate.py` (Sun Nov 1) were due before any code was in the repo. M1 (v0) is due **Tue Nov 3**.
-- **Done Mon Nov 2 (Claude, at Supriye's request):** Supriye's S2 skeleton and the code for S4–S9, plus Ayo's `evaluate.py` (Y3–Y6), each on its owner's branch (Section 7). Unit tests included.
-- **Running:** CERT r4.2 download (4.82 GB). Once it finishes: conversion → labels → EDA → v0 table.
+- **Done Mon Nov 2 (Claude, at Supriye's request):** Supriye's S2 skeleton and the code for S4–S9, plus Ayo's `evaluate.py` (Y3–Y6), each on its owner's branch (Section 7). Unit tests are included, plus an end-to-end test (`tests/test_pipeline_mini.py`) that runs S4→S9 on a miniature CERT archive. A self-review fixed 3 bugs before anything ran on real data.
+- **Paused at a checkpoint (Mon Nov 2, at Supriye's request).** Resume in this order:
+  1. **Dataset:** ~1.4 of 4.82 GB downloaded. Resume with `bash scripts/download_cert.sh` (on `supriye/S2-setup`); it continues where it stopped and checks the SHA-256. `answers.tar.bz2` is complete and its checksum matches.
+  2. **Environment:** `.venv` exists, but its packages were still downloading at the pause. If imports fail, re-run `.venv/Scripts/python -m pip install pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit pytest`, then `pip freeze > requirements.txt` on `supriye/S2-setup`.
+  3. **Tests not run yet:** run `python -m pytest tests` on `supriye/S9-features-v0` and on `ayo/Y3-evaluate`. Push those 5 code branches only after they pass (only `supriye/plan-updates` is pushed).
+  4. **Then:** `python -m src.data_loader convert` → `python -m src.labels` → run `notebooks/01_eda.ipynb` (still to be generated) → `python -m src.features v0`.
 - **Waiting on Supriye (human-only):** after-hours hours, split dates, web keyword lists, EDA observations, label hand-check. Placeholders sit in `src/config.py`, marked PROVISIONAL.
 - **Waiting on Ayo:** review `evaluate.py`, do the Y3 paper hand-check, open its PR.
 - **Waiting on Arva:** A1–A8 aren't in the repo yet; nothing of Arva's blocks Supriye's v0.
@@ -89,7 +93,9 @@
 ### Week 0
 - [ ] **S1** (Wed Oct 28) Download CERT r4.2
   - [x] Download started from KiltHub: `r4.2.tar.bz2` (4.82 GB), `answers.tar.bz2`, README, checksums **(Claude)**
-  - [ ] Download finished and SHA-256 matches `CHECKSUMS-sha256.txt`
+  - [x] Resumable parallel download script `scripts/download_cert.sh` **(Claude)**
+  - [x] `answers.tar.bz2`, README and checksums downloaded; answers SHA-256 OK
+  - [ ] `r4.2.tar.bz2` finished (paused at ~1.4 / 4.82 GB) and SHA-256 matches
 - [ ] **S2** (Wed Oct 28 – Thu Oct 29) Repository, environment and writing tools
   - [x] Folder structure, `.gitignore` (TEAM_PLAN 14.1), `src/config.py` committed on `supriye/S2-setup` **(Claude)**
   - [ ] `.venv` built and `requirements.txt` from `pip freeze` committed on `supriye/S2-setup`
@@ -263,12 +269,12 @@ Tick when the PR is **merged** into `main`. Files Claude wrote today are listed 
 
 **Merge order for the stacked branches (see Supriye.md §3):** S2 → (Y3, S5) → S6 → S9.
 
-- [ ] `supriye/S2-setup` (base `main`, reviewer Ayo). *Pushed Nov 2, PR not opened.* `.gitignore`, folders, `src/config.py` (+ `requirements.txt` once the venv is built)
+- [ ] `supriye/S2-setup` (base `main`, reviewer Ayo). *Committed locally Nov 2, not pushed until its tests pass.* `.gitignore`, folders, `src/config.py`, `scripts/download_cert.sh` (+ `requirements.txt` once the venv is built)
 - [ ] `supriye/plan-updates` (base `main`, any reviewer). *Pushed Nov 2, PR not opened.* `Tasks/PROGRESS.md` and the updated plans
-- [ ] `ayo/Y3-evaluate` (base `supriye/S2-setup`, reviewer Arva). *Pushed Nov 2, PR not opened.* `src/evaluate.py`, `tests/test_evaluate.py`
-- [ ] `supriye/S5-data-loader` (base `supriye/S2-setup`, reviewer Arva). *Pushed Nov 2, PR not opened.* `src/data_loader.py`
-- [ ] `supriye/S6-labels-eda` (base `supriye/S5-data-loader`, reviewer Arva). *Pushed Nov 2, PR not opened.* `src/labels.py`, `tests/test_labels.py` (+ `notebooks/01_eda.ipynb` and its tables/figures after the run)
-- [ ] `supriye/S9-features-v0` (base `supriye/S6-labels-eda`, reviewer Arva). *Pushed Nov 2, PR not opened.* `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`
+- [ ] `ayo/Y3-evaluate` (base `supriye/S2-setup`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/evaluate.py`, `tests/test_evaluate.py`
+- [ ] `supriye/S5-data-loader` (base `supriye/S2-setup`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/data_loader.py`
+- [ ] `supriye/S6-labels-eda` (base `supriye/S5-data-loader`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/labels.py`, `tests/test_labels.py` (+ `notebooks/01_eda.ipynb` and its tables/figures after the run)
+- [ ] `supriye/S9-features-v0` (base `supriye/S6-labels-eda`, reviewer Arva). *Committed locally Nov 2, not pushed until its tests pass.* `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `tests/test_pipeline_mini.py`
 - [ ] `arva/A3-synthetic` (reviewer Ayo, merge by Thu Oct 29)
 - [ ] `arva/A4-unsupervised-models` (reviewer Ayo, Mon Nov 2)
 - [ ] `arva/A7-risk-scoring` (reviewer Supriye, Sun Nov 1)
