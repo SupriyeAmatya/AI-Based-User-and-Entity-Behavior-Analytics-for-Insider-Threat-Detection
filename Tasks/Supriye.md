@@ -43,7 +43,9 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 
 ## 3. Files You Own & Your Git Branches
 
-**Files you own:** `src/data_loader.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py` (stretch), `notebooks/01_eda.ipynb`, `notebooks/02_feature_engineering.ipynb`, `docs/feature_dictionary.md`, `README.md`, `requirements.txt`, `.gitignore`, `paper/`
+**Files you own:** `src/config.py` (paths + every PROVISIONAL decision), `src/data_loader.py`, `src/labels.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py` (stretch), `tests/test_labels.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `notebooks/01_eda.ipynb`, `notebooks/02_feature_engineering.ipynb`, `docs/feature_dictionary.md`, `README.md`, `requirements.txt`, `.gitignore`, `paper/`, and the planning files in `Tasks/` (incl. `PROGRESS.md`) and `Guide/`
+
+**Where the data lives (never in Git):** raw archives in `data/raw/`; converted logs in `data/parquet/` (`logon`, `device`, `file`, `email`, `http` + `manifest.json`); labels and feature tables in `data/processed/`. These are the folders you share on the drive.
 
 **As repo owner you also:** add the collaborators and branch protection (S2), create the milestone tags (TEAM_PLAN 14.7), and make the final code archive (S34). If `main` ever breaks, you lead the fix (TEAM_PLAN Section 13).
 
@@ -64,6 +66,30 @@ How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pus
 | `supriye/notes` | S-LIT1–3 notes | Mon Nov 9 | Fri Nov 13 | Fri Nov 13 | Any teammate | — |
 | — | — | — | — | Sat Nov 14 | — | `analysis-done` (after Arva's `A18-prototype-cases` and Ayo's `Y18-shap-fpfn` merge) |
 | `supriye/S33-final` | S33, S34 (README results, last fixes) | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Ayo | `final-submission` |
+| `supriye/plan-updates` | Planning files: `Tasks/PROGRESS.md`, updates to the `Tasks/*.md` plans | Mon Nov 2 | Mon Nov 2 | Tue Nov 3 | Any teammate | — |
+
+**Branches built on unmerged branches (Nov 2).** Each task branch is meant to start from the latest `main`. But on Nov 2 nothing had been merged yet, so these branches are **stacked**: each one starts from the branch it needs code from.
+
+| Branch | Built on | Open its PR with base |
+|---|---|---|
+| `supriye/S2-setup` | `main` | `main` |
+| `ayo/Y3-evaluate` | `supriye/S2-setup` (needs `src/config.py`) | `supriye/S2-setup` |
+| `supriye/S5-data-loader` | `supriye/S2-setup` | `supriye/S2-setup` |
+| `supriye/S6-labels-eda` | `supriye/S5-data-loader` | `supriye/S5-data-loader` |
+| `supriye/S9-features-v0` | `supriye/S6-labels-eda` | `supriye/S6-labels-eda` |
+
+**Merge them in this order:** S2 → (Y3 and S5) → S6 → S9. Use the base shown above for each PR. When a base branch is squash-merged and deleted, GitHub automatically re-targets the next PR to `main`. If that PR then shows a conflict, run `git pull origin main` on the branch, keep the branch's version of its own files, and push. From `supriye/S10-behavior-features` onwards, branch from `main` as usual.
+
+### Decisions waiting for you (PROVISIONAL in `src/config.py`)
+These are human-only (TEAM_PLAN 12). The code runs with placeholder values so v0 could be built; change a value, then re-run `python -m src.labels` and `python -m src.features v0`.
+
+- [ ] **After hours** (`WORK_START_HOUR`, `WORK_END_HOUR`, now 07:00–19:00) — from the hour-of-day plot in `notebooks/01_eda.ipynb` (S11). Write the reason in the feature dictionary.
+- [ ] **Split dates** (`TRAIN_END`, `VAL_END`, now the plan's default 60/15/25 months) — from `results/tables/split_check.csv` (S8). Copy the final dates into TEAM_PLAN 5.3.
+- [ ] **Web keyword lists** for S15 — from `results/tables/top100_web_domains.csv`.
+- [ ] **EDA observations** — the empty *Observation* cells in `notebooks/01_eda.ipynb` (S7).
+- [ ] **Hand-check labels** for 3 insiders against `data/raw/answers/` (S6 step 4).
+- [ ] **Hijacked supervisor accounts (found Nov 3):** in scenario 3, the sysadmin logs in *as the supervisor*. Right now those 20 malicious days are labeled on the supervisor accounts (`FAW0032`, `FBA0348`), which then count as insiders. Keep this compromised-account view, or move those days to the insider? Either way, mention it in III. Dataset.
+- [ ] **Which emails count as "sent" (S14, found Nov 3):** only 62.4% come from the user's own `dtaa.com` address; the rest look like personal webmail from the work PC. Count all, or only work-address emails?
 
 You also **review** Arva's `A7`, `A11`, `A15`, `A21`, `A23`, `A24`, `A26` branches and Ayo's `Y7`, `Y14`, `Y23`, `Y25` branches. Dates are in the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). The `A15` and `Y14` reviews on Tue Nov 10 are hand-offs **you** need for the ablation, so review them quickly.
 
@@ -130,6 +156,8 @@ Upload these and post the link in chat. They count as delivered together with th
 2. Save them in `data/raw/` (which will be git-ignored).
 3. Check you have ≥ 40 GB of free disk space.
 
+**Run:** `bash scripts/download_cert.sh` from the repo root (on `supriye/S2-setup`). KiltHub limits each connection to ~0.4 MB/s, so the script fetches the archive in 16 parallel parts, can be stopped and re-run to resume, and checks both SHA-256 checksums at the end.
+
 **Done when:** both archives are fully downloaded, and the file sizes match the website.
 
 ### S2 · Wed Oct 28 – Thu Oct 29 · Repository, environment and writing tools
@@ -141,7 +169,7 @@ Upload these and post the link in chat. They count as delivered together with th
    ```
 3. Create the folder structure from [README.md](../README.md) (empty folders need a `.gitkeep` file, or Git won't track them).
 4. Create `.gitignore` with **exactly** the content in TEAM_PLAN 14.1.
-5. Create a virtual environment and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit`.
+5. Create a **Python 3.13** virtual environment at a short path outside the repo (`python -m venv %USERPROFILE%\.venvs\ueba`; see the README) and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit pytest`. Inside this long project path, Jupyter's install fails on the Windows 260-character path limit (found Nov 3). Everyone uses 3.13 so `requirements.txt` installs the same versions.
 6. Run `pip freeze > requirements.txt`.
 7. `git status` → check that `.venv/` is **not** listed → `git add` the folders, `.gitignore`, `requirements.txt` and the planning files → commit `S2: project structure, gitignore, requirements` → `git push -u origin supriye/S2-setup`.
 8. Open a PR, assign **Ayo** as reviewer, and merge on Thu Oct 29 after approval (TEAM_PLAN 14.4).
@@ -165,6 +193,8 @@ Upload these and post the link in chat. They count as delivered together with th
 3. For `http.csv` and `email.csv`, **drop the `content` column** while converting to save space (keep a note that it exists).
 4. Print the row count and date range of every file and save them into `notebooks/01_eda.ipynb` (you will reuse these in the Dataset section).
 
+**Run:** `python -m src.data_loader convert` from the repo root (one streaming pass, ~20–30 min). It never unpacks the big CSVs to disk; it also extracts LDAP/, psychometric.csv and the answers. Row counts go to `data/parquet/manifest.json`.
+
 **Done when:** every log has a Parquet file, and row counts match the CSVs.
 
 ### S5 · Sat Oct 31 · Data loaders and cleaning (`src/data_loader.py`) → M0
@@ -173,6 +203,8 @@ Upload these and post the link in chat. They count as delivered together with th
 3. `load_ldap()`: read every monthly file, add a `month` column, and stack them into one table.
 4. Print the number of duplicates and missing values removed per file. You will report these in the paper.
 5. Upload the Parquet files to the shared drive, post the link, and push `data_loader.py`.
+
+**Run:** `from src.data_loader import load_logon; load_logon(users=["AAM0658"])`. Every loader takes `columns=` and `users=`; the huge http log also has `iter_http_batches()`. The cleaning report (step 4) is the second table in `notebooks/01_eda.ipynb`.
 
 **Done when:** every loader runs in a fresh Python session; Arva and Ayo can download the Parquet files. → **M0**
 
@@ -185,6 +217,8 @@ Upload these and post the link in chat. They count as delivered together with th
 5. Make an **insider timeline table**: number of malicious user-days per **month × scenario**. You need it for S8.
 6. Save it as `data/processed/labels.parquet`.
 
+**Run:** `python -m src.labels`. It writes `data/processed/labels.parquet` and `results/tables/insider_timeline.csv`, and prints the step-4 checks. Step 4's hand check of 3 insiders is still yours (human-only).
+
 **Done when:** the number of insiders per scenario matches `insiders.csv`, and the timeline table is saved.
 
 ### S7 · Sun Nov 1 – Mon Nov 2 · Exploratory data analysis (`notebooks/01_eda.ipynb`)
@@ -196,6 +230,8 @@ Produce these outputs, each with a 1–2 sentence observation written by you und
 5. **Insider vs. normal comparison (figure F1):** for one insider per scenario, plot daily activity over time and mark the malicious period. Show one normal user from the same role next to them.
 6. Top 50 email recipient domains (to identify the company's own domain) and top 100 web domains (for the S15 keyword lists).
 
+**Run:** open `notebooks/01_eda.ipynb` with the project environment and choose Restart & Run All (~5–10 min; it streams the http log for item 6). The *Observation* cells are left empty for you.
+
 **Done when:** all 6 outputs are in the notebook with your written observations, and figures are saved to `results/figures/`.
 
 ### S8 · Sun Nov 1 – Mon Nov 2 · Decide the train/val/test split
@@ -203,6 +239,8 @@ Produce these outputs, each with a 1–2 sentence observation written by you und
 2. Check that **each** split contains malicious days from **all three** scenarios. Adjust the boundaries until it does.
 3. Post the proposal in chat on Sun evening; confirm at the Mon stand-up.
 4. Write the final dates into TEAM_PLAN.md Section 5.3 and push.
+
+**Run:** `python -m src.labels` prints the default 60/15/25 proposal and checks the split currently in `src/config.py` (`TRAIN_END`, `VAL_END`). The same check is saved to `results/tables/split_check.csv`. To try other dates, edit `src/config.py` and run it again.
 
 **Done when:** the dates are in TEAM_PLAN.md and every split has malicious days from all 3 scenarios.
 
@@ -222,6 +260,8 @@ Produce these outputs, each with a 1–2 sentence observation written by you und
    ```
    The `columns` argument is what makes the ablation (S22) possible.
 6. Save as `data/processed/features_v0.parquet`, share it, and post in chat.
+
+**Run:** `python -m src.features v0`, then `python -m pytest tests`. `tests/test_v0_smoke.py` checks the table against TEAM_PLAN 5.1 and pushes it through a quick model and `evaluate.py`; it skips that last part until `ayo/Y3-evaluate` is merged.
 
 **Done when:** Arva and Ayo confirm that `get_model_matrix(pd.read_parquet("data/processed/features_v0.parquet"), split="train")` works in their code. → **M1**
 
