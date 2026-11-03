@@ -64,8 +64,9 @@ def is_after_hours(hour: pd.Series) -> pd.Series:
 
 
 def per_user_day(events: pd.DataFrame, **aggregations) -> pd.DataFrame:
-    """Aggregate an event table to (user, date) using named boolean/count columns."""
-    return events.rename(columns={"day": "date"}).groupby(KEY).agg(**aggregations)
+    """Aggregate an event table to (user, date), where date is the event's `day` (midnight)."""
+    days = events.drop(columns="date").rename(columns={"day": "date"})
+    return days.groupby(KEY).agg(**aggregations)
 
 
 def ldap_context(keys: pd.DataFrame) -> pd.DataFrame:
