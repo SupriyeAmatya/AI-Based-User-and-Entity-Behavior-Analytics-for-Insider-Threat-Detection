@@ -155,10 +155,12 @@ ROC-AUC and PR-AUC need no threshold.
 ### 5.8 Code ownership
 | File | Owner |
 |---|---|
-| `src/data_loader.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py` | Supriye |
-| `src/synthetic.py`, `src/models_unsupervised.py`, `src/risk_scoring.py`, `src/pipeline.py`, `app/dashboard.py` | Arva |
-| `src/models_supervised.py`, `src/evaluate.py`, `src/explain.py` | Ayo |
-| `README.md`, `requirements.txt`, `paper/` (assembly) | Supriye |
+| `src/config.py` (paths, seed, PROVISIONAL decisions), `src/data_loader.py`, `src/labels.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py`, `tests/test_labels.py`, `tests/test_features.py`, `tests/test_v0_smoke.py` | Supriye |
+| `src/synthetic.py`, `src/models_unsupervised.py`, `src/risk_scoring.py`, `src/pipeline.py`, `app/dashboard.py`, their tests in `tests/` | Arva |
+| `src/models_supervised.py`, `src/evaluate.py`, `src/explain.py`, `tests/test_evaluate.py` and their other tests | Ayo |
+| `README.md`, `requirements.txt`, `.gitignore`, `paper/` (assembly), `Tasks/`, `Guide/` | Supriye |
+
+Everyone imports paths and `RANDOM_STATE` from `src/config.py`; nobody hard-codes `data/...` paths. Run all code from the repo root with the project `.venv` (e.g. `python -m src.labels`), and the tests with `python -m pytest tests`.
 
 Need a change in someone else's file? Open a GitHub Issue and assign the owner. Don't edit it directly.
 
@@ -286,7 +288,8 @@ Add each paper to the shared **Zotero** group library as you read it.
 
 | Tool | Purpose | Who |
 |---|---|---|
-| Python 3.11 | Language | All |
+| Python 3.13 | Language (the project `.venv` and `requirements.txt` were built with 3.13) | All |
+| pytest | Unit tests in `tests/` | All |
 | Pandas, NumPy, PyArrow | Data processing, Parquet I/O | All |
 | Scikit-learn | Isolation Forest, One-Class SVM, Random Forest, scaling, metrics | All |
 | XGBoost | Gradient-boosted trees | Ayo |
@@ -464,6 +467,8 @@ __pycache__/
 - **Name:** `<name>/<TaskID>-<short-description>`, lower-case words joined by hyphens, e.g. `supriye/S9-features-v0`, `arva/A6-autoencoder`, `ayo/Y4-thresholds`.
 - **Always start a branch from the latest `main`.**
 - **Keep branches short:** merge within 1–3 days. Long-lived branches cause conflicts.
+- **Every person's tasks go on that person's own branches** (`supriye/…`, `arva/…`, `ayo/…`), even when someone else helps write the code.
+- **When you need code that isn't merged yet,** start your branch from the branch that has it (a *stacked* branch). Open the PR with that branch as its base, so the PR shows only your changes. GitHub moves the PR to `main` when the base branch merges. On Nov 2 the first branches were stacked like this; the order is in [Supriye.md §3](Supriye.md#your-branches).
 - **Only edit files you own** (5.8). This matters most for notebooks (`.ipynb`), whose merge conflicts are very hard to fix.
 - **Literature and paper notes** go on one `<name>/notes` branch per person, merged once by Fri Nov 13.
 
@@ -606,6 +611,7 @@ git push origin m1-features-v0
 | Merge by | Branch | Owner | Tasks | Reviewer | Unblocks |
 |---|---|---|---|---|---|
 | Thu Oct 29 | `supriye/S2-setup` | Supriye | S2 | Ayo | Everyone's environment |
+| Tue Nov 3 | `supriye/plan-updates` | Supriye | `Tasks/PROGRESS.md` + plan updates | Any teammate | — |
 | Thu Oct 29 | `arva/A3-synthetic` | Arva | A3 | Ayo | Ayo's Y7 |
 | Sat Oct 31 | `supriye/S5-data-loader` | Supriye | S4, S5 | Arva | **M0** |
 | Sun Nov 1 | `ayo/Y3-evaluate` | Ayo | Y3–Y6 | Arva | Arva's A9; Supriye's S22 |

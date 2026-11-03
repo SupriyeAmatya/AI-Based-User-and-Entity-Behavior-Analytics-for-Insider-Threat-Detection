@@ -45,6 +45,17 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 
 **Files you own:** `src/synthetic.py`, `src/models_unsupervised.py`, `src/risk_scoring.py`, `src/pipeline.py`, `app/dashboard.py` (optional), `notebooks/03a_unsupervised_models.ipynb`, `notebooks/05_anomaly_investigation.ipynb`. Also the "Run the prototype" section of `README.md` (A23 only; README belongs to Supriye).
 
+**Shared code you use (don't edit):**
+- `src/config.py` (Supriye): `SCORES_DIR`, `FIGURES_DIR`, `TABLES_DIR`, `PROCESSED_DIR` and `RANDOM_STATE`. Import them instead of hard-coding paths.
+- `src/features.py` (Supriye): `get_model_matrix()`.
+- `src/evaluate.py` (Ayo): `evaluate_file()`, `compare_files()`.
+
+**State of the repo on Mon Nov 2:**
+- None of your branches are on GitHub yet; A1–A8 are due and still to do.
+- `evaluate.py` (with a synthetic **score** generator, `make_synthetic_scores()`) is on `ayo/Y3-evaluate`.
+- `get_model_matrix()` and the real v0 table code are on `supriye/S9-features-v0`.
+- Ayo's Y7 can start without your `synthetic.py`, but A3 is still needed for your own A4–A8 tests.
+
 ### Your branches
 How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pushing). A code hand-off counts as delivered only once its PR is **merged** and announced in chat. Commit (or `git stash`) before switching between branches.
 
@@ -64,6 +75,8 @@ How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pus
 | `arva/A23-readme-run` | A23 | Mon Nov 16 | Mon Nov 16 | Mon Nov 16 | Supriye |
 | `arva/A24-fresh-clone-fixes` *(if needed)* | A24 | Tue Nov 17 | Tue Nov 17 | Tue Nov 17 | Supriye |
 | `arva/A26-final-fixes` *(if needed)* | A26 | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Supriye |
+
+**Until `supriye/S2-setup` is merged:** start `arva/A3-synthetic`, `arva/A4-unsupervised-models` and `arva/A7-risk-scoring` from it (e.g. `git checkout -b arva/A3-synthetic origin/supriye/S2-setup`) so you have `src/config.py`. Open their PRs with base `supriye/S2-setup`; GitHub moves them to `main` when S2 merges. For A9 (real data), pull the v0 code into your branch with `git pull origin supriye/S9-features-v0`, and `evaluate.py` with `git pull origin ayo/Y3-evaluate`, until both are merged.
 
 You also **review** Supriye's `S5`, `S6`, `S9`, `S10`, `S17`, `S21`, `S24` branches and Ayo's `Y3`, `Y11`, `Y12`, `Y16`, `Y17`, `Y18` branches; see the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). Supriye's `S9` (Tue Nov 3) and `S17` (Sun Nov 8) are the data hand-offs your own work depends on, so review those within 3 hours.
 
