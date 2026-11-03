@@ -18,6 +18,7 @@ S5 - load clean tables:
     user/pc, drops exact duplicate rows and rows with no date or user. What was removed is kept
     in CLEANING_REPORT (see cleaning_report()).
 """
+import bz2
 import json
 import sys
 import tarfile
@@ -92,7 +93,10 @@ def convert_cert_to_parquet():
     PARQUET_DIR.mkdir(parents=True, exist_ok=True)
     CERT_SMALL_DIR.mkdir(parents=True, exist_ok=True)
     manifest = {}
-    with tarfile.open(CERT_ARCHIVE, "r|bz2") as tar:
+    # r4.2.tar.bz2 is a multi-stream bz2 file (several compressed blocks back to back).
+    # tarfile's own "r|bz2" stops after the first block, so decompress with bz2.open, which
+    # reads every block, and give tarfile the plain tar stream ("r|").
+    with bz2.open(CERT_ARCHIVE, "rb") as raw, tarfile.open(fileobj=raw, mode="r|") as tar:
         for member in tar:
             if not member.isfile():
                 continue
