@@ -63,7 +63,7 @@ def _convert_csv(fileobj, log):
     for chunk in reader:
         chunk["date"] = pd.to_datetime(chunk["date"], format=DATE_FORMAT)
         for c in INT_COLUMNS & set(chunk.columns):
-            chunk[c] = pd.to_numeric(chunk[c]).astype("int64")
+            chunk[c] = pd.to_numeric(chunk[c]).astype("Int64")  # nullable: a blank value stays missing
         if writer is None:
             schema = _arrow_schema(chunk.columns)
             writer = pq.ParquetWriter(out, schema, compression="snappy")
@@ -119,7 +119,10 @@ def read_manifest():
 
 
 # ---------------------------------------------------------------- S5: loaders
-def _clean(df, log):
+def _clean(df, log, keep_columns=None):
+    """Clean one log. Duplicates are judged on the full record including its unique `id`, so two
+    different events that look alike in a column subset are never merged; `id` is then dropped
+    again unless the caller asked for it (`keep_columns`)."""
     rows_in = len(df)
     if "date" in df and not pd.api.types.is_datetime64_any_dtype(df["date"]):
         df["date"] = pd.to_datetime(df["date"], format=DATE_FORMAT)
@@ -131,6 +134,8 @@ def _clean(df, log):
     df = df.dropna(subset=key)
     before_dedup = len(df)
     df = df.drop_duplicates()
+    if keep_columns is not None and "id" not in keep_columns:
+        df = df.drop(columns="id")
     if "date" in df:
         df["day"] = df["date"].dt.normalize()
         df["hour"] = df["date"].dt.hour + df["date"].dt.minute / 60
@@ -141,8 +146,9 @@ def _clean(df, log):
 
 def _load_log(log, columns=None, users=None):
     filters = [("user", "in", list(users))] if users is not None else None
-    df = pd.read_parquet(PARQUET_DIR / f"{log}.parquet", columns=columns, filters=filters)
-    return _clean(df, log)
+    read = None if columns is None else list(dict.fromkeys(["id", *columns]))
+    df = pd.read_parquet(PARQUET_DIR / f"{log}.parquet", columns=read, filters=filters)
+    return _clean(df, log, keep_columns=columns)
 
 
 def load_logon(columns=None, users=None):
