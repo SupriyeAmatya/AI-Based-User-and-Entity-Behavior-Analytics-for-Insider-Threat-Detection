@@ -1,0 +1,4 @@
+split,days_s1,days_s2,days_s3,insiders_s1,insiders_s2,insiders_s3
+train,59,492,28,19,20,9
+val,17,212,8,6,11,3
+test,9,157,4,5,8,2
