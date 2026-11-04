@@ -1,6 +1,6 @@
 # Progress Tracker — Everyone's Tasks and Events
 
-**Last updated:** Tue Nov 3, 2026 (after merging PR #7) · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
+**Last updated:** Wed Nov 4, 2026 (review of `main`) · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
 
 ## How to use this file
 - `[x]` = done: every "Done when" item of that task in the person's plan is true. `[ ]` = not done yet.
@@ -17,13 +17,25 @@
 - **Behind plan:** M0 (Sat Oct 31) and `evaluate.py` (Sun Nov 1) were late. **All S1–S9 and Y3–Y6 code is merged into `main` (Tue Nov 3)**. M1 still needs v0 rebuilt with Supriye's confirmed values, plus Arva's and Ayo's confirmation (§9).
 - **Done by Claude, at Supriye's request (Nov 2–3):**
   - **Data:** CERT r4.2 downloaded and checksum-verified, converted to Parquet (32.8M rows, 1.2 GB), labels built: 70 insiders, 984 malicious user-days out of 330,268 (0.298%).
-  - **Notebook and tables:** EDA notebook run end to end; v0 table built (100 users, 31,278 user-days, 252 malicious, every split × scenario covered).
+  - **Notebook and tables:** EDA notebook run end to end; v0 table built (100 users, 31,175 user-days, 236 malicious, every split × scenario covered; rebuilt Nov 4 so all 20 insiders are real).
   - **Ayo's `evaluate.py`** (Y3–Y6).
-  - **Tests:** 16/16 pass on `main` (with the data present; without it the 2 v0 smoke tests skip).
+  - **Tests:** 17/17 pass (with the data present; without it the 2 v0 smoke tests skip).
 - **Bugs found and fixed:**
   - **Before running** (self-review): duplicated `date` column, de-duplication on column subsets, nullable integers.
   - **On real data:** the archive is multi-stream bz2, which the first converter couldn't read; 14 senior staff have no department in LDAP.
 - **Environment:** on this laptop the project path is too long for Jupyter's install (Windows 260-character limit), so the environment lives at `%USERPROFILE%\.venvs\ueba`; the README explains it.
+- **Review of `main`, Wed Nov 4 (Claude, at Supriye's request).** Fixed on branch `supriye/review-fixes`:
+  - **v0 sampled both hijacked supervisor accounts as scenario-3 insiders**, so 2 of the 6 "insiders" were victims and 20 of 252 malicious rows were theirs. The sampler and the `insider` column now use only `answers/insiders.csv`. A new unit test fails on the old code.
+  - **`class_imbalance.csv` said 72 insiders.** It now gives 70 insiders (30/30/10) and, separately, 72 accounts with malicious days. This resolves the "two counts disagree" point in `docs/coverage.md`; the 986 vs 984 gap is the 2 malicious days with no logon.
+  - **`requirements.txt` pinned the Windows-only `pywinpty`,** which would break `pip install` on macOS/Linux; it's now marked `sys_platform == "win32"`.
+  - **`scripts/download_cert.sh` used `sha256sum`,** which macOS lacks; it now falls back to `shasum -a 256`.
+  - **No bugs in `evaluate.py`.** One note for Ayo (his file, not edited): `detection_delay()` counts from an insider's first malicious day *in test*, so a campaign that started in val looks faster to detect. Say so in §V or add the first-ever day.
+  - **Process:** `docs/coverage.md` (Arva) went straight to `main` without a PR (TEAM_PLAN 5.9); PR #9 (Arva's `CLAUDE.md`) was merged without a review.
+- **Overdue as of Wed Nov 4** (nothing on GitHub):
+  - **Arva:** A3–A10 (synthetic data, unsupervised models, risk score, first v0 run, tuning), due Oct 29 – Nov 4.
+  - **Ayo:** Y7–Y9 (supervised models, first v0 run, tuning), due Nov 2–4. Ayo has no commits yet.
+  - **Literature:** `paper/lit_notes/` is empty; S-LIT, A-LIT1–2 and Y-LIT1–2 were due Oct 28 – Nov 2.
+  - **Supriye:** the human-only decisions above; S10 and S11 are due today.
 - **Waiting on Supriye (human-only, Section 4 → "Decisions"):** after-hours hours, split dates, web keyword lists, EDA observations, label hand-check, and two new labeling questions (see S6, S14).
 - **Waiting on Ayo:** read `evaluate.py` (now on `main`), do the Y3 paper hand-check, and do the post-merge reviews assigned in §9.
 - **Waiting on Arva:** A1–A8 aren't in the repo yet; v0 + `get_model_matrix()` + `evaluate.py` are on `main`, ready for A9. Also the post-merge reviews in §9.
@@ -134,7 +146,7 @@
   - [ ] Final dates written into TEAM_PLAN 5.3 and announced
 - [ ] **S9** (Tue Nov 3) Feature table v0 + `get_model_matrix()` → M1
   - [x] `python -m src.features v0` + `get_model_matrix()` + tests, on `supriye/S9-features-v0` **(Claude)**
-  - [x] `features_v0.parquet` built with the PROVISIONAL values: 100 users (20 insiders, 7/7/6 per scenario), 31,278 user-days, 252 malicious, every split × scenario covered; smoke tests pass with `evaluate.py` **(Claude)**
+  - [x] `features_v0.parquet` built with the PROVISIONAL values: 100 users (20 insiders, 7/7/6 per scenario), 31,175 user-days, 236 malicious, every split × scenario covered (test has only 2 scenario-3 rows); all 20 insiders are real insiders (rebuilt Nov 4); smoke tests pass with `evaluate.py` **(Claude)**
   - [ ] Rebuilt once Supriye confirms after-hours + split, then uploaded to the drive
   - [ ] PRs merged (reviewer Arva) → tag `m1-features-v0`; Arva and Ayo confirm it loads in their code
 - [ ] **S10** (Wed Nov 4) Login features
