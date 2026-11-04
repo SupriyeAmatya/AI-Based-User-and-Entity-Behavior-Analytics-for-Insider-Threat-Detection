@@ -13,6 +13,8 @@ BASE=https://ndownloader.figshare.com/files
 ARCHIVE="$DIR/r4.2.tar.bz2"; ARCHIVE_ID=24856766; TOTAL=4824287500
 PARTS="$DIR/.parts"
 size() { wc -c < "$1" | tr -d ' '; }
+# sha256sum on Linux/Git Bash; macOS ships shasum instead
+if command -v sha256sum >/dev/null; then sha256() { sha256sum "$1"; }; else sha256() { shasum -a 256 "$1"; }; fi
 
 mkdir -p "$DIR"
 for small in CHECKSUMS-sha256.txt:24857831 SEI_Insider_README.txt:24860765 answers.tar.bz2:24857828; do
@@ -53,6 +55,6 @@ fi
 echo "verifying checksums..."
 for name in r4.2.tar.bz2 answers.tar.bz2; do
   expected=$(grep -E "[[:space:]]\*?$name\$" "$DIR/CHECKSUMS-sha256.txt" | awk '{print $1}')
-  actual=$(sha256sum "$DIR/$name" | awk '{print $1}')
+  actual=$(sha256 "$DIR/$name" | awk '{print $1}')
   if [ "$expected" = "$actual" ]; then echo "  $name OK"; else echo "  $name CHECKSUM MISMATCH" >&2; exit 1; fi
 done
