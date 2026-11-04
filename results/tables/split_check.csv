@@ -1,4 +1,4 @@
-split,days_s1,days_s2,days_s3,insiders_s1,insiders_s2,insiders_s3
-train,59,492,28,19,20,9
-val,17,212,8,6,11,3
-test,9,157,4,5,8,2
+split,days_s1,days_s2,days_s3,accounts_s1,accounts_s2,accounts_s3,insider_days_s1,insider_days_s2,insider_days_s3,insiders_s1,insiders_s2,insiders_s3
+train,59,492,28,19,20,9,59,492,14,19,20,7
+val,17,212,8,6,11,3,17,212,4,6,11,2
+test,9,157,4,5,8,2,9,157,2,5,8,1

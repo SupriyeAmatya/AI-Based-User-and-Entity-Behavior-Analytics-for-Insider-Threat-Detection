@@ -90,20 +90,35 @@ def propose_split(first_day, last_day, fractions=(0.60, 0.15)):
     return str(train_end.date()), str(val_end.date()), len(months)
 
 
-def check_split(labels, train_end=TRAIN_END, val_end=VAL_END) -> pd.DataFrame:
-    """Malicious user-days and insiders per split x scenario. Every cell must be > 0 (S8 step 2)."""
+def check_split(labels, train_end=TRAIN_END, val_end=VAL_END, real_insiders=None) -> pd.DataFrame:
+    """Malicious user-days and accounts per split x scenario. Every cell must be > 0 (S8 step 2).
+
+    The labels also hold the supervisor accounts hijacked in scenario 3, so `days_s*` and
+    `accounts_s*` count every labeled account. Pass `real_insiders` (answers/insiders.csv) to add
+    `insider_days_s*` and `insiders_s*`, which count the real insiders only.
+    """
     t = labels.assign(split=assign_split(labels["day"], train_end, val_end).to_numpy())
-    days = t.pivot_table(index="split", columns="scenario", values="day", aggfunc="count",
-                         fill_value=0).reindex(SPLITS, fill_value=0)
-    people = t.pivot_table(index="split", columns="scenario", values="user", aggfunc="nunique",
-                           fill_value=0).reindex(SPLITS, fill_value=0)
-    days.columns = [f"days_s{c}" for c in days.columns]
-    people.columns = [f"insiders_s{c}" for c in people.columns]
-    return days.join(people)
+
+    def per_cell(rows, value, func, prefix):
+        table = rows.pivot_table(index="split", columns="scenario", values=value, aggfunc=func,
+                                 fill_value=0).reindex(index=SPLITS, columns=[1, 2, 3], fill_value=0)
+        table.columns = [f"{prefix}_s{c}" for c in table.columns]
+        return table
+
+    parts = [per_cell(t, "day", "count", "days"), per_cell(t, "user", "nunique", "accounts")]
+    if real_insiders is not None:
+        real = t[t["user"].isin(real_insiders)]
+        parts += [per_cell(real, "day", "count", "insider_days"),
+                  per_cell(real, "user", "nunique", "insiders")]
+    return pd.concat(parts, axis=1)
 
 
 def split_is_valid(table: pd.DataFrame) -> bool:
-    return bool((table.filter(like="days_s") > 0).all().all())
+    """Every split has malicious days from every scenario; judged on real insiders when known."""
+    days = table.filter(like="insider_days_s")
+    if days.empty:
+        days = table.filter(regex=r"^days_s")
+    return bool((days > 0).all().all())
 
 
 def main():
@@ -120,13 +135,17 @@ def main():
     print("\nMalicious user-days per month x scenario:")
     print(timeline.to_string())
 
+    real = set(load_insiders()["user"])
+    hijacked = sorted(set(labels["user"]) - real)
+    print(f"\nAccounts with malicious days that are not insiders (hijacked in scenario 3): {hijacked}")
+
     logon = read_manifest()["logon"]
     train_end, val_end, n_months = propose_split(logon["date_min"], logon["date_max"])
     print(f"\nData covers {n_months} months. Default 60/15/25 rule -> "
           f"TRAIN_END={train_end}, VAL_END={val_end}")
-    print(check_split(labels, train_end, val_end).to_string())
+    print(check_split(labels, train_end, val_end, real).to_string())
 
-    table = check_split(labels)
+    table = check_split(labels, real_insiders=real)
     table.to_csv(TABLES_DIR / "split_check.csv")
     print(f"\nSplit in src/config.py (TRAIN_END={TRAIN_END}, VAL_END={VAL_END}): "
           f"{'OK, every split has every scenario' if split_is_valid(table) else 'NOT VALID'}")
