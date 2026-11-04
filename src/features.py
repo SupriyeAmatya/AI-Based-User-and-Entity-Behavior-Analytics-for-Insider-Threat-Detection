@@ -18,7 +18,7 @@ from src.config import (
     WORK_START_HOUR,
 )
 from src.data_loader import (
-    load_device, load_email, load_file, load_ldap, load_logon, recipient_domains,
+    load_device, load_email, load_file, load_insiders, load_ldap, load_logon, recipient_domains,
 )
 from src.labels import assign_split
 
@@ -90,24 +90,28 @@ def ldap_context(keys: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------- feature table v0 (S9)
-def sample_v0_users(labels: pd.DataFrame, all_users, seed=RANDOM_STATE):
+def sample_v0_users(labels: pd.DataFrame, all_users, real_insiders, seed=RANDOM_STATE):
     """~V0_N_INSIDERS insiders spread over the 3 scenarios + V0_N_NORMAL random normal users.
 
+    Insiders are drawn only from `real_insiders` (answers/insiders.csv). The labels also contain
+    the two supervisor accounts hijacked in scenario 3, but those people are victims, not insiders.
     Within each scenario, one insider with malicious days in every split it can cover is taken
     first, so train, val and test all get malicious rows for every scenario where that is possible;
-    the rest are random.
+    the rest are random. Accounts with any malicious day are never sampled as normal users.
     """
     rng = np.random.default_rng(seed)
     labels = labels.assign(split=assign_split(labels["day"]).to_numpy())
-    by_scenario = labels.groupby("scenario")["user"].unique()
+    labels_real = labels[labels["user"].isin(real_insiders)]
+    by_scenario = labels_real.groupby("scenario")["user"].unique()
     per_scenario = np.array_split(np.arange(V0_N_INSIDERS), len(by_scenario))
     insiders = []
     for (scenario, users), share in zip(by_scenario.items(), per_scenario):
         take = min(len(share), len(users))
         chosen = []
         for split in ("test", "val", "train"):  # rarest split first
-            in_split = labels.loc[(labels["scenario"] == scenario) & (labels["split"] == split), "user"]
-            have = labels.loc[labels["user"].isin(chosen) & (labels["split"] == split)]
+            in_split = labels_real.loc[(labels_real["scenario"] == scenario)
+                                       & (labels_real["split"] == split), "user"]
+            have = labels_real.loc[labels_real["user"].isin(chosen) & (labels_real["split"] == split)]
             if len(chosen) < take and have.empty and not in_split.empty:
                 pool = sorted(set(in_split) - set(chosen))
                 chosen.append(rng.choice(pool))
@@ -122,7 +126,8 @@ def sample_v0_users(labels: pd.DataFrame, all_users, seed=RANDOM_STATE):
 def build_v0(labels: pd.DataFrame) -> tuple:
     """S9: basic counts for a 100-user sample, all dates. Returns (features, report)."""
     all_users = load_logon(columns=["user"])["user"].unique()
-    insiders, normal = sample_v0_users(labels, all_users)
+    real_insiders = set(load_insiders()["user"])
+    insiders, normal = sample_v0_users(labels, all_users, real_insiders)
     users = insiders + normal
 
     logon = load_logon(columns=["user", "date", "activity"], users=users)
@@ -156,7 +161,7 @@ def build_v0(labels: pd.DataFrame) -> tuple:
     features = features.join(lab[["scenario"]], how="left")
     features["label"] = features["scenario"].notna().astype(int)
     features["scenario"] = features["scenario"].fillna(0).astype(int)
-    features["insider"] = features.index.get_level_values("user").isin(labels["user"]).astype(int)
+    features["insider"] = features.index.get_level_values("user").isin(real_insiders).astype(int)
 
     features = features.reset_index()
     features[["role", "department"]] = ldap_context(features[KEY]).to_numpy()
