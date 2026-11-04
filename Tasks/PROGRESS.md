@@ -31,8 +31,8 @@
   - **`scripts/download_cert.sh` used `sha256sum`,** which macOS lacks; it now falls back to `shasum -a 256`.
   - **No bugs in `evaluate.py`.** One note for Ayo (his file, not edited): `detection_delay()` counts from an insider's first malicious day *in test*, so a campaign that started in val looks faster to detect. Say so in §V or add the first-ever day.
   - **Process:** `docs/coverage.md` (Arva) went straight to `main` without a PR (TEAM_PLAN 5.9); PR #9 (Arva's `CLAUDE.md`) was merged without a review.
-- **Overdue as of Wed Nov 4** (nothing on GitHub):
-  - **Arva:** A3–A10 (synthetic data, unsupervised models, risk score, first v0 run, tuning), due Oct 29 – Nov 4.
+- **Overdue as of Wed Nov 4:**
+  - **Arva:** A4–A10 (unsupervised models, risk score, first v0 run, tuning), due Oct 30 – Nov 4. A3 has **PR #10** open since Nov 4 (`src/synthetic.py`; 21/21 tests pass on its branch; reviewer Ayo). Review note: rename `f_http_job_site` to `f_http_job`, the name planned for the real feature (S15).
   - **Ayo:** Y7–Y9 (supervised models, first v0 run, tuning), due Nov 2–4. Ayo has no commits yet.
   - **Literature:** `paper/lit_notes/` is empty; S-LIT, A-LIT1–2 and Y-LIT1–2 were due Oct 28 – Nov 2.
   - **Supriye:** the human-only decisions above; S10 and S11 are due today.
