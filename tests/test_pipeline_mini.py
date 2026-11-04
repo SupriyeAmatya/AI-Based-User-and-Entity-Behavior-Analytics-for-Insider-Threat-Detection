@@ -41,11 +41,12 @@ def _make_archives(raw):
     logon, device, file_, email, http = [], [], [], [], []
     answers = {u: [] for u in INSIDERS}
 
-    def rec(table, kind, user, ts, *rest, malicious=False):
+    def rec(table, kind, user, ts, *rest, malicious=False, by=None):
+        """`by` = the insider behind a record made on someone else's account (scenario 3)."""
         row = [f"{{ID-{next(ids)}}}", ts.strftime(FMT), user, f"PC-{USERS.index(user)}", *rest]
         table.append(row)
         if malicious:
-            answers[user].append([kind, *row])
+            answers[by or user].append([kind, *row])
 
     for day in DAYS:
         for user in USERS:
@@ -64,6 +65,9 @@ def _make_archives(raw):
                 f"{user.lower()}@dtaa.com", "50000", "2", "files", malicious=True)
             rec(http, "http", user, night + pd.Timedelta(minutes=8), "http://wikileaks.org/x", "w",
                 malicious=True)
+    # Like real scenario 3: the sysadmin logs in as their supervisor (HHH0008) once.
+    rec(logon, "logon", "HHH0008", MALICIOUS_DAYS[-1] + pd.Timedelta(hours=23), "Logon",
+        malicious=True, by="CCC0003")
     logon.append(list(logon[0]))  # one exact duplicate record (same id) for the cleaning report
 
     base = ["id", "date", "user", "pc"]
@@ -124,7 +128,7 @@ def test_s4_conversion_and_s5_loaders(mini):
     manifest = data_loader.convert_cert_to_parquet()
     assert set(manifest) == {"logon", "device", "file", "email", "http"}
     n_days, n_users = len(DAYS), len(USERS)
-    assert manifest["logon"]["rows"] == 2 * n_days * n_users + 3 * 3 + 1
+    assert manifest["logon"]["rows"] == 2 * n_days * n_users + 3 * 3 + 1 + 1  # + hijack + duplicate
     assert "content" not in manifest["http"]["columns"] and "content" not in manifest["email"]["columns"]
     assert (mini / "raw" / "r4.2" / "LDAP" / "2010-01.csv").exists()
     assert (mini / "raw" / "answers" / "insiders.csv").exists()
@@ -145,9 +149,10 @@ def test_s4_conversion_and_s5_loaders(mini):
 def test_s6_labels_and_s8_split(mini, capsys):
     data_loader.convert_cert_to_parquet()
     lab, records, checks = labels.build_labels()
-    assert checks["records_user_not_insider"] == 0 and checks["records_outside_start_end"] == 0
+    assert checks["records_user_not_insider"] == 1 and checks["records_outside_start_end"] == 0  # the hijack
     assert checks["insiders_per_scenario_answers"] == {1: 1, 2: 1, 3: 1}
-    assert len(lab) == 3 * 3 and set(lab["day"]) == set(MALICIOUS_DAYS)
+    assert len(lab) == 3 * 3 + 1 and set(lab["day"]) == set(MALICIOUS_DAYS)
+    assert set(lab["user"]) == set(INSIDERS) | {"HHH0008"}  # hijacked account keeps its label day
     labels.main()
     out = capsys.readouterr().out
     assert "OK, every split has every scenario" in out
@@ -161,7 +166,9 @@ def test_s9_feature_table_v0(mini):
     features.main(["v0"])
     df = pd.read_parquet(mini / "processed" / "features_v0.parquet")
     assert list(df.columns[:8]) == features.META_COLUMNS
-    assert df["user"].nunique() == 7                       # 3 insiders + 4 of the 5 normal users
+    assert df["user"].nunique() == 7                       # 3 insiders + the 4 untouched normal users
+    assert set(df.loc[df["insider"] == 1, "user"]) == set(INSIDERS)  # only real insiders are sampled
+    assert "HHH0008" not in set(df["user"])                 # the hijacked account is neither insider nor normal
     assert not df.duplicated(["user", "date"]).any()
     mal = df[df["label"] == 1]
     assert len(mal) == 9 and set(mal["scenario"]) == {1, 2, 3}
