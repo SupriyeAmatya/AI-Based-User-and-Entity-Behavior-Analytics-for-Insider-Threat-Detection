@@ -1,6 +1,6 @@
 # Progress Tracker — Everyone's Tasks and Events
 
-**Last updated:** Wed Nov 4, 2026 (review of `main`) · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
+**Last updated:** Wed Nov 4, 2026 (cross-check of Tasks, Guide and docs against the repo) · **Submission:** Fri Nov 20, 2026 (ready by Thu Nov 19)
 
 ## How to use this file
 - `[x]` = done: every "Done when" item of that task in the person's plan is true. `[ ]` = not done yet.
@@ -19,27 +19,30 @@
   - **Data:** CERT r4.2 downloaded and checksum-verified, converted to Parquet (32.8M rows, 1.2 GB), labels built: 70 insiders, 984 malicious user-days out of 330,268 (0.298%).
   - **Notebook and tables:** EDA notebook run end to end; v0 table built (100 users, 31,175 user-days, 236 malicious, every split × scenario covered; rebuilt Nov 4 so all 20 insiders are real).
   - **Ayo's `evaluate.py`** (Y3–Y6).
-  - **Tests:** 17/17 pass (with the data present; without it the 2 v0 smoke tests skip).
+  - **Tests:** 23/23 pass on `main` + this update (with the data present; without it the 2 v0 smoke tests skip).
 - **Bugs found and fixed:**
   - **Before running** (self-review): duplicated `date` column, de-duplication on column subsets, nullable integers.
   - **On real data:** the archive is multi-stream bz2, which the first converter couldn't read; 14 senior staff have no department in LDAP.
 - **Environment:** on this laptop the project path is too long for Jupyter's install (Windows 260-character limit), so the environment lives at `%USERPROFILE%\.venvs\ueba`; the README explains it.
-- **Review of `main`, Wed Nov 4 (Claude, at Supriye's request).** Fixed on branch `supriye/review-fixes`:
+- **Review of `main`, Wed Nov 4 (Claude, at Supriye's request).** Fixed in [PR #11](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/11) (merged):
   - **v0 sampled both hijacked supervisor accounts as scenario-3 insiders**, so 2 of the 6 "insiders" were victims and 20 of 252 malicious rows were theirs. The sampler and the `insider` column now use only `answers/insiders.csv`. A new unit test fails on the old code.
   - **`class_imbalance.csv` said 72 insiders.** It now gives 70 insiders (30/30/10) and, separately, 72 accounts with malicious days. This resolves the "two counts disagree" point in `docs/coverage.md`; the 986 vs 984 gap is the 2 malicious days with no logon.
   - **`requirements.txt` pinned the Windows-only `pywinpty`,** which would break `pip install` on macOS/Linux; it's now marked `sys_platform == "win32"`.
   - **`scripts/download_cert.sh` used `sha256sum`,** which macOS lacks; it now falls back to `shasum -a 256`.
   - **No bugs in `evaluate.py`.** One note for Ayo (his file, not edited): `detection_delay()` counts from an insider's first malicious day *in test*, so a campaign that started in val looks faster to detect. Say so in §V or add the first-ever day.
   - **Process:** `docs/coverage.md` (Arva) went straight to `main` without a PR (TEAM_PLAN 5.9); PR #9 (Arva's `CLAUDE.md`) was merged without a review.
+- **Cross-check of the docs, Wed Nov 4 evening (Claude).** Every number quoted in `Tasks/`, `Guide/` and `docs/` was recomputed from the data. All matched except one:
+  - **Scenario 3 is thinner than reported.** "Scenario 3 in test: 2 insiders, 4 days" counted *accounts*. The truth: **1 real insider (`JLM0364`) with 2 days**, plus 2 days on the hijacked supervisor account `FBA0348`. Across all splits, **20 of scenario 3's 40 labeled days are on the two hijacked accounts**. `split_check.csv` now reports real insiders and accounts separately; a new test covers it.
+  - Stale facts updated in the plans: disk space, conversion time, merged PRs, collaborators, branch-protection note, the real base rate in TEAM_PLAN 10.2, the README folder tree, and the ticked setup/EDA steps in the guide.
 - **Overdue as of Wed Nov 4:**
-  - **Arva:** A4–A10 (unsupervised models, risk score, first v0 run, tuning), due Oct 30 – Nov 4. A3 has **PR #10** open since Nov 4 (`src/synthetic.py`; 21/21 tests pass on its branch; reviewer Ayo). Review note: rename `f_http_job_site` to `f_http_job`, the name planned for the real feature (S15).
+  - **Arva:** A4–A10 (unsupervised models, risk score, first v0 run, tuning), due Oct 30 – Nov 4. A3 is done: [PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10) merged Nov 4 (`src/synthetic.py`, 5 tests). Open follow-up: rename `f_http_job_site` to `f_http_job`, the name planned for the real feature (S15).
   - **Ayo:** Y7–Y9 (supervised models, first v0 run, tuning), due Nov 2–4. Ayo has no commits yet.
   - **Literature:** `paper/lit_notes/` is empty; S-LIT, A-LIT1–2 and Y-LIT1–2 were due Oct 28 – Nov 2.
   - **Supriye:** the human-only decisions above; S10 and S11 are due today.
 - **Waiting on Supriye (human-only, Section 4 → "Decisions"):** after-hours hours, split dates, web keyword lists, EDA observations, label hand-check, and two new labeling questions (see S6, S14).
 - **Waiting on Ayo:** read `evaluate.py` (now on `main`), do the Y3 paper hand-check, and do the post-merge reviews assigned in §9.
-- **Waiting on Arva:** A1–A8 aren't in the repo yet; v0 + `get_model_matrix()` + `evaluate.py` are on `main`, ready for A9. Also the post-merge reviews in §9.
-- **GitHub:** PRs #1–#7 are merged and every task branch is deleted; only `main` remains. **No PR had a GitHub review**, so the reviews in §9 are still open and are done after the merge. Only `SupriyeAmatya` and `Bizzlefresh` are collaborators, so one teammate still needs an invite.
+- **Waiting on Arva:** A4–A10 (A3 is merged); v0 + `get_model_matrix()` + `evaluate.py` + `synthetic.py` are all on `main`, ready for A4–A9. Also the post-merge reviews in §9 and the `f_http_job` rename.
+- **GitHub:** PRs #1–#11 are merged and every task branch is deleted; only `main` remains. **No PR had a GitHub review**, so the reviews in §9 are still open and are done after the merge. All three are collaborators (`SupriyeAmatya`; `arjasa1103` = Arva; `Bizzlefresh`). **Branch protection on `main` is off**, and the repo is **public**, which makes protection free: Supriye can turn it on in Settings → Branches. Being public also means anyone can read the course work, so check the course rules. No milestone tags yet.
 - **Everyone now:** `git checkout main`, then `git pull origin main`. New branches start from `main`; no more stacking.
 
 ---
@@ -84,7 +87,7 @@
 | ✓ | Due | What | From → To |
 |---|---|---|---|
 | [ ] | Thu Oct 29 | GitHub invites, `requirements.txt`, Overleaf + Zotero invites | Supriye → Arva, Ayo |
-| [ ] | Thu Oct 29 | `src/synthetic.py` | Arva → Ayo |
+| [x] | Thu Oct 29 | `src/synthetic.py` *(merged Nov 4, PR #10)* | Arva → Ayo |
 | [ ] | Sat Oct 31 | CERT Parquet files on the shared drive | Supriye → Arva, Ayo |
 | [x] | Sun Nov 1 | `src/evaluate.py` merged *(Nov 3)* | Ayo → Arva, Supriye |
 | [ ] | Mon Nov 2 | Final split dates (TEAM_PLAN 5.3) | Supriye → Arva, Ayo |
@@ -114,7 +117,8 @@
 - [ ] **S2** (Wed Oct 28 – Thu Oct 29) Repository, environment and writing tools
   - [x] Folder structure, `.gitignore` (TEAM_PLAN 14.1), `src/config.py` committed on `supriye/S2-setup` **(Claude)**
   - [x] Environment built (Python 3.13, at `%USERPROFILE%\.venvs\ueba`, because the repo path is too long for Windows) and `requirements.txt` pinned on `supriye/S2-setup` **(Claude)**
-  - [ ] Both teammates added as collaborators (only `Bizzlefresh` so far) + branch protection on `main` (GitHub settings, Supriye)
+  - [x] Both teammates added as collaborators (`arjasa1103`, `Bizzlefresh`; checked Nov 4)
+  - [ ] Branch protection on `main` (GitHub Settings → Branches, Supriye; free because the repo is public)
   - [ ] Overleaf project (IEEE template) + Zotero group library created; invites sent
   - [ ] PR merged (reviewer Ayo); Arva and Ayo cloned and installed `requirements.txt`
 - [ ] **S3** (Thu Oct 29) Run the kickoff meeting. *Status unknown*
@@ -134,14 +138,14 @@
   - [x] `python -m src.labels`: labels, insider timeline and the step-4 checks, on `supriye/S6-labels-eda` **(Claude)**
   - [x] Run: 70 insiders (30/30/10), matching `insiders.csv`; 7,323 malicious records; all inside each insider's start–end; 986 malicious user-days **(Claude)**
   - [ ] **Human-only:** hand-check 3 insiders against `data/raw/answers/` (Supriye)
-  - [ ] **Decision (Supriye):** 50 scenario-3 records happen on the *supervisor's* account (the sysadmin logs in as them), so 20 malicious days are labeled on accounts `FAW0032` and `FBA0348`, which count as `insider = 1`. Keep this (compromised-account view) or move those days to the insider?
+  - [ ] **Decision (Supriye):** 50 scenario-3 records happen on the *supervisor's* account (the sysadmin logs in as them), so 20 malicious days are labeled on accounts `FAW0032` and `FBA0348`. Since Nov 4 (PR #11) they don't count as insiders, but those 20 days are still labeled malicious, which is half of scenario 3's labeled days. Keep this (compromised-account view) or move those days to the insider?
 - [ ] **S7** (Sun Nov 1 – Mon Nov 2) EDA notebook `notebooks/01_eda.ipynb`
   - [x] Notebook `notebooks/01_eda.ipynb` with items 1–6 written **(Claude)**
   - [x] Run top to bottom (10/10 cells, no errors); 4 figures incl. F1 in `results/figures/`, 7 tables in `results/tables/` **(Claude)**
   - [ ] **Human-only:** Observation cells written (Supriye)
 - [ ] **S8** (Sun Nov 1 – Mon Nov 2) Decide the train/val/test split
   - [x] Default 60/15/25 proposal + split check (`results/tables/split_check.csv`) **(Claude)**
-  - [x] The plan's default (train ≤ 2010-10-31, val ≤ 2011-01-31) passes: every split has every scenario. Thinnest cell: scenario 3 in test, 2 insiders and 4 days **(Claude)**
+  - [x] The plan's default (train ≤ 2010-10-31, val ≤ 2011-01-31) passes: every split has every scenario. Thinnest cell: scenario 3 in test, only **1 real insider (`JLM0364`) with 2 days**; 2 more days are on the hijacked account `FBA0348` (corrected Nov 4; `split_check.csv` now shows insiders and accounts separately) **(Claude)**
   - [ ] **Human-only:** Supriye decides `TRAIN_END` / `VAL_END` in `src/config.py` (now PROVISIONAL: 2010-10-31 / 2011-01-31)
   - [ ] Final dates written into TEAM_PLAN 5.3 and announced
 - [ ] **S9** (Tue Nov 3) Feature table v0 + `get_model_matrix()` → M1
@@ -192,7 +196,10 @@
 ### Week 0
 - [ ] **A1** (Wed Oct 28) Environment, clone, `arva/notes` branch. *Status unknown*
 - [ ] **A2** (Thu Oct 29) Kickoff. *Status unknown*
-- [ ] **A3** (Thu Oct 29) Synthetic data generator `src/synthetic.py`. *Status unknown — not in the repo yet*
+- [ ] **A3** (Thu Oct 29) Synthetic data generator `src/synthetic.py`
+  - [x] Merged Nov 4 ([PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10), Arva): 50 users × 300 days, TEAM_PLAN 5.1 format, 5 tests pass
+  - [ ] Ayo confirms he can load it (the card's "Done when")
+  - [ ] Rename `f_http_job_site` to `f_http_job` to match the real feature (S15)
 - [ ] **A4** (Fri Oct 30) Module skeleton `src/models_unsupervised.py`. *Status unknown — not in the repo yet*
 - [ ] **A5** (Fri Oct 30) Isolation Forest. *Status unknown*
 - [ ] **A6** (Sat Oct 31) Autoencoder. *Status unknown*
@@ -291,7 +298,7 @@ Tick when the PR is **merged** into `main`.
 - [x] `supriye/S5-data-loader`: merged into `main` Nov 3 (PR #4 → #7), branch deleted. Review by Arva still open (§9). `src/data_loader.py`
 - [x] `supriye/S6-labels-eda`: merged into `main` Nov 3 (PR #5 → #7), branch deleted. Review by Arva still open (§9). `src/labels.py`, `tests/test_labels.py`, `notebooks/01_eda.ipynb` (executed), `results/tables/*.csv`, `results/figures/*`
 - [x] `supriye/S9-features-v0`: merged into `main` Nov 3 (PR #6 → #7), branch deleted. Review by Arva still open (§9). `src/features.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `tests/test_pipeline_mini.py`
-- [ ] `arva/A3-synthetic` (reviewer Ayo, merge by Thu Oct 29)
+- [x] `arva/A3-synthetic`: merged into `main` Nov 4 (PR #10), branch deleted. Review by Ayo still open (§9).
 - [ ] `arva/A4-unsupervised-models` (reviewer Ayo, Mon Nov 2)
 - [ ] `arva/A7-risk-scoring` (reviewer Supriye, Sun Nov 1)
 - [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4)
@@ -382,6 +389,13 @@ Reviewer GitHub accounts: only `Bizzlefresh` is a collaborator so far. Supriye i
   - [ ] Reviewer approval: **none recorded on GitHub** (merged directly). Review it on `main` now; fixes go in a new PR
 - [ ] Supriye tags **`m1-features-v0`**; milestone M1 ticked in §1
 - [ ] Everyone pulls `main`. From here on, new branches start from `main` (no more stacking)
+
+### Later PRs (Nov 3–4)
+- [x] **[PR #8](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/8)** `supriye/tracker-merged` (tracker): merged Nov 3, no review
+- [x] **[PR #9](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/9)** `arva/docs-claude-md` (`CLAUDE.md`, Arva): merged Nov 4, no review
+- [x] **[PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10)** `arva/A3-synthetic` (A3, Arva): merged Nov 4, no review. Reviewer **Ayo**: run `python -m pytest tests/test_synthetic.py`, confirm `make_synthetic_features()` loads in Y7
+- [x] **[PR #11](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/11)** `supriye/review-fixes` (review fixes, Supriye): merged Nov 4, no review. Reviewer **Arva**
+- [ ] `docs/coverage.md` (Arva) was pushed straight to `main` without a PR; a teammate should still read it
 
 ### Catch-up merge
 - [x] **[PR #7](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/7)** `supriye/S2-setup` → `main`: brought #3–#6 into `main`. Squash-merged by Claude at Supriye's request, Tue Nov 3. 16/16 tests pass on `main`; `supriye/S2-setup` deleted afterwards

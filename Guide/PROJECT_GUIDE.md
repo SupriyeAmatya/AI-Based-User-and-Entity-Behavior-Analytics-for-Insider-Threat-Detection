@@ -33,7 +33,7 @@ Keep the research question in front of you the whole time — every experiment s
 | **Compromised account** | Legitimate credentials used by an attacker; behavior suddenly differs from the real owner |
 | **Behavioral anomaly** | A deviation from a user's own history (*individual baseline*) or from similar users (*peer group*) |
 | **UEBA** | Profiles users *and* entities (hosts, devices, servers), scores risk, prioritizes alerts for analysts |
-| **Class imbalance** | Malicious events are often < 0.1% of data — drives metric choice and model design |
+| **Class imbalance** | Malicious events are a tiny share of the data (0.3% of user-days in our CERT r4.2 data) — drives metric choice and model design |
 
 ### Literature review (≥ 5 papers from IEEE Xplore, Springer, Elsevier, or ACM DL)
 
@@ -97,9 +97,9 @@ Search terms: `insider threat detection machine learning`, `UEBA anomaly detecti
 - `auth.txt` has ~1 billion rows — work on a time window or a subset of users.
 
 ### Setup tasks
-- [ ] Create the folder structure from `README.md`
-- [ ] Place raw files in `data/raw/` (add `data/` to `.gitignore`)
-- [ ] Create a virtual environment and `requirements.txt`:
+- [x] Create the folder structure from `README.md`
+- [x] Place raw files in `data/raw/` (add `data/` to `.gitignore`)
+- [x] Create a virtual environment and `requirements.txt` (done Nov 3; pinned versions in `requirements.txt`, environment outside the repo):
   ```
   pandas
   numpy
@@ -118,13 +118,14 @@ Search terms: `insider threat detection machine learning`, `UEBA anomaly detecti
 
 ## Phase 3 — Exploratory Data Analysis (`notebooks/01_eda.ipynb`)
 
-- [ ] Load each log file; check row counts, date ranges, missing values, duplicates
-- [ ] Parse timestamps into `datetime`
-- [ ] Plot activity by hour of day and day of week (shows "normal working hours")
-- [ ] Count events per user — look for very active / very quiet users
-- [ ] Load the `answers/` folder and mark malicious events / user-days
-- [ ] Report the **class imbalance**: % of malicious user-days vs. normal
-- [ ] Plot a timeline for 2–3 known insiders vs. a normal user (great figure for the paper)
+- [x] Load each log file; check row counts, date ranges, missing values, duplicates
+- [x] Parse timestamps into `datetime`
+- [x] Plot activity by hour of day and day of week (shows "normal working hours")
+- [x] Count events per user — look for very active / very quiet users
+- [x] Load the `answers/` folder and mark malicious events / user-days
+- [x] Report the **class imbalance**: % of malicious user-days vs. normal (0.298%)
+- [x] Plot a timeline for 2–3 known insiders vs. a normal user (great figure for the paper)
+- [ ] Write the observations under each plot (Supriye, human-only)
 
 **Tip:** Convert the big CSVs to Parquet once, then always load Parquet — it is much faster.
 
@@ -140,7 +141,7 @@ Aggregate raw events into one row per **user-day** (recommended). Alternatives: 
 | Category | Example features |
 |---|---|
 | **Login patterns** | # logons, # logoffs, first logon hour, last logoff hour, session duration, # distinct PCs, logons on a PC that isn't the user's usual PC |
-| **Activity time** | # events after hours (e.g., before 8:00 / after 18:00), weekend activity flag |
+| **Activity time** | # events after hours (e.g., before 07:00 / after 19:00, PROVISIONAL in `src/config.py`), weekend activity flag |
 | **Removable media** | # USB connects, # USB connects after hours, # files copied to removable media, # `.exe` / `.zip` / `.doc` files copied |
 | **Email** | # emails sent, # external recipients, # attachments, total attachment size, # emails to non-company domains |
 | **Web / application usage** | # HTTP requests, # visits to job-search sites, # visits to cloud-storage / leak sites (e.g., wikileaks, dropbox), # keylogger-related URLs |
@@ -159,14 +160,15 @@ For each raw feature `x` on day `d`:
 Use **only past data** to compute baselines — never future days (that is data leakage).
 
 ### Produce
-- [ ] `data/processed/features_user_day.parquet`
-- [ ] A feature dictionary table (name, description, category) for the paper
+- [x] `data/processed/features_v0.parquet` (v0: 100-user sample, basic counts)
+- [ ] `data/processed/features_v1.parquet` (v1: all users, all feature groups + baselines)
+- [ ] A feature dictionary table (name, description, category) for the paper: `docs/feature_dictionary.md`
 
 ---
 
 ## Phase 5 — Establish Normal Behavior (`src/baseline.py`)
 
-- [ ] Pick a **training period** (e.g., the first 6 months) and keep only days with **no** malicious activity — this is your "normal" reference
+- [ ] Pick a **training period** (the `train` split, TEAM_PLAN 5.3; by default up to Oct 31, 2010) and keep only days with **no** malicious activity — this is your "normal" reference
 - [ ] Save per-user and per-peer-group baseline statistics (mean, std, percentiles)
 - [ ] Visualize one user's baseline vs. a day that deviates (good for the paper)
 
@@ -223,7 +225,7 @@ Compare **at least two** models. A strong design compares one unsupervised and o
 | Detection time | (a) Inference time per 1,000 user-days; (b) days between an insider's first malicious action and the first alert |
 
 ### Explain *why* precision/recall matter (required in the paper)
-If 0.1% of user-days are malicious, predicting "normal" always gives **99.9% accuracy and 0% recall**. Security teams care about catching threats (recall) without flooding analysts with false alarms (precision / FPR). Show this with a concrete number from your data.
+In our data 0.298% of user-days are malicious, so predicting "normal" always gives **99.70% accuracy and 0% recall**. Security teams care about catching threats (recall) without flooding analysts with false alarms (precision / FPR). Show this with a concrete number from your data.
 
 ### Detecting previously unseen anomalies (required)
 - [ ] **Leave-one-scenario-out:** train the supervised model on scenarios 1 & 2, test on scenario 3 (repeat for each). Compare with unsupervised models, which never see labels. Expect supervised models to drop sharply here — that is a key finding.

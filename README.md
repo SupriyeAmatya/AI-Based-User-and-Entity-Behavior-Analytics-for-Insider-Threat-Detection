@@ -56,38 +56,50 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 ```
 .
 ├── README.md                 # This file
+├── CLAUDE.md                 # Guidance for Claude Code sessions in this repo
 ├── Guide/
 │   └── PROJECT_GUIDE.md      # Step-by-step guide for completing the project
 ├── Tasks/
 │   ├── TEAM_PLAN.md          # Work split, milestones, file formats, literature/models/tools/metrics
+│   ├── PROGRESS.md           # Progress tracker: every task, meeting, hand-off and PR
 │   ├── Supriye.md            # Supriye's tasks and timeline (data, features, paper assembly)
 │   ├── Arva.md               # Arva's tasks and timeline (unsupervised models, risk scoring, prototype)
 │   └── Ayo.md                # Ayo's tasks and timeline (supervised models, evaluation, explainability)
-├── requirements.txt          # Python dependencies
-├── data/
-│   ├── raw/                  # Original CERT / LANL files (not committed)
-│   └── processed/            # Cleaned data and feature tables
+├── docs/
+│   ├── coverage.md           # Assignment requirements vs. status (dated snapshot)
+│   └── feature_dictionary.md # (S20, to come) every feature, its definition and why it matters
+├── requirements.txt          # Python dependencies (pinned, Python 3.13)
+├── scripts/
+│   └── download_cert.sh      # Download CERT r4.2 + answers (resumable, checksum-verified)
+├── data/                     # Not committed; share through the team drive
+│   ├── raw/                  # CERT archives, extracted LDAP/psychometric files and answers
+│   ├── parquet/              # The five logs as Parquet + manifest.json
+│   └── processed/            # labels.parquet, features_v0.parquet, features_v1.parquet
 ├── notebooks/
-│   ├── 01_eda.ipynb
+│   ├── 01_eda.ipynb          # Done (S7)
 │   ├── 02_feature_engineering.ipynb
 │   ├── 03a_unsupervised_models.ipynb
 │   ├── 03b_supervised_models.ipynb
 │   ├── 04_evaluation.ipynb
 │   └── 05_anomaly_investigation.ipynb
 ├── src/
-│   ├── data_loader.py        # Load and clean raw logs
-│   ├── features.py           # Behavioral feature extraction
+│   ├── config.py             # Paths, seed, PROVISIONAL decisions        (done)
+│   ├── data_loader.py        # Convert the archive; load and clean logs   (done)
+│   ├── labels.py             # Ground-truth labels, split check           (done)
+│   ├── features.py           # Feature table + get_model_matrix()         (v0 done)
+│   ├── synthetic.py          # Synthetic feature table for testing        (done)
+│   ├── evaluate.py           # Metrics, plots, detection delay            (done)
 │   ├── baseline.py           # Per-user / peer-group baselines
 │   ├── models_unsupervised.py# Isolation Forest, Autoencoder, One-Class SVM
 │   ├── models_supervised.py  # Random Forest, XGBoost
 │   ├── risk_scoring.py       # Convert model output to a 0–100 risk score
-│   ├── evaluate.py           # Metrics, plots, detection delay
 │   ├── explain.py            # SHAP explanations
 │   └── pipeline.py           # End-to-end UEBA prototype
+├── tests/                    # pytest: python -m pytest tests
 ├── app/
 │   └── dashboard.py          # Optional Streamlit dashboard
 ├── results/
-│   ├── scores/               # One score file per model
+│   ├── scores/               # One score file per model (not committed)
 │   ├── figures/              # ROC/PR curves, confusion matrices, SHAP plots
 │   └── tables/               # Metric tables for the paper
 └── paper/                    # Research paper (IEEE format) and references

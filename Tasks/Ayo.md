@@ -50,14 +50,15 @@ Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5
 **Shared code you use (Supriye's, don't edit):** `src/config.py` holds the paths (`SCORES_DIR`, `FIGURES_DIR`, `TABLES_DIR`) and `RANDOM_STATE`. Import them instead of hard-coding paths. `src/features.py` has `get_model_matrix()`.
 
 ### Already done for you: `ayo/Y3-evaluate` (Y3–Y6)
-On Mon Nov 2, Supriye asked Claude (AI) to write `evaluate.py`, because Supriye's ablation (S22) depends on it and it was due Sun Nov 1. It is committed and pushed on branch **`ayo/Y3-evaluate`** (built on `supriye/S2-setup`), with tests in `tests/test_evaluate.py`. The tests cover the 10-row example, thresholds, detection delay, user-level recall, `evaluate_file()`, `compare_files()` and all 4 plots on `make_synthetic_scores()`. Before it counts as yours:
+On Mon Nov 2, Supriye asked Claude (AI) to write `evaluate.py`, because Supriye's ablation (S22) depends on it and it was due Sun Nov 1. It was merged into `main` on Nov 3 (PR #3, via PR #7), with tests in `tests/test_evaluate.py`. The tests cover the 10-row example, thresholds, detection delay, user-level recall, `evaluate_file()`, `compare_files()` and all 4 plots on `make_synthetic_scores()`. Before it counts as yours:
 
 - [ ] Read every function until you can explain it line by line (TEAM_PLAN 12, rule 7). Change anything you disagree with.
 - [ ] **Do the Y3 hand-check on paper yourself** (human-only): compute TP/FP/TN/FN for your own 10-row example and compare with `threshold_metrics()`.
 - [ ] Run `python -m pytest tests/test_evaluate.py` with the project environment (6 tests; they passed on Nov 3).
-- [ ] Open the PR with base `supriye/S2-setup` (GitHub moves it to `main` once S2 merges); reviewer **Arva**.
+- [x] Merged into `main` (Nov 3). Arva's review is still open (PROGRESS §9).
+- [ ] Note for §V: `detection_delay()` counts from an insider's first malicious day *in test*, so a campaign that started in val looks faster to detect. Say so, or change it to use the first-ever malicious day.
 
-`evaluate.py` also contains `make_synthetic_scores()` (Y3 step 1), so Y7 can start before Arva's `synthetic.py` exists.
+`evaluate.py` also contains `make_synthetic_scores()` (Y3 step 1). Arva's `make_synthetic_features()` (`src/synthetic.py`) is on `main` too (Nov 4), so Y7 can be built and tested on synthetic features now.
 
 ### Your branches
 How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pushing). A code hand-off counts as delivered only once its PR is **merged** and announced in chat. Commit (or `git stash`) before switching between branches.
@@ -76,7 +77,7 @@ How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pus
 | `ayo/Y23-verify` | Y23 | Tue Nov 17 | Tue Nov 17 | Tue Nov 17 | Supriye |
 | `ayo/Y25-final-fixes` *(if needed)* | Y25 | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Supriye |
 
-**Until `supriye/S2-setup` and `ayo/Y3-evaluate` are merged:** start `ayo/Y7-supervised-models` from `ayo/Y3-evaluate` (`git checkout -b ayo/Y7-supervised-models origin/ayo/Y3-evaluate`). For the real-data run (Y8), pull Supriye's `get_model_matrix()` into it with `git pull origin supriye/S9-features-v0`. Once those branches are merged, branch from `main` as usual.
+Everything your branches need is on `main` (since Nov 4): `config.py`, `evaluate.py`, `get_model_matrix()`, the v0 code and `synthetic.py`. Start every branch from the latest `main`.
 
 You also **review** Supriye's `S2-setup` (Thu Oct 29), `S22-ablation` (Wed Nov 11) and `S33-final` (Thu Nov 19), and most of Arva's model branches. See the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view).
 

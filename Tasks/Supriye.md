@@ -68,6 +68,8 @@ How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pus
 | `supriye/S33-final` | S33, S34 (README results, last fixes) | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Ayo | `final-submission` |
 | `supriye/plan-updates` | Planning files: `Tasks/PROGRESS.md`, updates to the `Tasks/*.md` plans | Mon Nov 2 | Mon Nov 2 | Tue Nov 3 | Any teammate | — |
 
+*(Done: all of these were merged by Nov 3; kept for the record. New branches start from `main`.)*
+
 **Branches built on unmerged branches (Nov 2).** Each task branch is meant to start from the latest `main`. But on Nov 2 nothing had been merged yet, so these branches are **stacked**: each one starts from the branch it needs code from.
 
 | Branch | Built on | Open its PR with base |
@@ -84,11 +86,11 @@ How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pus
 These are human-only (TEAM_PLAN 12). The code runs with placeholder values so v0 could be built; change a value, then re-run `python -m src.labels` and `python -m src.features v0`.
 
 - [ ] **After hours** (`WORK_START_HOUR`, `WORK_END_HOUR`, now 07:00–19:00) — from the hour-of-day plot in `notebooks/01_eda.ipynb` (S11). Write the reason in the feature dictionary.
-- [ ] **Split dates** (`TRAIN_END`, `VAL_END`, now the plan's default 60/15/25 months) — from `results/tables/split_check.csv` (S8). Copy the final dates into TEAM_PLAN 5.3.
+- [ ] **Split dates** (`TRAIN_END`, `VAL_END`, now the plan's default 60/15/25 months) — from `results/tables/split_check.csv` (S8). Copy the final dates into TEAM_PLAN 5.3. Note: with the default, scenario 3 has only **1 real insider with 2 days in test** (`insider_days_s3`, `insiders_s3`).
 - [ ] **Web keyword lists** for S15 — from `results/tables/top100_web_domains.csv`.
 - [ ] **EDA observations** — the empty *Observation* cells in `notebooks/01_eda.ipynb` (S7).
 - [ ] **Hand-check labels** for 3 insiders against `data/raw/answers/` (S6 step 4).
-- [ ] **Hijacked supervisor accounts (found Nov 3):** in scenario 3, the sysadmin logs in *as the supervisor*. Right now those 20 malicious days are labeled on the supervisor accounts (`FAW0032`, `FBA0348`), which then count as insiders. Keep this compromised-account view, or move those days to the insider? Either way, mention it in III. Dataset.
+- [ ] **Hijacked supervisor accounts (found Nov 3):** in scenario 3, the sysadmin logs in *as the supervisor*. Right now those 20 malicious days are labeled on the supervisor accounts (`FAW0032`, `FBA0348`): half of scenario 3's labeled days. Since Nov 4 they no longer count as insiders (the `insider` column and the v0 sample use `insiders.csv`). Keep this compromised-account view, or move those days to the insider? Either way, mention it in III. Dataset.
 - [ ] **Which emails count as "sent" (S14, found Nov 3):** only 62.4% come from the user's own `dtaa.com` address; the rest look like personal webmail from the work PC. Count all, or only work-address emails?
 
 You also **review** Arva's `A7`, `A11`, `A15`, `A21`, `A23`, `A24`, `A26` branches and Ayo's `Y7`, `Y14`, `Y23`, `Y25` branches. Dates are in the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). The `A15` and `Y14` reviews on Tue Nov 10 are hand-offs **you** need for the ablation, so review them quickly.
@@ -154,7 +156,7 @@ Upload these and post the link in chat. They count as delivered together with th
 **Goal:** get the data downloading today, because it is large.
 1. Go to `kilthub.cmu.edu`, search **"Insider Threat Test Dataset"**, and download **`r4.2.tar.bz2`** and **`answers.tar.bz2`**.
 2. Save them in `data/raw/` (which will be git-ignored).
-3. Check you have ≥ 40 GB of free disk space.
+3. Check you have ≥ 8 GB of free disk space (4.8 GB archive + 1.2 GB Parquet; the 16 GB of CSVs inside are never unpacked).
 
 **Run:** `bash scripts/download_cert.sh` from the repo root (on `supriye/S2-setup`). KiltHub limits each connection to ~0.4 MB/s, so the script fetches the archive in 16 parallel parts, can be stopped and re-run to resume, and checks both SHA-256 checksums at the end.
 
@@ -193,7 +195,7 @@ Upload these and post the link in chat. They count as delivered together with th
 3. For `http.csv` and `email.csv`, **drop the `content` column** while converting to save space (keep a note that it exists).
 4. Print the row count and date range of every file and save them into `notebooks/01_eda.ipynb` (you will reuse these in the Dataset section).
 
-**Run:** `python -m src.data_loader convert` from the repo root (one streaming pass, ~20–30 min). It never unpacks the big CSVs to disk; it also extracts LDAP/, psychometric.csv and the answers. Row counts go to `data/parquet/manifest.json`.
+**Run:** `python -m src.data_loader convert` from the repo root (one streaming pass; ~10 min on Nov 3). It never unpacks the big CSVs to disk; it also extracts LDAP/, psychometric.csv and the answers. Row counts go to `data/parquet/manifest.json`.
 
 **Done when:** every log has a Parquet file, and row counts match the CSVs.
 
@@ -240,7 +242,7 @@ Produce these outputs, each with a 1–2 sentence observation written by you und
 3. Post the proposal in chat on Sun evening; confirm at the Mon stand-up.
 4. Write the final dates into TEAM_PLAN.md Section 5.3 and push.
 
-**Run:** `python -m src.labels` prints the default 60/15/25 proposal and checks the split currently in `src/config.py` (`TRAIN_END`, `VAL_END`). The same check is saved to `results/tables/split_check.csv`. To try other dates, edit `src/config.py` and run it again.
+**Run:** `python -m src.labels` prints the default 60/15/25 proposal and checks the split currently in `src/config.py` (`TRAIN_END`, `VAL_END`). The same check is saved to `results/tables/split_check.csv`: `days_s*` / `accounts_s*` count every labeled account, while `insider_days_s*` / `insiders_s*` count real insiders only (the split is judged on those). To try other dates, edit `src/config.py` and run it again.
 
 **Done when:** the dates are in TEAM_PLAN.md and every split has malicious days from all 3 scenarios.
 
@@ -261,7 +263,7 @@ Produce these outputs, each with a 1–2 sentence observation written by you und
    The `columns` argument is what makes the ablation (S22) possible.
 6. Save as `data/processed/features_v0.parquet`, share it, and post in chat.
 
-**Run:** `python -m src.features v0`, then `python -m pytest tests`. `tests/test_v0_smoke.py` checks the table against TEAM_PLAN 5.1 and pushes it through a quick model and `evaluate.py`; it skips that last part until `ayo/Y3-evaluate` is merged.
+**Run:** `python -m src.features v0`, then `python -m pytest tests`. `tests/test_v0_smoke.py` checks the table against TEAM_PLAN 5.1 and pushes it through a quick model and `evaluate.py`; it skips only when `data/processed/features_v0.parquet` is missing.
 
 **Done when:** Arva and Ayo confirm that `get_model_matrix(pd.read_parquet("data/processed/features_v0.parquet"), split="train")` works in their code. → **M1**
 

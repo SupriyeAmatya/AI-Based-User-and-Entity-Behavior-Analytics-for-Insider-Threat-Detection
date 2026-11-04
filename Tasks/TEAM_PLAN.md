@@ -184,10 +184,10 @@ After v1 (Sun Nov 8) the feature table is **frozen**. Only bugs that change resu
 
 ### CERT Insider Threat Test Dataset r4.2 (primary)
 - **Where:** Carnegie Mellon University KiltHub, "Insider Threat Test Dataset" (search the title on `kilthub.cmu.edu`). Download **`r4.2.tar.bz2`** and **`answers.tar.bz2`**.
-- **Size:** several GB unpacked; `http.csv` is by far the largest. Recommended: ≥ 16 GB RAM, ≥ 40 GB free disk.
-- **Scale:** ~1,000 users, ~17 months, ~70 malicious insiders across 3 scenarios (verify the exact counts in `answers/insiders.csv`).
+- **Size (verified Nov 3):** `r4.2.tar.bz2` is 4.82 GB and holds ~16 GB of CSVs (`http.csv` is 14.5 GB). `python -m src.data_loader convert` never unpacks them; the Parquet copy is 1.2 GB. Needs ≥ 8 GB free disk and 16 GB RAM is comfortable.
+- **Scale (verified Nov 3):** 1,000 users, Jan 2 2010 – May 17 2011 (17 months), 32.8M log rows, **70 insiders: 30 / 30 / 10** per scenario, 984 malicious user-days out of 330,268 with a logon (0.298%).
 
-| File | Typical columns (verify in the dataset readme) |
+| File | Columns (verified against the data, Nov 3) |
 |---|---|
 | `logon.csv` | `id, date, user, pc, activity` (Logon / Logoff) |
 | `device.csv` | `id, date, user, pc, activity` (Connect / Disconnect) |
@@ -202,7 +202,7 @@ After v1 (Sun Nov 8) the feature table is **frozen**. Only bugs that change resu
 **Scenarios in r4.2:**
 1. A user who never worked after hours or used USB drives starts logging in after hours, using a USB drive and uploading data to `wikileaks.org`, then leaves the organization.
 2. A user starts browsing job websites and contacting a competitor; before leaving, they copy data to USB drives at a much higher rate than before.
-3. A disgruntled system administrator downloads a keylogger, uses a USB drive to put it on the supervisor's machine, then logs in as the supervisor to send an alarming mass email, and leaves.
+3. A disgruntled system administrator downloads a keylogger, uses a USB drive to put it on the supervisor's machine, then logs in as the supervisor to send an alarming mass email, and leaves. In the labels, this puts 20 malicious days on two supervisor accounts (`FAW0032`, `FBA0348`): half of scenario 3's labeled days (open decision S6).
 
 **Important gap:** CERT `logon.csv` has **no failed logins**, so "authentication failures" (named in the assignment) cannot come from CERT. With the Nov 20 deadline, the default plan is to **state this gap clearly in Methodology and Limitations**, and use logon behavior on unusual PCs and at unusual times as the authentication signal. The LANL extension below is a **stretch goal**. At the Mon Nov 9 stand-up the team decides whether there is time for it.
 
@@ -332,7 +332,7 @@ For **every** model, report on the `test` split:
 3. The same metrics **per scenario** (1, 2, 3).
 4. The **unseen-scenario** (leave-one-scenario-out) results — see [Ayo.md](Ayo.md), tasks `Y12` and `Y16`.
 
-Why precision/recall matter (this paragraph must be in the paper): if ~0.1% of user-days are malicious, a model that always says "normal" scores **~99.9% accuracy with 0% recall**, so accuracy hides the failure completely. Use the real percentage from our data.
+Why precision/recall matter (this paragraph must be in the paper): in our data **0.298%** of user-days are malicious (984 of 330,268), so a model that always says "normal" scores **99.70% accuracy with 0% recall**. Accuracy hides the failure completely. Source: `results/tables/class_imbalance.csv`.
 
 ---
 
@@ -428,7 +428,7 @@ Each personal file lists extra human-only tasks for that role.
 
 **Supriye (repo owner):**
 1. On GitHub: **Settings → Collaborators → Add people** → add Arva and Ayo (they must accept the email invite).
-2. **Settings → Branches → Add branch protection rule** for `main`: tick **"Require a pull request before merging"** with **1 approval**. Branch protection on a *private* repo needs GitHub Pro, which is free with the GitHub Student Developer Pack. If it isn't available, the team enforces the rule by agreement.
+2. **Settings → Branches → Add branch protection rule** for `main`: tick **"Require a pull request before merging"** with **1 approval**. The repo is **public** (checked Nov 4), so branch protection is free. (On a private repo it would need GitHub Pro, free with the Student Developer Pack.) Until it's turned on, the team enforces the rule by agreement.
 3. Add the `.gitignore` below on your first branch (`supriye/S2-setup`, task S2).
 
 **Arva and Ayo:** clone the repo into a folder of your choice:
