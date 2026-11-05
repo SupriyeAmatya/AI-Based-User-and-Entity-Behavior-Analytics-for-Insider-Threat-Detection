@@ -1,8 +1,11 @@
 """Behavioral features and the shared model-input helper (owner: Supriye; tasks S9-S16).
 
-Build the v0 feature table (S9) from the repo root, after `python -m src.labels`:
-    python -m src.features v0
--> data/processed/features_v0.parquet, one row per user-day in TEAM_PLAN 5.1 format.
+Build a feature table from the repo root, after `python -m src.labels`:
+    python -m src.features v0   # S9: 100-user sample, 7 basic counts -> features_v0.parquet
+    python -m src.features v1   # S10-S16: every user, all behavior groups -> features_v1.parquet
+One row per user-day in TEAM_PLAN 5.1 format, in data/processed/. v1 also writes
+results/tables/v1_behavior_checks.csv. The first v1 run makes one pass over the 28M-row web log
+and caches it in data/processed/http_user_day_domain.parquet.
 
 Every model turns a feature table into inputs with the same helper (TEAM_PLAN 5.5):
     from src.features import get_model_matrix
@@ -14,11 +17,12 @@ import numpy as np
 import pandas as pd
 
 from src.config import (
-    COMPANY_DOMAIN, PROCESSED_DIR, RANDOM_STATE, V0_N_INSIDERS, V0_N_NORMAL, WORK_END_HOUR,
-    WORK_START_HOUR,
+    COMPANY_DOMAIN, EMAIL_COUNT_PERSONAL, HTTP_CATEGORIES, PROCESSED_DIR, RANDOM_STATE,
+    TABLES_DIR, V0_N_INSIDERS, V0_N_NORMAL, WORK_END_HOUR, WORK_START_HOUR,
 )
 from src.data_loader import (
-    load_device, load_email, load_file, load_insiders, load_ldap, load_logon, recipient_domains,
+    iter_http_batches, load_device, load_email, load_file, load_insiders, load_ldap, load_logon,
+    load_psychometric, recipient_domains,
 )
 from src.labels import assign_split
 
@@ -87,6 +91,39 @@ def ldap_context(keys: pd.DataFrame) -> pd.DataFrame:
     merged = pd.merge_asof(left.sort_values("month"), ldap, on="month", by="user",
                            direction="backward")
     return merged.sort_values("row")[["role", "department"]].reset_index(drop=True)
+
+
+# ---------------------------------------------------------------- web log, one pass (S15 step 2)
+def url_domains(urls: pd.Series) -> pd.Series:
+    """Lower-cased host of each URL, without a leading 'www.'."""
+    host = urls.str.extract(r"^[a-zA-Z]+://([^/:?#]+)", expand=False).str.lower()
+    return host.str.replace(r"^www\.", "", regex=True)
+
+
+def http_user_day_domains(refresh=False) -> pd.DataFrame:
+    """Visits and after-hours visits per (user, date, domain), from one chunked pass over http.
+
+    http has ~28M rows, so it is read in batches and aggregated as it goes. The result is cached in
+    data/processed/http_user_day_domain.parquet: the keyword lists (HTTP_CATEGORIES) are applied
+    afterwards, so changing a list never needs another pass over the log.
+    """
+    cache = PROCESSED_DIR / "http_user_day_domain.parquet"
+    if cache.exists() and not refresh:
+        return pd.read_parquet(cache)
+    parts = []
+    for batch in iter_http_batches(columns=("user", "date", "url")):
+        batch = batch.dropna(subset=["user", "date"])
+        date = pd.to_datetime(batch["date"])
+        part = pd.DataFrame({"user": batch["user"].str.strip(), "date": date.dt.normalize(),
+                             "domain": url_domains(batch["url"]).fillna("(none)"),
+                             "afterhours": is_after_hours(date.dt.hour + date.dt.minute / 60)})
+        parts.append(part.groupby(["user", "date", "domain"])
+                     .agg(visits=("afterhours", "size"), afterhours=("afterhours", "sum")))
+    out = pd.concat(parts).groupby(level=[0, 1, 2]).sum().reset_index()
+    out = out.astype({"visits": "int32", "afterhours": "int32"})
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    out.to_parquet(cache, index=False)
+    return out
 
 
 # ---------------------------------------------------------------- feature table v0 (S9)
@@ -186,15 +223,244 @@ def build_v0(labels: pd.DataFrame) -> tuple:
     return features, report
 
 
+# ---------------------------------------------------------------- feature table v1 (S10-S16)
+FILE_GROUPS = {"doc": {"doc", "docx", "pdf", "txt"}, "exe": {"exe"},
+               "zip": {"zip", "rar", "7z", "tar", "gz", "tgz"}, "img": {"jpg", "jpeg", "png"}}
+CTX_COLUMNS = ["f_ctx_O", "f_ctx_C", "f_ctx_E", "f_ctx_A", "f_ctx_N"]
+
+
+def primary_pcs(logon: pd.DataFrame, fallback_days=30) -> pd.Series:
+    """Each user's primary PC: the PC with the most logons in the train split (S10).
+
+    A user with no train logons (e.g. hired later) gets the most used PC of their first
+    `fallback_days` active days instead, so the choice never looks further ahead than needed.
+    """
+    logons = logon[logon["activity"] == "Logon"]
+    train = logons[assign_split(logons["day"]).to_numpy() == "train"]
+    primary = train.groupby("user")["pc"].agg(lambda s: s.value_counts().idxmax())
+    rest = logons[~logons["user"].isin(primary.index)]
+    if len(rest):
+        rank = rest.groupby("user")["day"].rank(method="dense")
+        early = rest[rank <= fallback_days]
+        primary = pd.concat([primary, early.groupby("user")["pc"].agg(
+            lambda s: s.value_counts().idxmax())])
+    return primary
+
+
+def login_features(logon: pd.DataFrame, primary_pc: pd.Series) -> pd.DataFrame:
+    """S10 + the logon part of S11. Rows: every user-day with at least one logon event."""
+    lg = logon.assign(is_logon=logon["activity"].eq("Logon"), is_logoff=logon["activity"].eq("Logoff"))
+    lg["logon_hour"] = lg["hour"].where(lg["is_logon"])
+    lg["logoff_hour"] = lg["hour"].where(lg["is_logoff"])
+    lg["other_pc"] = lg["is_logon"] & lg["pc"].ne(lg["user"].map(primary_pc))
+    lg["afterhours"] = is_after_hours(lg["hour"])
+    lg["afterhours_logon"] = lg["is_logon"] & lg["afterhours"]
+    out = per_user_day(lg, f_logon_count=("is_logon", "sum"), f_logoff_count=("is_logoff", "sum"),
+                       f_first_logon_hour=("logon_hour", "min"),
+                       f_last_logoff_hour=("logoff_hour", "max"), last_event=("hour", "max"),
+                       f_n_pcs=("pc", "nunique"), f_logon_other_pc=("other_pc", "sum"),
+                       f_afterhours_logon=("afterhours_logon", "sum"),
+                       n_events=("hour", "size"), n_afterhours=("afterhours", "sum"))
+    out["f_last_logoff_hour"] = out["f_last_logoff_hour"].fillna(out.pop("last_event"))
+    out["f_work_duration"] = out["f_last_logoff_hour"] - out["f_first_logon_hour"]
+    return out
+
+
+def usb_features(device: pd.DataFrame) -> pd.DataFrame:
+    """S12. Each Connect is paired with the next event on the same user + PC: if that is a
+    Disconnect on the same day it ends the session, otherwise the session is capped at midnight."""
+    d = device.sort_values(["user", "pc", "date"]).copy()
+    g = d.groupby(["user", "pc"], sort=False)
+    next_activity, next_date = g["activity"].shift(-1), g["date"].shift(-1)
+    midnight = d["day"] + pd.Timedelta(days=1)
+    ends = next_date.where(next_activity.eq("Disconnect") & (next_date < midnight), midnight)
+    d["connect"] = d["activity"].eq("Connect")
+    d["minutes"] = ((ends - d["date"]).dt.total_seconds() / 60).where(d["connect"], 0.0)
+    d["afterhours"] = is_after_hours(d["hour"])
+    d["connect_afterhours"] = d["connect"] & d["afterhours"]
+    d["connect_pc"] = d["pc"].where(d["connect"])
+    return per_user_day(d, f_usb_connect=("connect", "sum"),
+                        f_usb_afterhours=("connect_afterhours", "sum"),
+                        f_usb_n_pcs=("connect_pc", "nunique"), f_usb_duration=("minutes", "sum"),
+                        n_events=("hour", "size"), n_afterhours=("afterhours", "sum"))
+
+
+def file_extensions(filenames: pd.Series) -> pd.Series:
+    return filenames.str.extract(r"\.([A-Za-z0-9]+)\s*$", expand=False).str.lower()
+
+
+def file_features(files: pd.DataFrame) -> pd.DataFrame:
+    """S13: copies to removable media, by extension group (FILE_GROUPS)."""
+    f = files.assign(ext=file_extensions(files["filename"]))
+    for group, exts in FILE_GROUPS.items():
+        f[group] = f["ext"].isin(exts)
+    f["afterhours"] = is_after_hours(f["hour"])
+    return per_user_day(f, f_file_copy=("ext", "size"), f_file_doc=("doc", "sum"),
+                        f_file_exe=("exe", "sum"), f_file_zip=("zip", "sum"),
+                        f_file_img=("img", "sum"), f_file_afterhours=("afterhours", "sum"),
+                        n_events=("ext", "size"), n_afterhours=("afterhours", "sum"))
+
+
+def email_features(email: pd.DataFrame, count_personal=None) -> pd.DataFrame:
+    """S14. Every row of email.csv is an email sent by `user`: from the work address or, for
+    37.6% of rows, from personal webmail on the work PC (see EMAIL_COUNT_PERSONAL)."""
+    count_personal = EMAIL_COUNT_PERSONAL if count_personal is None else count_personal
+    e = email
+    if not count_personal:
+        e = e[e["from"].str.lower().str.endswith("@" + COMPANY_DOMAIN, na=False)]
+    e = e.copy()
+    domains = recipient_domains(e)
+    e["n_recipients"] = domains.str.len()
+    e["external"] = domains.apply(lambda ds: any(d != COMPANY_DOMAIN for d in ds))
+    e["attachments"] = e["attachments"].fillna(0).astype(int)
+    e["external_attach"] = e["external"] & (e["attachments"] > 0)
+    e["has_bcc"] = e["bcc"].fillna("").str.strip().ne("")
+    e["afterhours"] = is_after_hours(e["hour"])
+    return per_user_day(e, f_email_sent=("external", "size"),
+                        f_email_recipients=("n_recipients", "sum"),
+                        f_email_external=("external", "sum"), f_email_attach=("attachments", "sum"),
+                        f_email_external_attach=("external_attach", "sum"),
+                        f_email_size=("size", "mean"), f_email_bcc=("has_bcc", "sum"),
+                        f_email_afterhours=("afterhours", "sum"),
+                        n_events=("external", "size"), n_afterhours=("afterhours", "sum"))
+
+
+def domain_categories(domains: pd.Series, categories=None) -> pd.Series:
+    """Category of each domain ('other' if none): equal to a list entry or a sub-domain of one."""
+    categories = HTTP_CATEGORIES if categories is None else categories
+    lookup = {}
+    for d in pd.unique(domains):
+        lookup[d] = next((cat for cat, entries in categories.items()
+                          if any(d == e or str(d).endswith("." + e) for e in entries)), "other")
+    return domains.map(lookup)
+
+
+def http_features(visits: pd.DataFrame, categories=None) -> pd.DataFrame:
+    """S15 step 3, from the (user, date, domain) visit table of http_user_day_domains()."""
+    categories = HTTP_CATEGORIES if categories is None else categories
+    v = visits.assign(category=domain_categories(visits["domain"], categories))
+    g = v.groupby(KEY)
+    out = pd.DataFrame({"f_http_count": g["visits"].sum(), "f_http_domains": g["domain"].nunique(),
+                        "f_http_afterhours": g["afterhours"].sum()})
+    per_cat = v.pivot_table(index=KEY, columns="category", values="visits", aggfunc="sum",
+                            fill_value=0)
+    for cat in categories:
+        out[f"f_http_{cat}"] = per_cat[cat] if cat in per_cat else 0
+    out["n_events"], out["n_afterhours"] = out["f_http_count"], out["f_http_afterhours"]
+    return out
+
+
+def psychometric_features(users: pd.Series) -> pd.DataFrame:
+    """S16 step 2 (optional group): the Big-Five scores, constant per user, aligned with `users`."""
+    p = load_psychometric().set_index("user_id")[["O", "C", "E", "A", "N"]].astype(float)
+    p.columns = CTX_COLUMNS
+    return p.reindex(users.to_numpy()).reset_index(drop=True)
+
+
+def build_v1(labels: pd.DataFrame, users=None, baselines=True) -> tuple:
+    """S10-S18 for every user (or only `users`), all dates. Returns (features, report).
+
+    With `baselines`, src/baseline.py adds z_user_*, z_peer_* and new_* (S17-S18).
+
+    Rows are user-days with at least one logon event, as in v0 (S9 step 2); activity on other
+    days is dropped and counted in the report. No "days until leaving" feature (S16 step 3).
+    """
+    real_insiders = set(load_insiders()["user"])
+    logon = load_logon(columns=["user", "date", "pc", "activity"], users=users)
+    login = login_features(logon, primary_pcs(logon))
+    base_index = login.index[login["f_logon_count"] > 0]
+
+    usb = usb_features(load_device(columns=["user", "date", "pc", "activity"], users=users))
+    files = load_file(columns=["user", "date", "filename"], users=users)
+    fil = file_features(files)
+    mail = email_features(load_email(columns=["user", "date", "to", "cc", "bcc", "from", "size",
+                                              "attachments"], users=users))
+    visits = http_user_day_domains()
+    if users is not None:
+        visits = visits[visits["user"].isin(users)]
+    web = http_features(visits)
+
+    groups = [login, usb, fil, mail, web]
+    events = sum(g["n_events"].reindex(base_index, fill_value=0) for g in groups)
+    afterhours = sum(g["n_afterhours"].reindex(base_index, fill_value=0) for g in groups)
+    parts = [g.drop(columns=["n_events", "n_afterhours"]) for g in groups]
+    features = parts[0].loc[base_index].join(parts[1:], how="left")
+    features["f_afterhours_events"] = afterhours
+    features["f_afterhours_ratio"] = afterhours / events
+    features["f_weekend"] = (features.index.get_level_values("date").day_of_week >= 5).astype(int)
+    features = features.fillna({c: 0 for c in features.columns})
+
+    lab = labels.rename(columns={"day": "date"}).set_index(KEY)
+    features = features.join(lab[["scenario"]], how="left")
+    features["label"] = features["scenario"].notna().astype(int)
+    features["scenario"] = features["scenario"].fillna(0).astype(int)
+    features["insider"] = features.index.get_level_values("user").isin(real_insiders).astype(int)
+    features = features.reset_index()
+    features[["role", "department"]] = ldap_context(features[KEY]).to_numpy()
+    features["split"] = assign_split(features["date"]).to_numpy()
+    features = features.join(psychometric_features(features["user"]))
+
+    feature_cols = [c for c in features.columns if c.startswith("f_")]
+    features = features[META_COLUMNS + feature_cols].sort_values(KEY).reset_index(drop=True)
+    int_cols = [c for c in feature_cols if c not in NOT_COUNTS and c != "f_usb_duration"]
+    features[int_cols] = features[int_cols].astype("int64")
+    if baselines:
+        from src.baseline import add_baselines  # baseline.py imports this module
+        features = add_baselines(features, logon)
+
+    keys = labels.rename(columns={"day": "date"})[KEY]
+    if users is not None:
+        keys = keys[keys["user"].isin(users)]
+    active = set().union(*(set(g.index) for g in groups[1:]))
+    ext = file_extensions(files["filename"])
+    report = {
+        "users": features["user"].nunique(), "rows": len(features),
+        "malicious_rows": int(features["label"].sum()),
+        "malicious_days_without_logon_dropped": len(keys) - len(keys.merge(features[KEY])),
+        "activity_days_without_logon_dropped": len(active - set(base_index)),
+        "rows_per_split": features["split"].value_counts().to_dict(),
+        "malicious_rows_per_split_scenario":
+            features[features["label"] == 1].groupby(["split", "scenario"]).size().to_dict(),
+        "file_extension_coverage":
+            float(ext.isin(set().union(*FILE_GROUPS.values())).mean()) if len(ext) else float("nan"),
+        "features": len(feature_columns(features)),
+    }
+    return features, report
+
+
+def behavior_checks(features: pd.DataFrame) -> pd.DataFrame:
+    """The "Done when" checks of S12, S14 and S15: per scenario, a feature's mean on the
+    malicious days of the labeled accounts vs. the same accounts' other days."""
+    checks = [(1, "f_usb_connect"), (1, "f_http_leak"), (1, "f_afterhours_logon"),
+              (2, "f_http_job"), (2, "f_usb_connect"), (3, "f_email_recipients"),
+              (3, "f_http_hack"), (3, "f_logon_other_pc")]
+    rows = []
+    for scenario, col in checks:
+        accounts = features.loc[features["scenario"] == scenario, "user"].unique()
+        acc = features[features["user"].isin(accounts)]
+        bad = acc["scenario"] == scenario
+        rows.append({"scenario": scenario, "feature": col, "accounts": len(accounts),
+                     "mean_malicious_days": acc.loc[bad, col].mean(),
+                     "mean_other_days": acc.loc[~bad, col].mean(),
+                     "share_malicious_days_gt0": (acc.loc[bad, col] > 0).mean()})
+    return pd.DataFrame(rows)
+
+
 def main(argv):
-    if argv[:1] != ["v0"]:
+    if argv[:1] not in (["v0"], ["v1"]):
         print(__doc__)
         return
     labels = pd.read_parquet(PROCESSED_DIR / "labels.parquet")
-    features, report = build_v0(labels)
-    features.to_parquet(PROCESSED_DIR / "features_v0.parquet", index=False)
+    version = argv[0]
+    features, report = build_v0(labels) if version == "v0" else build_v1(labels)
+    features.to_parquet(PROCESSED_DIR / f"features_{version}.parquet", index=False)
     for k, v in report.items():
         print(f"{k}: {v}")
+    if version == "v1":
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        checks = behavior_checks(features)
+        checks.to_csv(TABLES_DIR / "v1_behavior_checks.csv", index=False)
+        print(checks.to_string(index=False))
     X, y, cols = get_model_matrix(features, split="train")
     print(f"get_model_matrix(train): X {X.shape}, positives {int(y.sum())}, features {cols}")
 
