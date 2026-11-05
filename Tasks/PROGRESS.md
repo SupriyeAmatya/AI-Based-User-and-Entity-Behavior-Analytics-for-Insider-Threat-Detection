@@ -157,13 +157,21 @@
   - [ ] Rebuilt once Supriye confirms after-hours + split, then uploaded to the drive
   - [x] PR merged (#6 via #7, Nov 3; v0 sampler fix #11, Nov 4)
   - [ ] Review by Arva (none on GitHub) → tag `m1-features-v0`; Arva and Ayo confirm it loads in their code
-- [ ] **S10** (Wed Nov 4) Login features
+- [x] **S10** (Wed Nov 4) Login features: `login_features()` + `primary_pcs()` (most-logon PC in train; users without train logons use their first 30 active days); unit tests check user-days against hand-made logs on `supriye/S10-behavior-features` **(Claude)**
 - [ ] **S11** (Wed Nov 4) Activity-time features. **Human-only:** decide after hours from the EDA hour plot and write the reason in the feature dictionary
-- [ ] **S12** (Thu Nov 5) USB device features
-- [ ] **S13** (Thu Nov 5) File features
-- [ ] **S14** (Fri Nov 6) Email features. **Decision (Supriye):** only 62.4% of emails come from the user's own `dtaa.com` address; the rest look like personal webmail sent from the work PC. Count all of them as "sent", or only work-address ones?
+  - [x] `f_afterhours_logon`, `f_afterhours_events` (logon + USB + file + email + web), `f_afterhours_ratio`, `f_weekend` on `supriye/S10-behavior-features` **(Claude)**
+  - [ ] **Human-only (Supriye):** after-hours window; built with the PROVISIONAL 07:00–19:00
+- [x] **S12** (Thu Nov 5) USB device features: connects, after-hours connects, PCs, minutes connected (Connect paired with the next Disconnect on the same PC, else capped at midnight). Scenario-1 insiders: 1.29 connects on malicious days vs 0.04 on their other days (`results/tables/v1_behavior_checks.csv`) on `supriye/S10-behavior-features` **(Claude)**
+- [x] **S13** (Thu Nov 5) File features: total, doc, exe, zip, img, after hours; the extension groups cover **100%** of the 445,581 file copies (r4.2 has only doc/pdf/txt/jpg/zip/exe) on `supriye/S10-behavior-features` **(Claude)**
+- [ ] **S14** (Fri Nov 6) Email features
+  - [x] The 8 email features; `EMAIL_COUNT_PERSONAL` in `src/config.py` switches between both counts. Scenario 3 (12 accounts incl. the 2 hijacked): 28.7 recipients on malicious days vs 25.3 otherwise on `supriye/S10-behavior-features` **(Claude)**
+  - [ ] **Decision (Supriye):** only 62.4% of emails come from the user's own `dtaa.com` address; the rest look like personal webmail sent from the work PC. Count all of them as "sent", or only work-address ones? *(PROVISIONAL: all, `EMAIL_COUNT_PERSONAL = True`)*
 - [ ] **S15** (Thu Nov 5 – Fri Nov 6) Web-usage features. **Human-only:** build the job / leak / cloud / hack keyword lists from `results/tables/top100_web_domains.csv`
-- [ ] **S16** (Sat Nov 7) Organizational context (no "days until leaving" feature). Note: 14 senior staff have no LDAP department; `ldap_context()` uses their functional unit instead (already in v0)
+  - [x] One 29-second pass over the 28.4M-row web log, cached per (user, day, domain) in `data/processed/http_user_day_domain.parquet`; the lists are applied afterwards, so editing them needs no new pass. 8 web features on `supriye/S10-behavior-features` **(Claude)**
+  - [x] Checks: scenario-1 insiders have `f_http_leak > 0` on 80% of malicious days (0 on other days); scenario-2 `f_http_job` 2.49 on malicious days vs 0.85 otherwise
+  - [ ] **Human-only (Supriye):** check the keyword lists. The log has only **475 domains** (all in `data/processed/http_domain_counts.csv`); the PROVISIONAL lists in `src/config.py` `HTTP_CATEGORIES` were drafted from all of them, with what was left out and why
+- [x] **S16** (Sat Nov 7) Organizational context: `role`/`department` from that month's LDAP for every row, Big-Five scores as `f_ctx_O`…`f_ctx_N`, no "days until leaving" feature. 14 senior staff without a department use their functional unit on `supriye/S10-behavior-features` **(Claude)**
+  - Full behavior table: 1,000 users, 330,268 user-days, 984 malicious, 41 `f_*` features, built in 1.5 min (`python -m src.features v1`)
 - [ ] **S17** (Sat Nov 7) Per-user baselines `z_user_*` + figure F3
 - [ ] **S18** (Sun Nov 8) Peer-group baselines `z_peer_*` + novelty flags `new_*`
 - [ ] **S19** (Sun Nov 8) Validation and leakage checks (5 checks; check 4 is a hand check, human-only)
