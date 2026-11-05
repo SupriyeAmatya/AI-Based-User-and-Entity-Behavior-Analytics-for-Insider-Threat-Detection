@@ -1,0 +1,21 @@
+rank,user,peak_date,peak_risk,high_days,medium_days,active_days,first_alert,alert_level,reasons
+1,TSM0363,2011-03-22,99.04035433070867,1,6,74,2011-02-01,High,3 after-hours logons; 5 logoffs; 5 logons
+2,CLB0774,2011-03-30,98.91240157480316,0,24,74,2011-02-07,Medium,24 files copied; 9 USB connects; 1 after-hours logons
+3,JLM0364,2011-02-22,98.5482283464567,0,9,63,2011-02-22,Medium,6 logoffs; 3 after-hours logons; 6 logons
+4,DCH0843,2011-02-08,97.89862204724409,0,2,17,2011-02-02,Medium,13 files copied; 5 USB connects; 1 after-hours logons
+5,CBB0365,2011-02-14,97.80511811023622,0,29,74,2011-02-02,Medium,7 logoffs; 4 after-hours logons; 8 logons
+6,LBC0356,2011-03-17,97.72637795275591,0,9,74,2011-02-02,Medium,5 after-hours logons; 6 logoffs; 7 logons
+7,RSC0089,2011-05-13,97.58366141732283,0,7,78,2011-03-09,Medium,9 USB connects; 5 logons; 3 logoffs
+8,THR0873,2011-03-01,97.54429133858268,0,20,74,2011-02-03,Medium,21 files copied; 9 USB connects; 13 external emails
+9,RHO0732,2011-02-01,96.99803149606299,0,4,74,2011-02-01,Medium,3 logoffs; 15 external emails; 1 after-hours logons
+10,MLL0598,2011-02-10,96.7224409448819,0,1,74,2011-02-10,Medium,7 USB connects; 4 files copied
+11,IBB0696,2011-03-23,96.55511811023622,0,2,74,2011-03-23,Medium,4 files copied; 3 logons; 2 USB connects
+12,ATE0869,2011-03-05,96.45669291338582,0,1,102,2011-03-05,Medium,1 after-hours logons; 4 files copied; 11 external emails
+13,ILJ0526,2011-02-03,96.35826771653544,0,3,79,2011-02-03,Medium,6 files copied; 3 logons; 2 USB connects
+14,JJH0613,2011-03-18,96.27460629921259,0,1,74,2011-03-18,Medium,4 USB connects; 4 files copied; 2 logons
+15,WIQ0567,2011-04-27,95.51181102362204,0,1,95,2011-04-27,Medium,7 files copied; 2 logons; 1 USB connects
+16,BTR0403,2011-05-13,95.50688976377953,0,1,74,2011-05-13,Medium,4 logons; 7 files copied; 3 logoffs
+17,MDH0580,2011-02-17,93.24803149606299,0,0,24,,Low,6 USB connects; 8 files copied
+18,RDT0424,2011-03-17,91.19586614173228,0,0,74,,Low,3 logons; 2 USB connects; 2 logoffs
+19,SAB0781,2011-04-04,90.51181102362204,0,0,74,,Low,10 files copied; 2 logons; 1 USB connects
+20,CRO0027,2011-05-14,90.40354330708661,0,0,75,,Low,1 after-hours logons

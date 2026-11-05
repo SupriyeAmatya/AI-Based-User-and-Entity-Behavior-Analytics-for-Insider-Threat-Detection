@@ -67,7 +67,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   └── Ayo.md                # Ayo's tasks and timeline (supervised models, evaluation, explainability)
 ├── docs/
 │   ├── coverage.md           # Assignment requirements vs. status (dated snapshot)
-│   └── feature_dictionary.md # (S20, to come) every feature, its definition and why it matters
+│   └── feature_dictionary.md # Every v1 column: definition, unit, why it matters (S20)
 ├── requirements.txt          # Python dependencies (pinned, Python 3.13)
 ├── scripts/
 │   └── download_cert.sh      # Download CERT r4.2 + answers (resumable, checksum-verified)
@@ -77,8 +77,8 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   └── processed/            # labels.parquet, features_v0.parquet, features_v1.parquet
 ├── notebooks/
 │   ├── 01_eda.ipynb          # Done (S7)
-│   ├── 02_feature_engineering.ipynb
-│   ├── 03a_unsupervised_models.ipynb
+│   ├── 02_feature_engineering.ipynb  # Done (S17–S19): F3 + validation checks
+│   ├── 03a_unsupervised_models.ipynb # Done on v0 (A9–A10): tuning log
 │   ├── 03b_supervised_models.ipynb   # Done on v0 (Y8–Y10): tuning log, imbalance
 │   ├── 04_evaluation.ipynb
 │   └── 05_anomaly_investigation.ipynb
@@ -86,15 +86,15 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── config.py             # Paths, seed, PROVISIONAL decisions        (done)
 │   ├── data_loader.py        # Convert the archive; load and clean logs   (done)
 │   ├── labels.py             # Ground-truth labels, split check           (done)
-│   ├── features.py           # Feature table + get_model_matrix()         (v0 done)
+│   ├── features.py           # Feature tables v0/v1 + get_model_matrix()  (done)
 │   ├── synthetic.py          # Synthetic feature table for testing        (done)
 │   ├── evaluate.py           # Metrics, plots, detection delay            (done)
-│   ├── baseline.py           # Per-user / peer-group baselines
-│   ├── models_unsupervised.py# Isolation Forest, Autoencoder, One-Class SVM
+│   ├── baseline.py           # Per-user / peer-group baselines, new_* flags (done)
+│   ├── models_unsupervised.py# Isolation Forest, Autoencoder (+ tuning)    (done)
 │   ├── models_supervised.py  # Random Forest, XGBoost (+ tuning, imbalance) (done)
-│   ├── risk_scoring.py       # Convert model output to a 0–100 risk score
+│   ├── risk_scoring.py       # Convert model output to a 0–100 risk score (done)
 │   ├── explain.py            # SHAP explanations
-│   └── pipeline.py           # End-to-end UEBA prototype
+│   └── pipeline.py           # End-to-end UEBA prototype                 (done)
 ├── tests/                    # pytest: python -m pytest tests
 ├── app/
 │   └── dashboard.py          # Optional Streamlit dashboard
