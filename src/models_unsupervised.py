@@ -1,34 +1,52 @@
-"""Unsupervised detectors (owner: Arva; A4 skeleton, A5 Isolation Forest, A6 autoencoder).
+"""Unsupervised detectors (owner: Arva; A4 skeleton, A5 Isolation Forest, A6 autoencoder, A8 extras,
+A13 One-Class SVM).
 
 Usage:
     from src.models_unsupervised import train_and_score
     scores, info = train_and_score(df, "iforest")                     # df = feature table (TEAM_PLAN 5.1)
     scores, info = train_and_score(df, "autoencoder", {"epochs": 30})
+    scores, info = train_and_score(df, "iforest", train_on="all")     # A8: saved as iforest_contam
+    errors = info["detector"].feature_errors(X)                       # A8: AE error per feature
 
 Every detector follows the team rules:
 - inputs come from get_model_matrix() (TEAM_PLAN 5.5), and StandardScaler is fitted on the training
   rows only;
-- it trains on split == "train" and label == 0 (TEAM_PLAN 5.4);
+- it trains on split == "train" and label == 0 (TEAM_PLAN 5.4); the A8 contamination variant
+  (train_on="all") trains on every training row, malicious ones included, and is saved as
+  <model_name>_contam;
 - it scores every row, higher = more suspicious, and the scores are saved to
   results/scores/<model_name>.parquet with user, date, split, label, scenario, score (TEAM_PLAN 5.2).
 `info` holds the fit and scoring times, for detection time (a) in A17.
 
 Demo on synthetic data (the A5 and A6 "done when" checks):
     python -m src.models_unsupervised demo
+
+Tuning (A9-A10): one call runs a whole grid, scores the val split and appends one row per run
+to the tuning log results/tables/tuning_log_unsupervised.csv; the best run is the one with the
+highest val PR-AUC (never test, never accuracy):
+    log, best = tune(df, "iforest")                    # IF_GRID, 18 runs
+    log, best = tune(df, "autoencoder", dataset="v0")  # AE_GRID, 16 runs
 """
+import json
 import sys
 import time
+from pathlib import Path
+
+import joblib
 
 import numpy as np
 import pandas as pd
 import torch
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import ParameterGrid
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.svm import OneClassSVM
 from torch import nn
 
-from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR
+from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
+from src.evaluate import ranking_metrics, threshold_metrics, threshold_top_k
 from src.features import get_model_matrix
 
 SCORE_KEYS = ["user", "date", "split", "label", "scenario"]
@@ -149,13 +167,96 @@ class AutoencoderDetector(UnsupervisedDetector):
     def score(self, X):
         return self._errors(self._tensor(X)).mean(axis=1)
 
+    def feature_residuals(self, X) -> pd.DataFrame:
+        """Scaled input minus its reconstruction, per feature: > 0 where the value was higher than
+        the autoencoder expected (A12 uses this to name only above-normal features)."""
+        tensor = self._tensor(X)
+        self.network.eval()
+        with torch.no_grad():
+            residuals = (tensor - self.network(tensor)).numpy()
+        columns = X.columns if isinstance(X, pd.DataFrame) else None
+        index = X.index if isinstance(X, pd.DataFrame) else None
+        return pd.DataFrame(residuals, index=index, columns=columns)
 
-DETECTORS = {d.name: d for d in (IsolationForestDetector, AutoencoderDetector)}
+    def feature_errors(self, X) -> pd.DataFrame:
+        """Squared reconstruction error per feature, same shape as X (A8 step 1). Its row mean is
+        score(X); the largest entries say which features the autoencoder found unusual (A12)."""
+        return self.feature_residuals(X) ** 2
+
+
+# ---------------------------------------------------------------- A13: One-Class SVM (optional)
+class OneClassSVMDetector(UnsupervisedDetector):
+    """RBF One-Class SVM in the same scaler pipeline. It scales poorly with rows, so it is fitted on
+    a random sample of at most `max_train` normal training rows (A13 card: 20,000)."""
+
+    name = "ocsvm"
+    defaults = {"nu": 0.01, "gamma": "scale", "kernel": "rbf", "max_train": 20_000,
+                "random_state": RANDOM_STATE}
+
+    def fit(self, X_train_normal, X_val_normal=None):
+        p = self.params
+        if len(X_train_normal) > p["max_train"]:
+            X_train_normal = X_train_normal.sample(p["max_train"], random_state=p["random_state"])
+        self.n_fitted = len(X_train_normal)
+        self.pipeline = Pipeline([("scaler", StandardScaler()),
+                                  ("model", OneClassSVM(kernel=p["kernel"], nu=p["nu"],
+                                                        gamma=p["gamma"]))])
+        self.pipeline.fit(X_train_normal)
+        return self
+
+    def score(self, X):
+        return -self.pipeline.decision_function(X)
+
+
+DETECTORS = {d.name: d for d in (IsolationForestDetector, AutoencoderDetector, OneClassSVMDetector)}
+
+
+# ---------------------------------------------------------------- A11: saving trained detectors
+def save_detector(detector, path):
+    """Isolation Forest -> joblib.dump; autoencoder -> torch.save of its weights, parameters and
+    scaler (plain tensors and lists, so torch.load(weights_only=True) can read it back)."""
+    if isinstance(detector, AutoencoderDetector):
+        torch.save({"params": detector.params, "state_dict": detector.network.state_dict(),
+                    "scaler_mean": detector.scaler.mean_.tolist(),
+                    "scaler_scale": detector.scaler.scale_.tolist(),
+                    "feature_names": list(getattr(detector, "feature_names", []) or []),
+                    "history": detector.history, "best_epoch": detector.best_epoch}, path)
+    else:
+        joblib.dump(detector, path)
+
+
+def load_detector(path):
+    """Inverse of save_detector()."""
+    path = Path(path)
+    if path.suffix != ".pt":
+        return joblib.load(path)
+    saved = torch.load(path, weights_only=True)
+    detector = AutoencoderDetector(**saved["params"])
+    names = saved["feature_names"]
+    scaler = StandardScaler()
+    scaler.mean_ = np.array(saved["scaler_mean"])
+    scaler.scale_ = np.array(saved["scaler_scale"])
+    scaler.var_ = scaler.scale_ ** 2
+    scaler.n_features_in_ = len(scaler.mean_)
+    if names:
+        scaler.feature_names_in_ = np.array(names, dtype=object)
+    detector.scaler = scaler
+    detector.network = detector._network(len(scaler.mean_))
+    detector.network.load_state_dict(saved["state_dict"])
+    detector.feature_names, detector.history = names, saved["history"]
+    detector.best_epoch = saved["best_epoch"]
+    return detector
 
 
 # ---------------------------------------------------------------- A4: train and score
-def train_and_score(df, model_name, params=None, save=True, save_as=None):
-    """Fit `model_name` on normal training rows, score every row, optionally save the score file.
+def train_and_score(df, model_name, params=None, save=True, save_as=None, train_on="normal",
+                    columns=None):
+    """Fit `model_name` on training rows, score every row, optionally save the score file.
+
+    train_on="normal" (TEAM_PLAN 5.4) fits on split == "train" & label == 0 and stops the AE early
+    on the normal val rows. train_on="all" (A8 contamination variant) uses no labels at all: it fits
+    on every train row and stops early on every val row, and saves as <model_name>_contam.
+    columns: feature subset passed to get_model_matrix() (default: every model input).
 
     Returns (scores, info). scores has TEAM_PLAN 5.2 columns; info has the timings (A17).
     save_as overrides the file name (e.g. "iforest_synthetic"), so demo runs never overwrite
@@ -163,10 +264,12 @@ def train_and_score(df, model_name, params=None, save=True, save_as=None):
     """
     if model_name not in DETECTORS:
         raise ValueError(f"unknown model {model_name!r}; choose from {sorted(DETECTORS)}")
-    X_all, _, feature_names = get_model_matrix(df)
-    normal = df["label"] == 0
-    X_train = X_all[(df["split"] == "train") & normal]
-    X_val = X_all[(df["split"] == "val") & normal]
+    if train_on not in ("normal", "all"):
+        raise ValueError(f"train_on must be 'normal' or 'all', not {train_on!r}")
+    X_all, _, feature_names = get_model_matrix(df, columns=columns)
+    use = df["label"] == 0 if train_on == "normal" else pd.Series(True, index=df.index)
+    X_train = X_all[(df["split"] == "train") & use]
+    X_val = X_all[(df["split"] == "val") & use]
     detector = DETECTORS[model_name](**(params or {}))
 
     started = time.perf_counter()
@@ -181,14 +284,83 @@ def train_and_score(df, model_name, params=None, save=True, save_as=None):
     path = None
     if save:
         SCORES_DIR.mkdir(parents=True, exist_ok=True)
-        path = SCORES_DIR / f"{save_as or model_name}.parquet"
+        default = model_name if train_on == "normal" else f"{model_name}_contam"
+        path = SCORES_DIR / f"{save_as or default}.parquet"
         scores.to_parquet(path, index=False)
-    info = {"model": model_name, "params": detector.params, "features": feature_names,
+    info = {"model": model_name, "train_on": train_on, "params": detector.params,
+            "features": feature_names,
             "n_train": len(X_train), "n_scored": len(X_all), "fit_seconds": fit_seconds,
             "score_seconds": score_seconds,
             "score_seconds_per_1000": 1000 * score_seconds / max(len(X_all), 1),
             "path": path, "detector": detector}
     return scores, info
+
+
+# ---------------------------------------------------------------- A9-A10: tuning
+IF_GRID = {"n_estimators": [100, 200, 500], "max_samples": [256, 1024, "auto"],
+           "max_features": [0.5, 1.0]}
+AE_GRID = {"bottleneck": [8, 16], "hidden": [(64, 32), (128, 64)], "dropout": [0.0, 0.1],
+           "lr": [1e-3, 1e-4]}
+GRIDS = {"iforest": IF_GRID, "autoencoder": AE_GRID}
+TUNING_LOG = "tuning_log_unsupervised.csv"
+
+
+def val_metrics(scores: pd.DataFrame, k: float = 0.01) -> dict:
+    """Val-split ROC-AUC, PR-AUC and recall when the top k of val user-days are flagged."""
+    val = scores[scores["split"] == "val"]
+    out = {f"val_{m}": v for m, v in ranking_metrics(val["label"], val["score"]).items()
+           if m != "positive_rate"}
+    out["val_recall_top1pct"] = threshold_metrics(val["label"], val["score"],
+                                                  threshold_top_k(val, k))["recall"]
+    return out
+
+
+def tune(df, model_name, grid=None, dataset="v0", fixed=None, log_name=TUNING_LOG,
+         train_on="normal"):
+    """Run every parameter combination of `grid` (default: the card grid), score val, and append one
+    row per run to results/tables/<log_name>. Returns (this run's log rows, best params by
+    val PR-AUC). `fixed` adds parameters to every run (e.g. {"epochs": 30})."""
+    grid = GRIDS[model_name] if grid is None else grid
+    rows = []
+    for params in ParameterGrid(grid):
+        params = {**(fixed or {}), **params}
+        scores, info = train_and_score(df, model_name, params, save=False, train_on=train_on)
+        rows.append({"model": model_name, "dataset": dataset, "train_on": train_on,
+                     "params": json.dumps(params, default=str), **val_metrics(scores),
+                     "fit_seconds": round(info["fit_seconds"], 2), "n_train": info["n_train"],
+                     "n_features": len(info["features"])})
+    log = pd.DataFrame(rows)
+    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+    path = TABLES_DIR / log_name
+    log.to_csv(path, mode="a", header=not path.exists(), index=False)
+    best = json.loads(log.loc[log["val_pr_auc"].idxmax(), "params"])
+    if "hidden" in best:
+        best["hidden"] = tuple(best["hidden"])
+    return log, best
+
+
+def hyperparameter_table(log_path=None, name="T4_hyperparameters_unsupervised.csv") -> pd.DataFrame:
+    """Draft of table T4 (A14 step 2): per model, the card defaults, the grid searched and the best
+    setting so far by val PR-AUC (from the tuning log), saved to results/tables/<name>."""
+    log_path = TABLES_DIR / TUNING_LOG if log_path is None else log_path
+    log = pd.read_csv(log_path) if Path(log_path).exists() else pd.DataFrame()
+    rows = []
+    for model, cls in DETECTORS.items():
+        row = {"model": model,
+               "defaults": json.dumps({k: v for k, v in cls.defaults.items()
+                                       if k not in ("random_state", "seed")}, default=str),
+               "grid": json.dumps(GRIDS.get(model, {}), default=str)}
+        runs = log[log["model"] == model] if len(log) else log
+        if len(runs):
+            best = runs.loc[runs["val_pr_auc"].idxmax()]
+            row.update({"best_params": best["params"], "dataset": best["dataset"],
+                        "val_pr_auc": best["val_pr_auc"], "val_roc_auc": best["val_roc_auc"],
+                        "runs": len(runs)})
+        rows.append(row)
+    table = pd.DataFrame(rows)
+    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+    table.to_csv(TABLES_DIR / name, index=False)
+    return table
 
 
 def plot_loss_curves(history, name="autoencoder_loss"):

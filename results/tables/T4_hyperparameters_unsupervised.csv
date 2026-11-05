@@ -1,0 +1,4 @@
+model,defaults,grid,best_params,dataset,val_pr_auc,val_roc_auc,runs
+iforest,"{""n_estimators"": 200, ""max_samples"": ""auto"", ""max_features"": 1.0, ""contamination"": ""auto""}","{""n_estimators"": [100, 200, 500], ""max_samples"": [256, 1024, ""auto""], ""max_features"": [0.5, 1.0]}","{""max_features"": 0.5, ""max_samples"": 1024, ""n_estimators"": 500}",v0,0.06248139881348611,0.8763600814548946,19
+autoencoder,"{""hidden"": [64, 32], ""bottleneck"": 16, ""dropout"": 0.0, ""lr"": 0.001, ""batch_size"": 256, ""epochs"": 50, ""patience"": 5}","{""bottleneck"": [8, 16], ""hidden"": [[64, 32], [128, 64]], ""dropout"": [0.0, 0.1], ""lr"": [0.001, 0.0001]}","{""bottleneck"": 16, ""dropout"": 0.0, ""hidden"": [128, 64], ""lr"": 0.0001}",v0,0.12207255960981521,0.9109007683158813,17
+ocsvm,"{""nu"": 0.01, ""gamma"": ""scale"", ""kernel"": ""rbf"", ""max_train"": 20000}",{},{},v0,0.015496551596345083,0.26164032087864,1
