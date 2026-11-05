@@ -287,6 +287,8 @@
   - [x] `get_shap_values()` (RF class 1, XGB log-odds, Isolation Forest with the sign flipped so positive = anomalous), `explain_sample()` (all test positives + 5,000 negatives), `plot_summary()`, `plot_waterfall()`, `top_features()`; all work on the v0 XGBoost and Isolation Forest (`python -m src.explain demo`, figures `results/figures/shap_*_v0.*`) **(Claude, branch `ayo/Y11-explain`)**
   - [ ] Arva confirms it works for the case studies (A19)
 - [ ] **Y12** (Sat Nov 7) Leave-one-scenario-out (LOSO) code. **Human-only:** design and justify the experiment
+  - [x] `run_loso()` (held-out scenario's accounts removed from training and early stopping; test = test rows of scenario 0 + the held-out one; saves `<model>_loso_s<k>.parquet`) and `loso_table()` (RF/XGB next to the unsupervised models on the same rows); work on synthetic data and on v0 **(Claude, branch `ayo/Y12-loso`)**
+  - [ ] **Human-only (Ayo):** justify the design; L7 notes
 - [ ] **Y13** (Sun Nov 8) Hyperparameter table T4 draft + section notes
   - [x] T4 draft: `hyperparameter_table()` → `results/tables/T4_hyperparameters_supervised.csv` **(Claude, branch `ayo/Y7-supervised-models`)**
   - [ ] **Human-only (Ayo):** IV-C/V notes in `paper/notes_ayo.md`; L8 and L11a notes
@@ -338,7 +340,7 @@ Tick when the PR is **merged** into `main`.
 - [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6): PR open, stacked on `ayo/Y7-supervised-models`
 - [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6): PR open, stacked on `arva/A9-v0-tuning`
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
-- [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7)
+- [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7): PR open, stacked on `ayo/Y7-supervised-models`
 - [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7): PR open, stacked on `arva/A11-pipeline`
 - [ ] `supriye/S17-baselines-v1` (reviewer Arva, Sun Nov 8)
 - [ ] `supriye/S21-v1-fixes` *(only if needed)* (reviewer Arva, Tue Nov 10, 12:00)
