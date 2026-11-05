@@ -35,7 +35,7 @@
   - **Scenario 3 is thinner than reported.** "Scenario 3 in test: 2 insiders, 4 days" counted *accounts*. The truth: **1 real insider (`JLM0364`) with 2 days**, plus 2 days on the hijacked supervisor account `FBA0348`. Across all splits, **20 of scenario 3's 40 labeled days are on the two hijacked accounts**. `split_check.csv` now reports real insiders and accounts separately; a new test covers it.
   - Stale facts updated in the plans: disk space, conversion time, merged PRs, collaborators, branch-protection note, the real base rate in TEAM_PLAN 10.2, the README folder tree, and the ticked setup/EDA steps in the guide.
 - **Overdue as of Wed Nov 4:**
-  - **Arva:** A4–A10 (unsupervised models, risk score, first v0 run, tuning), due Oct 30 – Nov 4. A3 is done: [PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10) merged Nov 4 (`src/synthetic.py`, 5 tests). Open follow-up: rename `f_http_job_site` to `f_http_job`, the name planned for the real feature (S15).
+  - **Arva:** A4–A10 (unsupervised models, risk score, first v0 run, tuning), due Oct 30 – Nov 4. A3 is done: [PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10) merged Nov 4 (`src/synthetic.py`, 5 tests). Follow-up rename `f_http_job_site` → `f_http_job` done on branch `arva/A3-http-job-rename`.
   - **Ayo:** Y7–Y9 (supervised models, first v0 run, tuning), due Nov 2–4. Ayo has no commits yet.
   - **Literature:** `paper/lit_notes/` is empty; S-LIT, A-LIT1–2 and Y-LIT1–2 were due Oct 28 – Nov 2.
   - **Supriye:** the human-only decisions above; S10 and S11 are due today.
@@ -199,7 +199,7 @@
 - [ ] **A3** (Thu Oct 29) Synthetic data generator `src/synthetic.py`
   - [x] Merged Nov 4 ([PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10), Arva): 50 users × 300 days, TEAM_PLAN 5.1 format, 5 tests pass
   - [ ] Ayo confirms he can load it (the card's "Done when")
-  - [ ] Rename `f_http_job_site` to `f_http_job` to match the real feature (S15)
+  - [x] Renamed `f_http_job_site` to `f_http_job` to match the real feature (S15); a new test checks every synthetic feature name against the planned v1 names **(Claude, branch `arva/A3-http-job-rename`)**
 - [ ] **A4** (Fri Oct 30) Module skeleton `src/models_unsupervised.py`. *Status unknown — not in the repo yet*
 - [ ] **A5** (Fri Oct 30) Isolation Forest. *Status unknown*
 - [ ] **A6** (Sat Oct 31) Autoencoder. *Status unknown*

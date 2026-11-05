@@ -32,12 +32,12 @@ BASE_RATES = {
     "f_email_external": 3.0,
     "f_email_recipients": 15.0,
     "f_http_count": 100.0,
-    "f_http_job_site": 0.5,
+    "f_http_job": 0.5,
 }
 # Features that are inflated on malicious days, per scenario (the examples in the A3 card).
 SCENARIO_FEATURES = {
     1: ["f_afterhours_logon", "f_usb_connect"],   # after-hours USB use
-    2: ["f_file_copy", "f_http_job_site"],        # job hunting + copying files
+    2: ["f_file_copy", "f_http_job"],        # job hunting + copying files
     3: ["f_email_external", "f_email_recipients"],  # emailing data out
 }
 ROLES = ["Engineer", "Salesperson", "ITAdmin"]

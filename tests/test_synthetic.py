@@ -53,3 +53,20 @@ def test_same_seed_same_table_and_model_matrix_works(df):
     assert not df.equals(make_synthetic_features(seed=1))
     X, y, cols = get_model_matrix(df, split="train")
     assert X.shape == (9000, len(cols)) and y.sum() == 24
+
+
+def test_feature_names_match_the_planned_real_features(df):
+    # Model code written on synthetic data must run unchanged on v1, so every synthetic f_* column
+    # has to be one of the real feature names planned in Tasks/Supriye.md S10-S16.
+    planned = {
+        "f_logon_count", "f_logoff_count", "f_first_logon_hour", "f_last_logoff_hour",
+        "f_work_duration", "f_n_pcs", "f_logon_other_pc",
+        "f_afterhours_logon", "f_afterhours_events", "f_afterhours_ratio", "f_weekend",
+        "f_usb_connect", "f_usb_afterhours", "f_usb_n_pcs", "f_usb_duration",
+        "f_file_copy", "f_file_doc", "f_file_exe", "f_file_zip", "f_file_img", "f_file_afterhours",
+        "f_email_sent", "f_email_recipients", "f_email_external", "f_email_attach",
+        "f_email_external_attach", "f_email_size", "f_email_bcc", "f_email_afterhours",
+        "f_http_count", "f_http_domains", "f_http_job", "f_http_leak", "f_http_cloud",
+        "f_http_hack", "f_http_afterhours",
+    }
+    assert set(BASE_RATES) <= planned
