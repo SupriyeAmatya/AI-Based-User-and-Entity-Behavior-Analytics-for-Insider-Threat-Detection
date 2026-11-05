@@ -111,3 +111,18 @@ def test_tune_runs_a_grid_and_logs_every_run(df, tmp_outputs, monkeypatch):
 def test_card_grids_have_the_planned_sizes():
     from sklearn.model_selection import ParameterGrid
     assert len(ParameterGrid(mu.IF_GRID)) == 18 and len(ParameterGrid(mu.AE_GRID)) == 16
+
+
+# ---------------------------------------------------------------- A11
+@pytest.mark.parametrize("name, params, suffix", [("iforest", {}, ".joblib"),
+                                                   ("autoencoder", {"epochs": 3}, ".pt")])
+def test_saved_detector_gives_the_same_scores(df, name, params, suffix, tmp_path):
+    _, info = mu.train_and_score(df, name, params, save=False)
+    detector = info["detector"]
+    detector.feature_names = info["features"]
+    path = tmp_path / f"model{suffix}"
+    mu.save_detector(detector, path)
+    loaded = mu.load_detector(path)
+    X, _, _ = mu.get_model_matrix(df.head(200))
+    np.testing.assert_allclose(loaded.score(X), detector.score(X), rtol=1e-6)
+    assert loaded.feature_names == info["features"]

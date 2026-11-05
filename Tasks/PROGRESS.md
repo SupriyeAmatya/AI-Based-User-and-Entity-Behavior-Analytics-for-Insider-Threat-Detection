@@ -216,8 +216,8 @@
 - [x] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant: `AutoencoderDetector.feature_errors(X)` (same shape as X; row mean = score) and `train_and_score(..., train_on="all")` saved as `<model>_contam`; both tested on synthetic data **(Claude, branch `arva/A8-feature-errors`)**
 - [x] **A9** (Tue Nov 3) First run on real data (v0); tuning log started: `notebooks/03a_unsupervised_models.ipynb` scores v0 with both models (`results/scores/{iforest,autoencoder}_v0.parquet`); val PR-AUC 0.054 (IF) and 0.104 (AE) with the card settings **(Claude, branch `arva/A9-v0-tuning`)**
 - [x] **A10** (Wed Nov 4) Tuning workflow: `tune(df, model)` runs a whole grid (IF 18 runs, AE 16) and appends to `results/tables/tuning_log_unsupervised.csv`; best on v0 by val PR-AUC: IF 0.063, AE 0.122 **(Claude, branch `arva/A9-v0-tuning`)**. **Human-only (Arva):** choose the grids and say why
-- [ ] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`
-- [ ] **A12** (Fri Nov 6) Alert reasons (top-3 per alert)
+- [x] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`: `python src/pipeline.py --features data/processed/features_v0.parquet --model iforest --top 20` runs from the repo root and prints the ranked table (`results/tables/top_risky_users.csv`); trained models saved in `models/` (joblib / `torch.save`) and reused; also runs on v1 **(Claude, branch `arva/A11-pipeline`)**
+- [x] **A12** (Fri Nov 6) Alert reasons: a `reasons` column with 3 readable reasons per listed user (IF: largest |`z_user_*`| + first-time flags, or above-normal deviation on v0; AE: largest above-expected per-feature errors), e.g. "after-hours events 4.1σ above own baseline" **(Claude, branch `arva/A11-pipeline`)**
 - [ ] **A13** *(optional)* (Sat Nov 7) One-Class SVM
 - [ ] **A14** (Sun Nov 8) Pipeline diagram F2, hyperparameter table T4 draft, section notes. **Human-only:** draw F2
 
@@ -315,7 +315,7 @@ Tick when the PR is **merged** into `main`.
 - [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4): PR open, stacked on `arva/A8-feature-errors`
 - [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5)
 - [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6)
-- [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6)
+- [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6): PR open, stacked on `arva/A9-v0-tuning`
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
 - [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7)
 - [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7)
