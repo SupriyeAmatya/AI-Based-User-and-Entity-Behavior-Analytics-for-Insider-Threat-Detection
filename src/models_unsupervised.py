@@ -26,6 +26,11 @@ to the tuning log results/tables/tuning_log_unsupervised.csv; the best run is th
 highest val PR-AUC (never test, never accuracy):
     log, best = tune(df, "iforest")                    # IF_GRID, 18 runs
     log, best = tune(df, "autoencoder", dataset="v0")  # AE_GRID, 16 runs
+    clear_log("v1")                                    # A15: before re-running v1; v0 rows stay
+
+Final score files (A16), every row, with the detector defaults:
+    python -m src.models_unsupervised final                                        # features_v1
+    python -m src.models_unsupervised final data/processed/features_v1_1.parquet
 """
 import json
 import sys
@@ -45,7 +50,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import OneClassSVM
 from torch import nn
 
-from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
+from src.config import FIGURES_DIR, PROCESSED_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
 from src.evaluate import ranking_metrics, threshold_metrics, threshold_top_k
 from src.features import get_model_matrix
 
@@ -63,7 +68,8 @@ class UnsupervisedDetector:
     """fit() on normal training rows, score() any rows; higher score = more suspicious."""
 
     name = "base"
-    defaults = {}
+    card = {}       # the values suggested in the task card, kept for table T4 (A16 step 2)
+    defaults = {}   # the values every run uses unless params override them
 
     def __init__(self, **params):
         unknown = set(params) - set(self.defaults)
@@ -81,8 +87,10 @@ class UnsupervisedDetector:
 # ---------------------------------------------------------------- A5: Isolation Forest
 class IsolationForestDetector(UnsupervisedDetector):
     name = "iforest"
-    defaults = {"n_estimators": 200, "max_samples": "auto", "max_features": 1.0,
-                "contamination": "auto", "random_state": RANDOM_STATE}
+    card = {"n_estimators": 200, "max_samples": "auto", "max_features": 1.0,
+            "contamination": "auto", "random_state": RANDOM_STATE}           # A5 card
+    # PROVISIONAL (A16, Arva): replace with the best v1 setting by val PR-AUC.
+    defaults = dict(card)
 
     def fit(self, X_train_normal, X_val_normal=None):
         self.pipeline = Pipeline([("scaler", StandardScaler()),
@@ -103,8 +111,10 @@ class AutoencoderDetector(UnsupervisedDetector):
     """
 
     name = "autoencoder"
-    defaults = {"hidden": (64, 32), "bottleneck": 16, "dropout": 0.0, "lr": 1e-3,
-                "batch_size": 256, "epochs": 50, "patience": 5, "seed": RANDOM_STATE}
+    card = {"hidden": (64, 32), "bottleneck": 16, "dropout": 0.0, "lr": 1e-3,
+            "batch_size": 256, "epochs": 50, "patience": 5, "seed": RANDOM_STATE}  # A6 card
+    # PROVISIONAL (A16, Arva): replace with the best v1 setting by val PR-AUC.
+    defaults = dict(card)
 
     def _network(self, n_features):
         sizes = [n_features, *self.params["hidden"], self.params["bottleneck"]]
@@ -196,8 +206,9 @@ class OneClassSVMDetector(UnsupervisedDetector):
     a random sample of at most `max_train` normal training rows (A13 card: 20,000)."""
 
     name = "ocsvm"
-    defaults = {"nu": 0.01, "gamma": "scale", "kernel": "rbf", "max_train": 20_000,
-                "random_state": RANDOM_STATE}
+    card = {"nu": 0.01, "gamma": "scale", "kernel": "rbf", "max_train": 20_000,
+            "random_state": RANDOM_STATE}                                     # A13 card
+    defaults = dict(card)
 
     def fit(self, X_train_normal, X_val_normal=None):
         p = self.params
@@ -338,23 +349,47 @@ def tune(df, model_name, grid=None, dataset="v0", fixed=None, log_name=TUNING_LO
     log = pd.DataFrame(rows)
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
     path = TABLES_DIR / log_name
-    log.to_csv(path, mode="a", header=not path.exists(), index=False)
+    old = pd.read_csv(path) if path.exists() else pd.DataFrame()
+    pd.concat([old, log], ignore_index=True).to_csv(path, index=False)   # A15: columns stay aligned
     best = json.loads(log.loc[log["val_pr_auc"].idxmax(), "params"])
     if "hidden" in best:
         best["hidden"] = tuple(best["hidden"])
     return log, best
 
 
-def hyperparameter_table(log_path=None, name="T4_hyperparameters_unsupervised.csv") -> pd.DataFrame:
-    """Draft of table T4 (A14 step 2): per model, the card defaults, the grid searched and the best
-    setting so far by val PR-AUC (from the tuning log), saved to results/tables/<name>."""
+def clear_log(dataset, log_name=TUNING_LOG):
+    """Remove one dataset's rows from the tuning log and keep every other dataset's rows (A15).
+    The notebook calls it before re-running a dataset, so e.g. the v0 history survives a v1 run."""
+    path = TABLES_DIR / log_name
+    if not path.exists():
+        return
+    log = pd.read_csv(path)
+    log[log["dataset"] != dataset].to_csv(path, index=False)
+
+
+def _without_seed(params):
+    return json.dumps({k: v for k, v in params.items() if k not in ("random_state", "seed")},
+                      default=str)
+
+
+def hyperparameter_table(log_path=None, name="T4_hyperparameters_unsupervised.csv",
+                         dataset=None) -> pd.DataFrame:
+    """Table T4 (A14 step 2, A15 step 3): per model, the card values, the current defaults, the grid
+    searched and the best setting by val PR-AUC from the tuning log, saved to results/tables/<name>.
+
+    Only runs trained on normal days (train_on == "normal") count, and with `dataset` (e.g. "v1")
+    only that dataset's runs, so T4 shows the choice made on that dataset.
+    """
     log_path = TABLES_DIR / TUNING_LOG if log_path is None else log_path
     log = pd.read_csv(log_path) if Path(log_path).exists() else pd.DataFrame()
+    if len(log):
+        log = log[log["train_on"] == "normal"]
+        if dataset is not None:
+            log = log[log["dataset"] == dataset]
     rows = []
     for model, cls in DETECTORS.items():
-        row = {"model": model,
-               "defaults": json.dumps({k: v for k, v in cls.defaults.items()
-                                       if k not in ("random_state", "seed")}, default=str),
+        row = {"model": model, "card": _without_seed(cls.card),
+               "defaults": _without_seed(cls.defaults),
                "grid": json.dumps(GRIDS.get(model, {}), default=str)}
         runs = log[log["model"] == model] if len(log) else log
         if len(runs):
@@ -388,6 +423,34 @@ def plot_loss_curves(history, name="autoencoder_loss"):
     return fig
 
 
+# ---------------------------------------------------------------- A16: final score files
+# (model, train_on) of every final score file. OCSVM is optional (A13); keep or drop it is Arva's
+# decision (DEC-A), so it stays in the list until then.
+FINAL_RUNS = [("iforest", "normal"), ("autoencoder", "normal"),
+              ("iforest", "all"), ("autoencoder", "all"), ("ocsvm", "normal")]
+
+
+def final(features_path=None, df=None, params=None):
+    """Write the final score files for every row with the detector defaults, no grid search (A16):
+    iforest, autoencoder, iforest_contam, autoencoder_contam and ocsvm in results/scores/.
+    Teammates run this themselves instead of receiving score files (TEAM_PLAN 2.5.12).
+
+    features_path defaults to data/processed/features_v1.parquet; pass df to skip reading a file.
+    params: optional {model: {parameter: value}} overrides (the tests use it to train faster).
+    Returns the paths written.
+    """
+    if df is None:
+        features_path = features_path or PROCESSED_DIR / "features_v1.parquet"
+        df = pd.read_parquet(features_path)
+    paths = []
+    for model, train_on in FINAL_RUNS:
+        _, info = train_and_score(df, model, (params or {}).get(model), train_on=train_on)
+        print(f"{info['path'].name:28s} {info['n_scored']:,} rows scored, "
+              f"fit {info['fit_seconds']:.1f}s on {info['n_train']:,} rows")
+        paths.append(info["path"])
+    return paths
+
+
 def demo():
     """A5/A6 checks on synthetic data: ROC-AUC of both detectors and the autoencoder loss curve."""
     from src.synthetic import make_synthetic_features
@@ -412,5 +475,7 @@ def demo():
 if __name__ == "__main__":
     if sys.argv[1:] == ["demo"]:
         demo()
+    elif sys.argv[1:2] == ["final"] and len(sys.argv) <= 3:
+        final(*sys.argv[2:])
     else:
         print(__doc__)
