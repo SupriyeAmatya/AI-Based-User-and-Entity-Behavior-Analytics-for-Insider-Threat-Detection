@@ -73,3 +73,23 @@ def test_loss_curve_figure(df, tmp_outputs):
     _, info = mu.train_and_score(df, "autoencoder", {"epochs": 3}, save=False)
     mu.plot_loss_curves(info["detector"].history, "ae_loss_test")
     assert (tmp_outputs / "figures" / "ae_loss_test.png").exists()
+
+
+# ---------------------------------------------------------------- A8
+def test_feature_errors_shape_and_mean_equals_score(df):
+    _, info = mu.train_and_score(df, "autoencoder", {"epochs": 3}, save=False)
+    X, _, cols = mu.get_model_matrix(df.head(50))
+    errors = info["detector"].feature_errors(X)
+    assert errors.shape == X.shape and list(errors.columns) == cols
+    assert errors.index.equals(X.index) and (errors.to_numpy() >= 0).all()
+    np.testing.assert_allclose(errors.mean(axis=1), info["detector"].score(X), rtol=1e-5)
+
+
+@pytest.mark.parametrize("name, params", [("iforest", {}), ("autoencoder", {"epochs": 3})])
+def test_contamination_variant_trains_on_all_train_rows(df, name, params, tmp_outputs):
+    scores, info = mu.train_and_score(df, name, params, train_on="all")
+    assert info["n_train"] == int((df["split"] == "train").sum())    # malicious rows included
+    assert info["path"] == tmp_outputs / "scores" / f"{name}_contam.parquet" and info["path"].exists()
+    assert info["train_on"] == "all" and len(scores) == len(df)
+    with pytest.raises(ValueError):
+        mu.train_and_score(df, name, params, save=False, train_on="some")
