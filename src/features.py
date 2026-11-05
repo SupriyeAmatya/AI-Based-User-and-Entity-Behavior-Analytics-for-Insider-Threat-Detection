@@ -357,8 +357,10 @@ def psychometric_features(users: pd.Series) -> pd.DataFrame:
     return p.reindex(users.to_numpy()).reset_index(drop=True)
 
 
-def build_v1(labels: pd.DataFrame, users=None) -> tuple:
-    """S10-S16 for every user (or only `users`), all dates. Returns (features, report).
+def build_v1(labels: pd.DataFrame, users=None, baselines=True) -> tuple:
+    """S10-S18 for every user (or only `users`), all dates. Returns (features, report).
+
+    With `baselines`, src/baseline.py adds z_user_*, z_peer_* and new_* (S17-S18).
 
     Rows are user-days with at least one logon event, as in v0 (S9 step 2); activity on other
     days is dropped and counted in the report. No "days until leaving" feature (S16 step 3).
@@ -402,6 +404,9 @@ def build_v1(labels: pd.DataFrame, users=None) -> tuple:
     features = features[META_COLUMNS + feature_cols].sort_values(KEY).reset_index(drop=True)
     int_cols = [c for c in feature_cols if c not in NOT_COUNTS and c != "f_usb_duration"]
     features[int_cols] = features[int_cols].astype("int64")
+    if baselines:
+        from src.baseline import add_baselines  # baseline.py imports this module
+        features = add_baselines(features, logon)
 
     keys = labels.rename(columns={"day": "date"})[KEY]
     if users is not None:
@@ -418,7 +423,7 @@ def build_v1(labels: pd.DataFrame, users=None) -> tuple:
             features[features["label"] == 1].groupby(["split", "scenario"]).size().to_dict(),
         "file_extension_coverage":
             float(ext.isin(set().union(*FILE_GROUPS.values())).mean()) if len(ext) else float("nan"),
-        "features": len(feature_cols),
+        "features": len(feature_columns(features)),
     }
     return features, report
 
