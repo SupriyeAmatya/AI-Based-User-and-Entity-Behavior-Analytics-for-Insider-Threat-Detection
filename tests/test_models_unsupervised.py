@@ -126,3 +126,19 @@ def test_saved_detector_gives_the_same_scores(df, name, params, suffix, tmp_path
     X, _, _ = mu.get_model_matrix(df.head(200))
     np.testing.assert_allclose(loaded.score(X), detector.score(X), rtol=1e-6)
     assert loaded.feature_names == info["features"]
+
+
+# ---------------------------------------------------------------- A13-A14
+def test_ocsvm_scores_and_caps_training_rows(df):
+    scores, info = mu.train_and_score(df, "ocsvm", {"max_train": 2000}, save=False)
+    assert info["detector"].n_fitted == 2000 and len(scores) == len(df)
+    assert roc_auc_score(scores["label"], scores["score"]) > 0.8
+
+
+def test_hyperparameter_table_draft(df, tmp_outputs, monkeypatch):
+    monkeypatch.setattr(mu, "TABLES_DIR", tmp_outputs / "tables")
+    mu.tune(df, "iforest", {"n_estimators": [50, 100]})
+    table = mu.hyperparameter_table()
+    assert set(table["model"]) == {"iforest", "autoencoder", "ocsvm"}
+    assert table.set_index("model").loc["iforest", "runs"] == 2
+    assert (tmp_outputs / "tables" / "T4_hyperparameters_unsupervised.csv").exists()
