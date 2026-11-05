@@ -79,7 +79,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── 01_eda.ipynb          # Done (S7)
 │   ├── 02_feature_engineering.ipynb
 │   ├── 03a_unsupervised_models.ipynb
-│   ├── 03b_supervised_models.ipynb
+│   ├── 03b_supervised_models.ipynb   # Done on v0 (Y8–Y10): tuning log, imbalance
 │   ├── 04_evaluation.ipynb
 │   └── 05_anomaly_investigation.ipynb
 ├── src/
@@ -91,7 +91,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── evaluate.py           # Metrics, plots, detection delay            (done)
 │   ├── baseline.py           # Per-user / peer-group baselines
 │   ├── models_unsupervised.py# Isolation Forest, Autoencoder, One-Class SVM
-│   ├── models_supervised.py  # Random Forest, XGBoost
+│   ├── models_supervised.py  # Random Forest, XGBoost (+ tuning, imbalance) (done)
 │   ├── risk_scoring.py       # Convert model output to a 0–100 risk score
 │   ├── explain.py            # SHAP explanations
 │   └── pipeline.py           # End-to-end UEBA prototype

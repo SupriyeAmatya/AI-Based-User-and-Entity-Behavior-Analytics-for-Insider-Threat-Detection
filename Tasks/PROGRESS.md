@@ -262,13 +262,15 @@
   - [ ] Arva and Supriye confirm they can import and run it
 
 ### Week 1
-- [ ] **Y7** (Mon Nov 2) Random Forest + XGBoost `src/models_supervised.py`
-- [ ] **Y8** (Tue Nov 3) First run on real data (v0); tuning log started
-- [ ] **Y9** (Wed Nov 4) Tuning workflow (RF and XGB grids)
-- [ ] **Y10** (Thu Nov 5) Imbalance experiment → `results/tables/imbalance.csv`
+- [x] **Y7** (Mon Nov 2) Random Forest + XGBoost `src/models_supervised.py`: `train_and_score_supervised()` (all train rows, every row scored, TEAM_PLAN 5.2 file), card settings, XGB early stopping on val; score files for synthetic data and `evaluate_file()` runs on them **(Claude, branch `ayo/Y7-supervised-models`)**
+- [x] **Y8** (Tue Nov 3) First run on real data (v0); tuning log started: `notebooks/03b_supervised_models.ipynb`, `results/scores/{random_forest,xgboost}_v0.parquet`; val PR-AUC 0.078 (RF) and 0.296 (XGB) with the card settings **(Claude, branch `ayo/Y7-supervised-models`)**
+- [x] **Y9** (Wed Nov 4) Tuning workflow: `tune_supervised(df, model)` runs the card grid (RF 24, XGB 16) into `results/tables/tuning_log_supervised.csv`; best on v0 by val PR-AUC: RF 0.273, XGB 0.324 **(Claude, branch `ayo/Y7-supervised-models`)**
+- [x] **Y10** (Thu Nov 5) Imbalance experiment → `results/tables/imbalance.csv` (6 rows: RF and XGB × no weighting / class weights / SMOTE on training rows only, via an imblearn Pipeline) **(Claude, branch `ayo/Y7-supervised-models`)**. **Human-only (Ayo):** pick the set-up for the final models
 - [ ] **Y11** (Fri Nov 6) `src/explain.py` (SHAP) → Arva
 - [ ] **Y12** (Sat Nov 7) Leave-one-scenario-out (LOSO) code. **Human-only:** design and justify the experiment
 - [ ] **Y13** (Sun Nov 8) Hyperparameter table T4 draft + section notes
+  - [x] T4 draft: `hyperparameter_table()` → `results/tables/T4_hyperparameters_supervised.csv` **(Claude, branch `ayo/Y7-supervised-models`)**
+  - [ ] **Human-only (Ayo):** IV-C/V notes in `paper/notes_ayo.md`; L8 and L11a notes
 
 ### Week 2
 - [ ] **Y14** (Mon Nov 9) Retrain and tune on v1
@@ -313,7 +315,7 @@ Tick when the PR is **merged** into `main`.
   - [ ] A8 (per-feature error + contamination variant), on a new branch from `main`
 - [x] `arva/A7-risk-scoring`: merged into `main` Nov 4 (PR #15), branch deleted. Review by Supriye still open (§9)
 - [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4)
-- [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5)
+- [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5): PR open
 - [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6)
 - [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6)
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
