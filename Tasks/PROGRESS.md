@@ -200,9 +200,9 @@
   - [x] Merged Nov 4 ([PR #10](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/10), Arva): 50 users × 300 days, TEAM_PLAN 5.1 format, 5 tests pass
   - [ ] Ayo confirms he can load it (the card's "Done when")
   - [x] Renamed `f_http_job_site` to `f_http_job` to match the real feature (S15); a new test checks every synthetic feature name against the planned v1 names **(Claude, branch `arva/A3-http-job-rename`)**
-- [ ] **A4** (Fri Oct 30) Module skeleton `src/models_unsupervised.py`. *Status unknown — not in the repo yet*
-- [ ] **A5** (Fri Oct 30) Isolation Forest. *Status unknown*
-- [ ] **A6** (Sat Oct 31) Autoencoder. *Status unknown*
+- [x] **A4** (Fri Oct 30) Module skeleton `src/models_unsupervised.py`: `UnsupervisedDetector` interface + `train_and_score()` (normal train rows only, every row scored, TEAM_PLAN 5.2 score file, fit/score timings) **(Claude, branch `arva/A4-unsupervised-models`)**
+- [x] **A5** (Fri Oct 30) Isolation Forest: card settings in a scaler pipeline, score = `-decision_function`; synthetic ROC-AUC 0.93 **(Claude)**
+- [x] **A6** (Sat Oct 31) Autoencoder (PyTorch, card architecture n→64→32→16→32→64→n, early stopping on val normal rows, loss-curve plot); synthetic ROC-AUC 0.93, loss falls 0.98 → 0.02 **(Claude)**. **Human-only (Arva):** choose the final architecture and tuning grid, and say why
 - [x] **A7** (Sun Nov 1) Risk scoring `src/risk_scoring.py`: daily risk 0–100 (percentile of normal training scores), 7-day max user risk + decayed sum, alert levels, `rank_users()`; works on synthetic scores **(Claude, branch `arva/A7-risk-scoring`)**. **Human-only (Arva):** alert levels High ≥ 99 / Medium ≥ 95 are PROVISIONAL; decide and justify them (IV-D)
 
 ### Week 1
