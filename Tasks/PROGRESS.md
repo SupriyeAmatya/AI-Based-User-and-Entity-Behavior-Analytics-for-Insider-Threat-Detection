@@ -227,8 +227,8 @@
 
 ### Week 1
 - [x] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant: `AutoencoderDetector.feature_errors(X)` (same shape as X; row mean = score) and `train_and_score(..., train_on="all")` saved as `<model>_contam`; both tested on synthetic data **(Claude, branch `arva/A8-feature-errors`)**
-- [ ] **A9** (Tue Nov 3) First run on real data (v0); tuning log started
-- [ ] **A10** (Wed Nov 4) Tuning workflow (IF and AE grids, chosen by val PR-AUC)
+- [x] **A9** (Tue Nov 3) First run on real data (v0); tuning log started: `notebooks/03a_unsupervised_models.ipynb` scores v0 with both models (`results/scores/{iforest,autoencoder}_v0.parquet`); val PR-AUC 0.054 (IF) and 0.104 (AE) with the card settings **(Claude, branch `arva/A9-v0-tuning`)**
+- [x] **A10** (Wed Nov 4) Tuning workflow: `tune(df, model)` runs a whole grid (IF 18 runs, AE 16) and appends to `results/tables/tuning_log_unsupervised.csv`; best on v0 by val PR-AUC: IF 0.063, AE 0.122 **(Claude, branch `arva/A9-v0-tuning`)**. **Human-only (Arva):** choose the grids and say why
 - [ ] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`
 - [ ] **A12** (Fri Nov 6) Alert reasons (top-3 per alert)
 - [ ] **A13** *(optional)* (Sat Nov 7) One-Class SVM
@@ -325,7 +325,7 @@ Tick when the PR is **merged** into `main`.
   - [x] A4–A6 merged into `main` Nov 4 (PR #14), branch deleted. No review by Ayo yet (§9)
   - [ ] A8 (per-feature error + contamination variant): on `arva/A8-feature-errors` (PR open)
 - [x] `arva/A7-risk-scoring`: merged into `main` Nov 4 (PR #15), branch deleted. Review by Supriye still open (§9)
-- [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4)
+- [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4): PR open, stacked on `arva/A8-feature-errors`
 - [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5)
 - [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6)
 - [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6)
