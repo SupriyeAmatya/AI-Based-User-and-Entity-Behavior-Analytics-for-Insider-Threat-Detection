@@ -1,0 +1,6 @@
+check,result
+1 no missing / infinite inputs,PASS
+2 every split x scenario has malicious rows,PASS
+3 baselines unchanged after deleting the last month,PASS
+4 hand check (human-only); automated recount,recount MATCH
+5 no label-derived or future columns,PASS
