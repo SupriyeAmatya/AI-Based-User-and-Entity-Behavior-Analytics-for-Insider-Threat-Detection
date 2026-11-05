@@ -226,7 +226,7 @@
 - [x] **A7** (Sun Nov 1) Risk scoring `src/risk_scoring.py`: daily risk 0–100 (percentile of normal training scores), 7-day max user risk + decayed sum, alert levels, `rank_users()`; works on synthetic scores **(Claude, [PR #15](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/15), merged Nov 4)**. **Human-only (Arva):** alert levels High ≥ 99 / Medium ≥ 95 are PROVISIONAL; decide and justify them (IV-D)
 
 ### Week 1
-- [ ] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant
+- [x] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant: `AutoencoderDetector.feature_errors(X)` (same shape as X; row mean = score) and `train_and_score(..., train_on="all")` saved as `<model>_contam`; both tested on synthetic data **(Claude, branch `arva/A8-feature-errors`)**
 - [ ] **A9** (Tue Nov 3) First run on real data (v0); tuning log started
 - [ ] **A10** (Wed Nov 4) Tuning workflow (IF and AE grids, chosen by val PR-AUC)
 - [ ] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`
@@ -323,7 +323,7 @@ Tick when the PR is **merged** into `main`.
 - [x] `arva/A3-http-job-rename` *(follow-up, not in the plan)*: merged into `main` Nov 4 (PR #13), branch deleted. `f_http_job_site` → `f_http_job`. No review
 - [ ] `arva/A4-unsupervised-models` (A4, A5, A6, A8; reviewer Ayo, Mon Nov 2)
   - [x] A4–A6 merged into `main` Nov 4 (PR #14), branch deleted. No review by Ayo yet (§9)
-  - [ ] A8 (per-feature error + contamination variant), on a new branch from `main`
+  - [ ] A8 (per-feature error + contamination variant): on `arva/A8-feature-errors` (PR open)
 - [x] `arva/A7-risk-scoring`: merged into `main` Nov 4 (PR #15), branch deleted. Review by Supriye still open (§9)
 - [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4)
 - [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5)

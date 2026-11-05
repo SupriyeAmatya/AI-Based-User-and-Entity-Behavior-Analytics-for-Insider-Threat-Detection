@@ -1,14 +1,18 @@
-"""Unsupervised detectors (owner: Arva; A4 skeleton, A5 Isolation Forest, A6 autoencoder).
+"""Unsupervised detectors (owner: Arva; A4 skeleton, A5 Isolation Forest, A6 autoencoder, A8 extras).
 
 Usage:
     from src.models_unsupervised import train_and_score
     scores, info = train_and_score(df, "iforest")                     # df = feature table (TEAM_PLAN 5.1)
     scores, info = train_and_score(df, "autoencoder", {"epochs": 30})
+    scores, info = train_and_score(df, "iforest", train_on="all")     # A8: saved as iforest_contam
+    errors = info["detector"].feature_errors(X)                       # A8: AE error per feature
 
 Every detector follows the team rules:
 - inputs come from get_model_matrix() (TEAM_PLAN 5.5), and StandardScaler is fitted on the training
   rows only;
-- it trains on split == "train" and label == 0 (TEAM_PLAN 5.4);
+- it trains on split == "train" and label == 0 (TEAM_PLAN 5.4); the A8 contamination variant
+  (train_on="all") trains on every training row, malicious ones included, and is saved as
+  <model_name>_contam;
 - it scores every row, higher = more suspicious, and the scores are saved to
   results/scores/<model_name>.parquet with user, date, split, label, scenario, score (TEAM_PLAN 5.2).
 `info` holds the fit and scoring times, for detection time (a) in A17.
@@ -149,13 +153,27 @@ class AutoencoderDetector(UnsupervisedDetector):
     def score(self, X):
         return self._errors(self._tensor(X)).mean(axis=1)
 
+    def feature_errors(self, X) -> pd.DataFrame:
+        """Squared reconstruction error per feature, same shape as X (A8 step 1). Its row mean is
+        score(X); the largest entries say which features the autoencoder found unusual (A12)."""
+        errors = self._errors(self._tensor(X))
+        columns = X.columns if isinstance(X, pd.DataFrame) else None
+        index = X.index if isinstance(X, pd.DataFrame) else None
+        return pd.DataFrame(errors, index=index, columns=columns)
+
 
 DETECTORS = {d.name: d for d in (IsolationForestDetector, AutoencoderDetector)}
 
 
 # ---------------------------------------------------------------- A4: train and score
-def train_and_score(df, model_name, params=None, save=True, save_as=None):
-    """Fit `model_name` on normal training rows, score every row, optionally save the score file.
+def train_and_score(df, model_name, params=None, save=True, save_as=None, train_on="normal",
+                    columns=None):
+    """Fit `model_name` on training rows, score every row, optionally save the score file.
+
+    train_on="normal" (TEAM_PLAN 5.4) fits on split == "train" & label == 0 and stops the AE early
+    on the normal val rows. train_on="all" (A8 contamination variant) uses no labels at all: it fits
+    on every train row and stops early on every val row, and saves as <model_name>_contam.
+    columns: feature subset passed to get_model_matrix() (default: every model input).
 
     Returns (scores, info). scores has TEAM_PLAN 5.2 columns; info has the timings (A17).
     save_as overrides the file name (e.g. "iforest_synthetic"), so demo runs never overwrite
@@ -163,10 +181,12 @@ def train_and_score(df, model_name, params=None, save=True, save_as=None):
     """
     if model_name not in DETECTORS:
         raise ValueError(f"unknown model {model_name!r}; choose from {sorted(DETECTORS)}")
-    X_all, _, feature_names = get_model_matrix(df)
-    normal = df["label"] == 0
-    X_train = X_all[(df["split"] == "train") & normal]
-    X_val = X_all[(df["split"] == "val") & normal]
+    if train_on not in ("normal", "all"):
+        raise ValueError(f"train_on must be 'normal' or 'all', not {train_on!r}")
+    X_all, _, feature_names = get_model_matrix(df, columns=columns)
+    use = df["label"] == 0 if train_on == "normal" else pd.Series(True, index=df.index)
+    X_train = X_all[(df["split"] == "train") & use]
+    X_val = X_all[(df["split"] == "val") & use]
     detector = DETECTORS[model_name](**(params or {}))
 
     started = time.perf_counter()
@@ -181,9 +201,11 @@ def train_and_score(df, model_name, params=None, save=True, save_as=None):
     path = None
     if save:
         SCORES_DIR.mkdir(parents=True, exist_ok=True)
-        path = SCORES_DIR / f"{save_as or model_name}.parquet"
+        default = model_name if train_on == "normal" else f"{model_name}_contam"
+        path = SCORES_DIR / f"{save_as or default}.parquet"
         scores.to_parquet(path, index=False)
-    info = {"model": model_name, "params": detector.params, "features": feature_names,
+    info = {"model": model_name, "train_on": train_on, "params": detector.params,
+            "features": feature_names,
             "n_train": len(X_train), "n_scored": len(X_all), "fit_seconds": fit_seconds,
             "score_seconds": score_seconds,
             "score_seconds_per_1000": 1000 * score_seconds / max(len(X_all), 1),
