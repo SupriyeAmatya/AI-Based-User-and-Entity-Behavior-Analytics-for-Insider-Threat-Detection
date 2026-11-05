@@ -284,6 +284,8 @@
 - [x] **Y9** (Wed Nov 4) Tuning workflow: `tune_supervised(df, model)` runs the card grid (RF 24, XGB 16) into `results/tables/tuning_log_supervised.csv`; best on v0 by val PR-AUC: RF 0.273, XGB 0.324 **(Claude, branch `ayo/Y7-supervised-models`)**
 - [x] **Y10** (Thu Nov 5) Imbalance experiment → `results/tables/imbalance.csv` (6 rows: RF and XGB × no weighting / class weights / SMOTE on training rows only, via an imblearn Pipeline) **(Claude, branch `ayo/Y7-supervised-models`)**. **Human-only (Ayo):** pick the set-up for the final models
 - [ ] **Y11** (Fri Nov 6) `src/explain.py` (SHAP) → Arva
+  - [x] `get_shap_values()` (RF class 1, XGB log-odds, Isolation Forest with the sign flipped so positive = anomalous), `explain_sample()` (all test positives + 5,000 negatives), `plot_summary()`, `plot_waterfall()`, `top_features()`; all work on the v0 XGBoost and Isolation Forest (`python -m src.explain demo`, figures `results/figures/shap_*_v0.*`) **(Claude, branch `ayo/Y11-explain`)**
+  - [ ] Arva confirms it works for the case studies (A19)
 - [ ] **Y12** (Sat Nov 7) Leave-one-scenario-out (LOSO) code. **Human-only:** design and justify the experiment
 - [ ] **Y13** (Sun Nov 8) Hyperparameter table T4 draft + section notes
   - [x] T4 draft: `hyperparameter_table()` → `results/tables/T4_hyperparameters_supervised.csv` **(Claude, branch `ayo/Y7-supervised-models`)**
@@ -333,7 +335,7 @@ Tick when the PR is **merged** into `main`.
 - [x] `arva/A7-risk-scoring`: merged into `main` Nov 4 (PR #15), branch deleted. Review by Supriye still open (§9)
 - [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4): PR open, stacked on `arva/A8-feature-errors`
 - [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5): PR open
-- [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6)
+- [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6): PR open, stacked on `ayo/Y7-supervised-models`
 - [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6): PR open, stacked on `arva/A9-v0-tuning`
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
 - [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7)

@@ -93,7 +93,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── models_unsupervised.py# Isolation Forest, Autoencoder (+ tuning)    (done)
 │   ├── models_supervised.py  # Random Forest, XGBoost (+ tuning, imbalance) (done)
 │   ├── risk_scoring.py       # Convert model output to a 0–100 risk score (done)
-│   ├── explain.py            # SHAP explanations
+│   ├── explain.py            # SHAP explanations                         (done)
 │   └── pipeline.py           # End-to-end UEBA prototype                 (done)
 ├── tests/                    # pytest: python -m pytest tests
 ├── app/
