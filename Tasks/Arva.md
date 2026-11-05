@@ -60,7 +60,7 @@ Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tic
 #### REV-A · Thu Nov 5 – Sun Nov 8 · Read your code and do your reviews
 1. **Read** `models_unsupervised.py`, `risk_scoring.py`, `pipeline.py` and `synthetic.py` until you can explain every function [H].
 2. **Confirm** `src/explain.py` works for your case studies: run `python -m src.explain demo` (Y11 hand-off).
-3. **Review** on `main` the PRs assigned to you: Supriye's #4, #5, #6, #11, #12, #16, #17, #18, #26 and Ayo's #3, #24, #25. Run each "How to test" step.
+3. **Review** on `main` the PRs assigned to you: Supriye's #4, #5, #6, #11, #12, #16, #17, #18, #26, #28 and Ayo's #3, #24, #25. Run each "How to test" step.
 4. **Open** a GitHub Issue for the owner for anything that needs changing.
 5. **Tick** each review in PROGRESS §7.
 

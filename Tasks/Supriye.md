@@ -29,7 +29,7 @@ Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tic
 - **S9:** v0 table (100 users) + `get_model_matrix()`.
 - **S10–S16:** 41 behavior features for all users (PR #17).
 - **S17–S20:** `src/baseline.py` (`z_user_*`, `z_peer_*`, `new_*`), F3, leakage checks 1/2/3/5 and the feature dictionary (PR #18).
-- **Tracker:** PROGRESS audit (#16), the Week 1 tracker (#26), and the web-count fix (#28, open; this rewrite supersedes it).
+- **Tracker:** PROGRESS audit (#16), the Week 1 tracker (#26), and the web-count fix (#28).
 
 ### 1.4 What's left (in order)
 1. **Catch-up (Nov 5–8):** your 5 decisions, the rebuild if needed, the hand-checks, the drive upload, setup leftovers, reviews, and the M2 freeze.
@@ -268,7 +268,6 @@ Branch: `supriye/S22-ablation`, from `main` **after** `arva/A15-final-models` an
 - **The tuned defaults aren't merged by Wed:** run S22 with explicit params read from `results/tables/T4_hyperparameters_*.csv` (v1 rows, on the open PRs' branches), and note it in the PR. Don't ask for score files.
 - **A teammate asks for raw logs or `http.parquet`:** point them to the web cache (`http_user_day_domain.parquet`) or the 4 small logs in the drop; send nothing else.
 - **Overleaf compile errors near the deadline:** keep the last good PDF; fix one section at a time.
-- **PR #28 is still open:** close it once this plan rewrite merges (it only fixed the old S15 line).
 
 ---
 

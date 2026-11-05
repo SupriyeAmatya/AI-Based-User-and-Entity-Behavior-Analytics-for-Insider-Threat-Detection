@@ -1,6 +1,6 @@
 # Progress Checker (v2)
 
-**Last updated:** Thu Nov 5, 2026 (`main` at `3439136`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
+**Last updated:** Thu Nov 5, 2026 (`main` at `8060fc3`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
 Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arva.md](Arva.md), [Ayo.md](Ayo.md)
 
 ---
@@ -9,13 +9,13 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 
 ### 1.1 Snapshot (Thu Nov 5)
 - **Code:**
-  - **Weeks 0–1 are complete and merged:** PRs #1–#27, 83/83 tests on `main`.
+  - **Weeks 0–1 are complete and merged:** PRs #1–#28, 83/83 tests on `main`.
   - **Week 2 has not started:** no v1 model results, final score files, T5–T8, F4–F8 or notebooks 04–05.
 - **Data:**
   - **Feature table v1** is built on Supriye's laptop: 330,268 user-days, 73 inputs.
   - **The data drop** is not on the shared drive yet.
 - **People:**
-  - **Reviews:** none of the 27 merged PRs has a review.
+  - **Reviews:** none of the 28 merged PRs has a review.
   - **Ayo** has no commits yet.
   - **Literature:** `paper/lit_notes/` is empty.
 - **Decisions:** 5 PROVISIONAL values (Supriye), the AE architecture and alert levels (Arva), and the imbalance set-up and LOSO justification (Ayo) are open.
@@ -34,7 +34,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | Supriye tasks (S1–S35, LIT) | 13 lines | Decisions, paper, finish |
 | Arva tasks (A1–A26, LIT) | 10 lines | A15–A26, decisions, LIT |
 | Ayo tasks (Y1–Y25, LIT) | 11 lines | Y14–Y25, decisions, LIT |
-| Post-merge reviews | 0 / 26 | 26 |
+| Post-merge reviews | 0 / 27 | 27 |
 | Milestones | 1 / 15 | 14 |
 
 ---
@@ -252,7 +252,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **Y24** draft review
 - [ ] **Y25** final fixes
 
-### 3.7 Post-merge reviews (none of #1–#27 had a GitHub review)
+### 3.7 Post-merge reviews (none of #1–#28 had a GitHub review)
 Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new PR from a new branch.
 
 | ✓ | PR | What | Author (written by) | Reviewer |
@@ -284,7 +284,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 | [ ] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva |
 | [ ] | #26 | Tracker | Supriye (Claude) | Arva |
 | [ ] | #27 | Coverage refresh | Arva | Supriye |
-| [ ] | #28 | S15 web-count fix *(open; superseded by this plan rewrite, close it)* | Supriye (Claude) | — |
+| [ ] | #28 | S15 web-count fix | Supriye (Claude) | Arva |
 
 - [ ] **`docs/coverage.md` first version** (pushed straight to `main` without a PR): read by a teammate.
 

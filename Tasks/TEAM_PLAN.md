@@ -47,14 +47,14 @@ Progress is tracked in [PROGRESS.md](PROGRESS.md). This file replaces the Oct 28
 - **Evaluation:** test split only, at two operating points (best-F1 on val, top-1% alert budget), per scenario, plus leave-one-scenario-out (LOSO) for unseen behavior.
 - **Paper:** IEEE conference format, ~8 pages, 8 tables (T1–T8) and 8 figures (F1–F8).
 
-### 1.3 Where we stand (Thu Nov 5, `main` at `3439136`)
-- **Weeks 0–1 code is done and merged** (PRs #1–#27). 83/83 tests pass. Most of it was written by Claude at Supriye's request, so **each owner must still read it and be able to explain every line** (2.6).
+### 1.3 Where we stand (Thu Nov 5, `main` at `8060fc3`)
+- **Weeks 0–1 code is done and merged** (PRs #1–#28). 83/83 tests pass. Most of it was written by Claude at Supriye's request, so **each owner must still read it and be able to explain every line** (2.6).
 - **Feature table v1 exists** locally: 330,268 user-days, 73 inputs. Leakage checks 1, 2, 3 and 5 pass.
 - **All 5 models run on v0** (100-user sample). Best val PR-AUC so far: IF 0.063, AE 0.122, RF 0.273, XGB 0.324.
 - **No v1 model results yet.** No final score files, T5–T8, F4–F8, case studies or paper text exist yet.
 - **Open human items:**
   - **Decisions:** the PROVISIONAL values;
-  - **Reviews:** all of them (none of #1–#27 has one);
+  - **Reviews:** all of them (none of #1–#28 has one);
   - **Setup:** the data drop, Overleaf/Zotero and branch protection;
   - **Literature:** all notes (`paper/lit_notes/` is empty).
   - **Ayo:** no commits yet.
