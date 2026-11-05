@@ -29,6 +29,9 @@ highest val PR-AUC (never test, never accuracy):
 import json
 import sys
 import time
+from pathlib import Path
+
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -162,16 +165,61 @@ class AutoencoderDetector(UnsupervisedDetector):
     def score(self, X):
         return self._errors(self._tensor(X)).mean(axis=1)
 
+    def feature_residuals(self, X) -> pd.DataFrame:
+        """Scaled input minus its reconstruction, per feature: > 0 where the value was higher than
+        the autoencoder expected (A12 uses this to name only above-normal features)."""
+        tensor = self._tensor(X)
+        self.network.eval()
+        with torch.no_grad():
+            residuals = (tensor - self.network(tensor)).numpy()
+        columns = X.columns if isinstance(X, pd.DataFrame) else None
+        index = X.index if isinstance(X, pd.DataFrame) else None
+        return pd.DataFrame(residuals, index=index, columns=columns)
+
     def feature_errors(self, X) -> pd.DataFrame:
         """Squared reconstruction error per feature, same shape as X (A8 step 1). Its row mean is
         score(X); the largest entries say which features the autoencoder found unusual (A12)."""
-        errors = self._errors(self._tensor(X))
-        columns = X.columns if isinstance(X, pd.DataFrame) else None
-        index = X.index if isinstance(X, pd.DataFrame) else None
-        return pd.DataFrame(errors, index=index, columns=columns)
+        return self.feature_residuals(X) ** 2
 
 
 DETECTORS = {d.name: d for d in (IsolationForestDetector, AutoencoderDetector)}
+
+
+# ---------------------------------------------------------------- A11: saving trained detectors
+def save_detector(detector, path):
+    """Isolation Forest -> joblib.dump; autoencoder -> torch.save of its weights, parameters and
+    scaler (plain tensors and lists, so torch.load(weights_only=True) can read it back)."""
+    if isinstance(detector, AutoencoderDetector):
+        torch.save({"params": detector.params, "state_dict": detector.network.state_dict(),
+                    "scaler_mean": detector.scaler.mean_.tolist(),
+                    "scaler_scale": detector.scaler.scale_.tolist(),
+                    "feature_names": list(getattr(detector, "feature_names", []) or []),
+                    "history": detector.history, "best_epoch": detector.best_epoch}, path)
+    else:
+        joblib.dump(detector, path)
+
+
+def load_detector(path):
+    """Inverse of save_detector()."""
+    path = Path(path)
+    if path.suffix != ".pt":
+        return joblib.load(path)
+    saved = torch.load(path, weights_only=True)
+    detector = AutoencoderDetector(**saved["params"])
+    names = saved["feature_names"]
+    scaler = StandardScaler()
+    scaler.mean_ = np.array(saved["scaler_mean"])
+    scaler.scale_ = np.array(saved["scaler_scale"])
+    scaler.var_ = scaler.scale_ ** 2
+    scaler.n_features_in_ = len(scaler.mean_)
+    if names:
+        scaler.feature_names_in_ = np.array(names, dtype=object)
+    detector.scaler = scaler
+    detector.network = detector._network(len(scaler.mean_))
+    detector.network.load_state_dict(saved["state_dict"])
+    detector.feature_names, detector.history = names, saved["history"]
+    detector.best_epoch = saved["best_epoch"]
+    return detector
 
 
 # ---------------------------------------------------------------- A4: train and score
