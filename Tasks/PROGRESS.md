@@ -203,7 +203,7 @@
 - [ ] **A4** (Fri Oct 30) Module skeleton `src/models_unsupervised.py`. *Status unknown — not in the repo yet*
 - [ ] **A5** (Fri Oct 30) Isolation Forest. *Status unknown*
 - [ ] **A6** (Sat Oct 31) Autoencoder. *Status unknown*
-- [ ] **A7** (Sun Nov 1) Risk scoring `src/risk_scoring.py`. *Status unknown*
+- [x] **A7** (Sun Nov 1) Risk scoring `src/risk_scoring.py`: daily risk 0–100 (percentile of normal training scores), 7-day max user risk + decayed sum, alert levels, `rank_users()`; works on synthetic scores **(Claude, branch `arva/A7-risk-scoring`)**. **Human-only (Arva):** alert levels High ≥ 99 / Medium ≥ 95 are PROVISIONAL; decide and justify them (IV-D)
 
 ### Week 1
 - [ ] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant
