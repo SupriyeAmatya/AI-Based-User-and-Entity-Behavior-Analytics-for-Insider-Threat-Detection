@@ -219,7 +219,11 @@
 - [x] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`: `python src/pipeline.py --features data/processed/features_v0.parquet --model iforest --top 20` runs from the repo root and prints the ranked table (`results/tables/top_risky_users.csv`); trained models saved in `models/` (joblib / `torch.save`) and reused; also runs on v1 **(Claude, branch `arva/A11-pipeline`)**
 - [x] **A12** (Fri Nov 6) Alert reasons: a `reasons` column with 3 readable reasons per listed user (IF: largest |`z_user_*`| + first-time flags, or above-normal deviation on v0; AE: largest above-expected per-feature errors), e.g. "after-hours events 4.1σ above own baseline" **(Claude, branch `arva/A11-pipeline`)**
 - [ ] **A13** *(optional)* (Sat Nov 7) One-Class SVM
+  - [x] `OneClassSVMDetector` (rbf, nu 0.01, gamma scale, ≤ 20,000 normal training rows) scores v0 (`results/scores/ocsvm_v0.parquet`); val ROC-AUC **0.26** on v0, below random (checked: ~1% of rows fall outside the boundary, as `nu` says; synthetic ROC-AUC > 0.8) **(Claude, branch `arva/A13-ocsvm`)**
+  - [ ] **Human-only (Arva):** L10a notes (A-LIT4)
 - [ ] **A14** (Sun Nov 8) Pipeline diagram F2, hyperparameter table T4 draft, section notes. **Human-only:** draw F2
+  - [x] T4 draft: `hyperparameter_table()` → `results/tables/T4_hyperparameters_unsupervised.csv` (defaults, grid, best by val PR-AUC) **(Claude, branch `arva/A13-ocsvm`)**
+  - [ ] **Human-only (Arva):** draw F2; IV-C/IV-D notes in `paper/notes_arva.md`
 
 ### Week 2
 - [ ] **A15** (Mon Nov 9) Retrain and tune on v1
@@ -318,7 +322,7 @@ Tick when the PR is **merged** into `main`.
 - [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6): PR open, stacked on `arva/A9-v0-tuning`
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
 - [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7)
-- [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7)
+- [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7): PR open, stacked on `arva/A11-pipeline`
 - [ ] `supriye/S17-baselines-v1` (reviewer Arva, Sun Nov 8)
 - [ ] `supriye/S21-v1-fixes` *(only if needed)* (reviewer Arva, Tue Nov 10, 12:00)
 - [ ] `arva/A15-final-models` (reviewer Supriye, Tue Nov 10)

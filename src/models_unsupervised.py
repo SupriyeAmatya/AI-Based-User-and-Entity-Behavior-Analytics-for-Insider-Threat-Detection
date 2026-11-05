@@ -1,4 +1,5 @@
-"""Unsupervised detectors (owner: Arva; A4 skeleton, A5 Isolation Forest, A6 autoencoder, A8 extras).
+"""Unsupervised detectors (owner: Arva; A4 skeleton, A5 Isolation Forest, A6 autoencoder, A8 extras,
+A13 One-Class SVM).
 
 Usage:
     from src.models_unsupervised import train_and_score
@@ -41,6 +42,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import ParameterGrid
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.svm import OneClassSVM
 from torch import nn
 
 from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
@@ -182,7 +184,31 @@ class AutoencoderDetector(UnsupervisedDetector):
         return self.feature_residuals(X) ** 2
 
 
-DETECTORS = {d.name: d for d in (IsolationForestDetector, AutoencoderDetector)}
+# ---------------------------------------------------------------- A13: One-Class SVM (optional)
+class OneClassSVMDetector(UnsupervisedDetector):
+    """RBF One-Class SVM in the same scaler pipeline. It scales poorly with rows, so it is fitted on
+    a random sample of at most `max_train` normal training rows (A13 card: 20,000)."""
+
+    name = "ocsvm"
+    defaults = {"nu": 0.01, "gamma": "scale", "kernel": "rbf", "max_train": 20_000,
+                "random_state": RANDOM_STATE}
+
+    def fit(self, X_train_normal, X_val_normal=None):
+        p = self.params
+        if len(X_train_normal) > p["max_train"]:
+            X_train_normal = X_train_normal.sample(p["max_train"], random_state=p["random_state"])
+        self.n_fitted = len(X_train_normal)
+        self.pipeline = Pipeline([("scaler", StandardScaler()),
+                                  ("model", OneClassSVM(kernel=p["kernel"], nu=p["nu"],
+                                                        gamma=p["gamma"]))])
+        self.pipeline.fit(X_train_normal)
+        return self
+
+    def score(self, X):
+        return -self.pipeline.decision_function(X)
+
+
+DETECTORS = {d.name: d for d in (IsolationForestDetector, AutoencoderDetector, OneClassSVMDetector)}
 
 
 # ---------------------------------------------------------------- A11: saving trained detectors
@@ -311,6 +337,30 @@ def tune(df, model_name, grid=None, dataset="v0", fixed=None, log_name=TUNING_LO
     if "hidden" in best:
         best["hidden"] = tuple(best["hidden"])
     return log, best
+
+
+def hyperparameter_table(log_path=None, name="T4_hyperparameters_unsupervised.csv") -> pd.DataFrame:
+    """Draft of table T4 (A14 step 2): per model, the card defaults, the grid searched and the best
+    setting so far by val PR-AUC (from the tuning log), saved to results/tables/<name>."""
+    log_path = TABLES_DIR / TUNING_LOG if log_path is None else log_path
+    log = pd.read_csv(log_path) if Path(log_path).exists() else pd.DataFrame()
+    rows = []
+    for model, cls in DETECTORS.items():
+        row = {"model": model,
+               "defaults": json.dumps({k: v for k, v in cls.defaults.items()
+                                       if k not in ("random_state", "seed")}, default=str),
+               "grid": json.dumps(GRIDS.get(model, {}), default=str)}
+        runs = log[log["model"] == model] if len(log) else log
+        if len(runs):
+            best = runs.loc[runs["val_pr_auc"].idxmax()]
+            row.update({"best_params": best["params"], "dataset": best["dataset"],
+                        "val_pr_auc": best["val_pr_auc"], "val_roc_auc": best["val_roc_auc"],
+                        "runs": len(runs)})
+        rows.append(row)
+    table = pd.DataFrame(rows)
+    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+    table.to_csv(TABLES_DIR / name, index=False)
+    return table
 
 
 def plot_loss_curves(history, name="autoencoder_loss"):
