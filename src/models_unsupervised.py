@@ -19,7 +19,14 @@ Every detector follows the team rules:
 
 Demo on synthetic data (the A5 and A6 "done when" checks):
     python -m src.models_unsupervised demo
+
+Tuning (A9-A10): one call runs a whole grid, scores the val split and appends one row per run
+to the tuning log results/tables/tuning_log_unsupervised.csv; the best run is the one with the
+highest val PR-AUC (never test, never accuracy):
+    log, best = tune(df, "iforest")                    # IF_GRID, 18 runs
+    log, best = tune(df, "autoencoder", dataset="v0")  # AE_GRID, 16 runs
 """
+import json
 import sys
 import time
 
@@ -28,11 +35,13 @@ import pandas as pd
 import torch
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import ParameterGrid
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 
-from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR
+from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
+from src.evaluate import ranking_metrics, threshold_metrics, threshold_top_k
 from src.features import get_model_matrix
 
 SCORE_KEYS = ["user", "date", "split", "label", "scenario"]
@@ -211,6 +220,49 @@ def train_and_score(df, model_name, params=None, save=True, save_as=None, train_
             "score_seconds_per_1000": 1000 * score_seconds / max(len(X_all), 1),
             "path": path, "detector": detector}
     return scores, info
+
+
+# ---------------------------------------------------------------- A9-A10: tuning
+IF_GRID = {"n_estimators": [100, 200, 500], "max_samples": [256, 1024, "auto"],
+           "max_features": [0.5, 1.0]}
+AE_GRID = {"bottleneck": [8, 16], "hidden": [(64, 32), (128, 64)], "dropout": [0.0, 0.1],
+           "lr": [1e-3, 1e-4]}
+GRIDS = {"iforest": IF_GRID, "autoencoder": AE_GRID}
+TUNING_LOG = "tuning_log_unsupervised.csv"
+
+
+def val_metrics(scores: pd.DataFrame, k: float = 0.01) -> dict:
+    """Val-split ROC-AUC, PR-AUC and recall when the top k of val user-days are flagged."""
+    val = scores[scores["split"] == "val"]
+    out = {f"val_{m}": v for m, v in ranking_metrics(val["label"], val["score"]).items()
+           if m != "positive_rate"}
+    out["val_recall_top1pct"] = threshold_metrics(val["label"], val["score"],
+                                                  threshold_top_k(val, k))["recall"]
+    return out
+
+
+def tune(df, model_name, grid=None, dataset="v0", fixed=None, log_name=TUNING_LOG,
+         train_on="normal"):
+    """Run every parameter combination of `grid` (default: the card grid), score val, and append one
+    row per run to results/tables/<log_name>. Returns (this run's log rows, best params by
+    val PR-AUC). `fixed` adds parameters to every run (e.g. {"epochs": 30})."""
+    grid = GRIDS[model_name] if grid is None else grid
+    rows = []
+    for params in ParameterGrid(grid):
+        params = {**(fixed or {}), **params}
+        scores, info = train_and_score(df, model_name, params, save=False, train_on=train_on)
+        rows.append({"model": model_name, "dataset": dataset, "train_on": train_on,
+                     "params": json.dumps(params, default=str), **val_metrics(scores),
+                     "fit_seconds": round(info["fit_seconds"], 2), "n_train": info["n_train"],
+                     "n_features": len(info["features"])})
+    log = pd.DataFrame(rows)
+    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+    path = TABLES_DIR / log_name
+    log.to_csv(path, mode="a", header=not path.exists(), index=False)
+    best = json.loads(log.loc[log["val_pr_auc"].idxmax(), "params"])
+    if "hidden" in best:
+        best["hidden"] = tuple(best["hidden"])
+    return log, best
 
 
 def plot_loss_curves(history, name="autoencoder_loss"):

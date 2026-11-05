@@ -93,3 +93,21 @@ def test_contamination_variant_trains_on_all_train_rows(df, name, params, tmp_ou
     assert info["train_on"] == "all" and len(scores) == len(df)
     with pytest.raises(ValueError):
         mu.train_and_score(df, name, params, save=False, train_on="some")
+
+
+# ---------------------------------------------------------------- A9-A10
+def test_tune_runs_a_grid_and_logs_every_run(df, tmp_outputs, monkeypatch):
+    monkeypatch.setattr(mu, "TABLES_DIR", tmp_outputs / "tables")
+    grid = {"n_estimators": [50, 100], "max_features": [0.5, 1.0]}
+    log, best = mu.tune(df, "iforest", grid, dataset="synthetic")
+    assert len(log) == 4 and log["val_pr_auc"].between(0, 1).all()
+    assert {"params", "val_roc_auc", "val_pr_auc", "val_recall_top1pct", "fit_seconds"} <= set(log.columns)
+    assert best == {k: v for k, v in mu.json.loads(log.loc[log["val_pr_auc"].idxmax(), "params"]).items()}
+    mu.tune(df, "autoencoder", {"bottleneck": [8], "hidden": [(64, 32)]}, fixed={"epochs": 2})
+    saved = pd.read_csv(tmp_outputs / "tables" / mu.TUNING_LOG)
+    assert len(saved) == 5 and set(saved["model"]) == {"iforest", "autoencoder"}  # appended
+
+
+def test_card_grids_have_the_planned_sizes():
+    from sklearn.model_selection import ParameterGrid
+    assert len(ParameterGrid(mu.IF_GRID)) == 18 and len(ParameterGrid(mu.AE_GRID)) == 16
