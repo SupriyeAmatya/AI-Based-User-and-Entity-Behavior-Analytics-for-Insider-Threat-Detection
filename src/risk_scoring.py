@@ -11,6 +11,10 @@ Usage:
   and user_risk_decayed: risk x 0.5^(age_in_days / 3) summed over the user's past days.
 - alert_level from user_risk: High >= HIGH, Medium >= MEDIUM, else Low.
 
+Prototype results (A18):
+    precision_at_k(table, risk, k=20)   # how many of the top 20 users are test-period insiders
+    plot_risk_timeline(risk, f8_user(risk))   # figure F8
+
 Demo on Ayo's synthetic scores (the A7 "done when" check):
     python -m src.risk_scoring demo
 """
@@ -18,6 +22,8 @@ import sys
 
 import numpy as np
 import pandas as pd
+
+from src.config import FIGURES_DIR
 
 # PROVISIONAL (A7, Arva decides and justifies them in IV-D): the card's suggested levels.
 # High = top 1% of normal training behaviour, matching the TEAM_PLAN 5.6 alert budget.
@@ -97,6 +103,71 @@ def rank_users(risk: pd.DataFrame, date, top=None) -> pd.DataFrame:
     table["alert_level"] = alert_level(table["user_risk"])
     table.insert(0, "rank", np.arange(1, len(table) + 1))
     return table.head(top) if top else table
+
+
+# ---------------------------------------------------------------- A18: prototype results
+def insiders_in_test(risk: pd.DataFrame) -> set:
+    """Users with at least one malicious day (label == 1) in the test period."""
+    return set(risk.loc[(risk["split"] == "test") & (risk["label"] == 1), "user"])
+
+
+def precision_at_k(table: pd.DataFrame, risk: pd.DataFrame, k=20) -> dict:
+    """How many of the first k users of a ranked table (e.g. pipeline.top_users) are test-period
+    insiders, and what share of all test insiders that is.
+
+    precision_at_k = insiders among the listed users / number of listed users (k, or fewer if the
+    table is shorter); insider_recall = insiders among the listed users / all test insiders.
+    """
+    listed = list(table["user"].head(k))
+    insiders = insiders_in_test(risk)
+    hits = sorted(set(listed) & insiders)
+    return {"k": k, "n_listed": len(listed), "n_insiders_listed": len(hits),
+            "precision_at_k": len(hits) / len(listed) if listed else float("nan"),
+            "n_test_insiders": len(insiders),
+            "insider_recall": len(hits) / len(insiders) if insiders else float("nan"),
+            "insiders_listed": " ".join(hits)}
+
+
+def f8_user(risk: pd.DataFrame) -> str:
+    """The user for figure F8 by the A18 card rule: the test-period insider with the highest
+    7-day user risk in the test period (ties: first user name)."""
+    insiders = insiders_in_test(risk)
+    if not insiders:
+        raise ValueError("no insider has a malicious day in the test period")
+    test = risk[(risk["split"] == "test") & risk["user"].isin(insiders)]
+    peak = test.groupby("user")["user_risk"].max()
+    return peak[peak == peak.max()].index.min()
+
+
+def plot_risk_timeline(risk: pd.DataFrame, user, name="F8_risk_timeline"):
+    """Figure F8 for one user: daily risk and 7-day user risk over time, malicious days shaded,
+    the High and Medium levels as lines, and the test period marked. Saved as PNG and PDF."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    rows = risk[risk["user"] == user].sort_values("date")
+    if rows.empty:
+        raise ValueError(f"user {user!r} has no rows")
+    fig, ax = plt.subplots(figsize=(7, 3))
+    test = risk.loc[risk["split"] == "test", "date"]
+    if len(test):
+        ax.axvspan(test.min(), test.max(), color="0.92", zorder=0, label="test period")
+    for i, day in enumerate(rows.loc[rows["label"] == 1, "date"]):
+        ax.axvspan(day, day + pd.Timedelta(days=1), color="tab:red", alpha=0.3, lw=0,
+                   label="malicious day" if i == 0 else None)
+    ax.plot(rows["date"], rows["daily_risk"], ".", ms=3, color="0.4", label="daily risk")
+    ax.plot(rows["date"], rows["user_risk"], color="tab:blue", lw=1.2,
+            label=f"user risk ({WINDOW_DAYS}-day max)")
+    ax.axhline(HIGH, color="tab:red", ls="--", lw=0.8, label=f"High ({HIGH:g})")
+    ax.axhline(MEDIUM, color="tab:orange", ls="--", lw=0.8, label=f"Medium ({MEDIUM:g})")
+    ax.set(ylim=(0, 101), ylabel="Risk (0-100)", title=f"Risk over time: {user}")
+    fig.autofmt_xdate()
+    ax.legend(fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.3), ncol=3)  # below the plot
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    for ext in ("png", "pdf"):
+        fig.savefig(FIGURES_DIR / f"{name}.{ext}", dpi=300, bbox_inches="tight")
+    return fig
 
 
 def demo():
