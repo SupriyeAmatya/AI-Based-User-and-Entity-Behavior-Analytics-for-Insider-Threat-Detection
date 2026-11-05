@@ -172,10 +172,15 @@
   - [ ] **Human-only (Supriye):** check the keyword lists. The log has only **475 domains** (all in `data/processed/http_domain_counts.csv`); the PROVISIONAL lists in `src/config.py` `HTTP_CATEGORIES` were drafted from all of them, with what was left out and why
 - [x] **S16** (Sat Nov 7) Organizational context: `role`/`department` from that month's LDAP for every row, Big-Five scores as `f_ctx_O`…`f_ctx_N`, no "days until leaving" feature. 14 senior staff without a department use their functional unit on `supriye/S10-behavior-features` **(Claude)**
   - Full behavior table: 1,000 users, 330,268 user-days, 984 malicious, 41 `f_*` features, built in 1.5 min (`python -m src.features v1`)
-- [ ] **S17** (Sat Nov 7) Per-user baselines `z_user_*` + figure F3
-- [ ] **S18** (Sun Nov 8) Peer-group baselines `z_peer_*` + novelty flags `new_*`
+- [x] **S17** (Sat Nov 7) Per-user baselines: `src/baseline.py` `z_user_*` for 14 key features (previous 30 active days, today excluded, cold start from `z_peer`), figure F3 (`results/figures/F3_user_baseline.*`, scenario-2 insider `RMW0542`) on `supriye/S17-baselines-v1` **(Claude)**
+- [x] **S18** (Sun Nov 8) Peer-group baselines `z_peer_*` (role on the same date; department if < 5 users) + `new_usb_user`, `new_pc`, `new_leak_site`, `new_afterhours` (past days only); no missing values on `supriye/S17-baselines-v1` **(Claude)**
 - [ ] **S19** (Sun Nov 8) Validation and leakage checks (5 checks; check 4 is a hand check, human-only)
+  - [x] `notebooks/02_feature_engineering.ipynb` (runs top to bottom): checks 1, 2, 3, 5 **pass** (leakage test: 0.0 change after deleting the last month); an automated raw-log recount for 3 insiders (one per scenario) matches; results in `results/tables/v1_validation_checks.csv` on `supriye/S17-baselines-v1` **(Claude)**
+  - [ ] **Human-only (Supriye):** check 4 hand count, written in the notebook's Observation cell
 - [ ] **S20** (Sun Nov 8 – Mon Nov 9) Feature table v1 + feature dictionary + walkthrough → M2
+  - [x] `features_v1.parquet` built: 330,268 user-days, 73 model inputs (41 `f_*`, 14 `z_user_*`, 14 `z_peer_*`, 4 `new_*`), 1 min 45 s on `supriye/S17-baselines-v1` **(Claude)**
+  - [x] `docs/feature_dictionary.md`: every column with group, definition, unit and why it matters on `supriye/S17-baselines-v1` **(Claude)**
+  - [ ] Uploaded to the drive; walkthrough (Mon); Arva and Ayo load v1 → M2
 
 ### Week 2
 - [ ] **S21** (Tue Nov 10) Bug-fix window until 12:00
