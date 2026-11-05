@@ -157,17 +157,30 @@
   - [ ] Rebuilt once Supriye confirms after-hours + split, then uploaded to the drive
   - [x] PR merged (#6 via #7, Nov 3; v0 sampler fix #11, Nov 4)
   - [ ] Review by Arva (none on GitHub) → tag `m1-features-v0`; Arva and Ayo confirm it loads in their code
-- [ ] **S10** (Wed Nov 4) Login features
+- [x] **S10** (Wed Nov 4) Login features: `login_features()` + `primary_pcs()` (most-logon PC in train; users without train logons use their first 30 active days); unit tests check user-days against hand-made logs on `supriye/S10-behavior-features` **(Claude)**
 - [ ] **S11** (Wed Nov 4) Activity-time features. **Human-only:** decide after hours from the EDA hour plot and write the reason in the feature dictionary
-- [ ] **S12** (Thu Nov 5) USB device features
-- [ ] **S13** (Thu Nov 5) File features
-- [ ] **S14** (Fri Nov 6) Email features. **Decision (Supriye):** only 62.4% of emails come from the user's own `dtaa.com` address; the rest look like personal webmail sent from the work PC. Count all of them as "sent", or only work-address ones?
+  - [x] `f_afterhours_logon`, `f_afterhours_events` (logon + USB + file + email + web), `f_afterhours_ratio`, `f_weekend` on `supriye/S10-behavior-features` **(Claude)**
+  - [ ] **Human-only (Supriye):** after-hours window; built with the PROVISIONAL 07:00–19:00
+- [x] **S12** (Thu Nov 5) USB device features: connects, after-hours connects, PCs, minutes connected (Connect paired with the next Disconnect on the same PC, else capped at midnight). Scenario-1 insiders: 1.29 connects on malicious days vs 0.04 on their other days (`results/tables/v1_behavior_checks.csv`) on `supriye/S10-behavior-features` **(Claude)**
+- [x] **S13** (Thu Nov 5) File features: total, doc, exe, zip, img, after hours; the extension groups cover **100%** of the 445,581 file copies (r4.2 has only doc/pdf/txt/jpg/zip/exe) on `supriye/S10-behavior-features` **(Claude)**
+- [ ] **S14** (Fri Nov 6) Email features
+  - [x] The 8 email features; `EMAIL_COUNT_PERSONAL` in `src/config.py` switches between both counts. Scenario 3 (12 accounts incl. the 2 hijacked): 28.7 recipients on malicious days vs 25.3 otherwise on `supriye/S10-behavior-features` **(Claude)**
+  - [ ] **Decision (Supriye):** only 62.4% of emails come from the user's own `dtaa.com` address; the rest look like personal webmail sent from the work PC. Count all of them as "sent", or only work-address ones? *(PROVISIONAL: all, `EMAIL_COUNT_PERSONAL = True`)*
 - [ ] **S15** (Thu Nov 5 – Fri Nov 6) Web-usage features. **Human-only:** build the job / leak / cloud / hack keyword lists from `results/tables/top100_web_domains.csv`
-- [ ] **S16** (Sat Nov 7) Organizational context (no "days until leaving" feature). Note: 14 senior staff have no LDAP department; `ldap_context()` uses their functional unit instead (already in v0)
-- [ ] **S17** (Sat Nov 7) Per-user baselines `z_user_*` + figure F3
-- [ ] **S18** (Sun Nov 8) Peer-group baselines `z_peer_*` + novelty flags `new_*`
+  - [x] One 29-second pass over the 28.4M-row web log, cached per (user, day, domain) in `data/processed/http_user_day_domain.parquet`; the lists are applied afterwards, so editing them needs no new pass. 8 web features on `supriye/S10-behavior-features` **(Claude)**
+  - [x] Checks: scenario-1 insiders have `f_http_leak > 0` on 80% of malicious days (0 on other days); scenario-2 `f_http_job` 2.49 on malicious days vs 0.85 otherwise
+  - [ ] **Human-only (Supriye):** check the keyword lists. The log has only **475 domains** (all in `data/processed/http_domain_counts.csv`); the PROVISIONAL lists in `src/config.py` `HTTP_CATEGORIES` were drafted from all of them, with what was left out and why
+- [x] **S16** (Sat Nov 7) Organizational context: `role`/`department` from that month's LDAP for every row, Big-Five scores as `f_ctx_O`…`f_ctx_N`, no "days until leaving" feature. 14 senior staff without a department use their functional unit on `supriye/S10-behavior-features` **(Claude)**
+  - Full behavior table: 1,000 users, 330,268 user-days, 984 malicious, 41 `f_*` features, built in 1.5 min (`python -m src.features v1`)
+- [x] **S17** (Sat Nov 7) Per-user baselines: `src/baseline.py` `z_user_*` for 14 key features (previous 30 active days, today excluded, cold start from `z_peer`), figure F3 (`results/figures/F3_user_baseline.*`, scenario-2 insider `RMW0542`) on `supriye/S17-baselines-v1` **(Claude)**
+- [x] **S18** (Sun Nov 8) Peer-group baselines `z_peer_*` (role on the same date; department if < 5 users) + `new_usb_user`, `new_pc`, `new_leak_site`, `new_afterhours` (past days only); no missing values on `supriye/S17-baselines-v1` **(Claude)**
 - [ ] **S19** (Sun Nov 8) Validation and leakage checks (5 checks; check 4 is a hand check, human-only)
+  - [x] `notebooks/02_feature_engineering.ipynb` (runs top to bottom): checks 1, 2, 3, 5 **pass** (leakage test: 0.0 change after deleting the last month); an automated raw-log recount for 3 insiders (one per scenario) matches; results in `results/tables/v1_validation_checks.csv` on `supriye/S17-baselines-v1` **(Claude)**
+  - [ ] **Human-only (Supriye):** check 4 hand count, written in the notebook's Observation cell
 - [ ] **S20** (Sun Nov 8 – Mon Nov 9) Feature table v1 + feature dictionary + walkthrough → M2
+  - [x] `features_v1.parquet` built: 330,268 user-days, 73 model inputs (41 `f_*`, 14 `z_user_*`, 14 `z_peer_*`, 4 `new_*`), 1 min 45 s on `supriye/S17-baselines-v1` **(Claude)**
+  - [x] `docs/feature_dictionary.md`: every column with group, definition, unit and why it matters on `supriye/S17-baselines-v1` **(Claude)**
+  - [ ] Uploaded to the drive; walkthrough (Mon); Arva and Ayo load v1 → M2
 
 ### Week 2
 - [ ] **S21** (Tue Nov 10) Bug-fix window until 12:00
@@ -213,13 +226,17 @@
 - [x] **A7** (Sun Nov 1) Risk scoring `src/risk_scoring.py`: daily risk 0–100 (percentile of normal training scores), 7-day max user risk + decayed sum, alert levels, `rank_users()`; works on synthetic scores **(Claude, [PR #15](https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection/pull/15), merged Nov 4)**. **Human-only (Arva):** alert levels High ≥ 99 / Medium ≥ 95 are PROVISIONAL; decide and justify them (IV-D)
 
 ### Week 1
-- [ ] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant
-- [ ] **A9** (Tue Nov 3) First run on real data (v0); tuning log started
-- [ ] **A10** (Wed Nov 4) Tuning workflow (IF and AE grids, chosen by val PR-AUC)
-- [ ] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`
-- [ ] **A12** (Fri Nov 6) Alert reasons (top-3 per alert)
+- [x] **A8** (Mon Nov 2) Per-feature reconstruction error + contamination variant: `AutoencoderDetector.feature_errors(X)` (same shape as X; row mean = score) and `train_and_score(..., train_on="all")` saved as `<model>_contam`; both tested on synthetic data **(Claude, branch `arva/A8-feature-errors`)**
+- [x] **A9** (Tue Nov 3) First run on real data (v0); tuning log started: `notebooks/03a_unsupervised_models.ipynb` scores v0 with both models (`results/scores/{iforest,autoencoder}_v0.parquet`); val PR-AUC 0.054 (IF) and 0.104 (AE) with the card settings **(Claude, branch `arva/A9-v0-tuning`)**
+- [x] **A10** (Wed Nov 4) Tuning workflow: `tune(df, model)` runs a whole grid (IF 18 runs, AE 16) and appends to `results/tables/tuning_log_unsupervised.csv`; best on v0 by val PR-AUC: IF 0.063, AE 0.122 **(Claude, branch `arva/A9-v0-tuning`)**. **Human-only (Arva):** choose the grids and say why
+- [x] **A11** (Thu Nov 5) Prototype pipeline `src/pipeline.py`: `python src/pipeline.py --features data/processed/features_v0.parquet --model iforest --top 20` runs from the repo root and prints the ranked table (`results/tables/top_risky_users.csv`); trained models saved in `models/` (joblib / `torch.save`) and reused; also runs on v1 **(Claude, branch `arva/A11-pipeline`)**
+- [x] **A12** (Fri Nov 6) Alert reasons: a `reasons` column with 3 readable reasons per listed user (IF: largest |`z_user_*`| + first-time flags, or above-normal deviation on v0; AE: largest above-expected per-feature errors), e.g. "after-hours events 4.1σ above own baseline" **(Claude, branch `arva/A11-pipeline`)**
 - [ ] **A13** *(optional)* (Sat Nov 7) One-Class SVM
+  - [x] `OneClassSVMDetector` (rbf, nu 0.01, gamma scale, ≤ 20,000 normal training rows) scores v0 (`results/scores/ocsvm_v0.parquet`); val ROC-AUC **0.26** on v0, below random (checked: ~1% of rows fall outside the boundary, as `nu` says; synthetic ROC-AUC > 0.8) **(Claude, branch `arva/A13-ocsvm`)**
+  - [ ] **Human-only (Arva):** L10a notes (A-LIT4)
 - [ ] **A14** (Sun Nov 8) Pipeline diagram F2, hyperparameter table T4 draft, section notes. **Human-only:** draw F2
+  - [x] T4 draft: `hyperparameter_table()` → `results/tables/T4_hyperparameters_unsupervised.csv` (defaults, grid, best by val PR-AUC) **(Claude, branch `arva/A13-ocsvm`)**
+  - [ ] **Human-only (Arva):** draw F2; IV-C/IV-D notes in `paper/notes_arva.md`
 
 ### Week 2
 - [ ] **A15** (Mon Nov 9) Retrain and tune on v1
@@ -314,15 +331,15 @@ Tick when the PR is **merged** into `main`.
 - [x] `arva/A3-http-job-rename` *(follow-up, not in the plan)*: merged into `main` Nov 4 (PR #13), branch deleted. `f_http_job_site` → `f_http_job`. No review
 - [ ] `arva/A4-unsupervised-models` (A4, A5, A6, A8; reviewer Ayo, Mon Nov 2)
   - [x] A4–A6 merged into `main` Nov 4 (PR #14), branch deleted. No review by Ayo yet (§9)
-  - [ ] A8 (per-feature error + contamination variant), on a new branch from `main`
+  - [ ] A8 (per-feature error + contamination variant): on `arva/A8-feature-errors` (PR open)
 - [x] `arva/A7-risk-scoring`: merged into `main` Nov 4 (PR #15), branch deleted. Review by Supriye still open (§9)
-- [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4)
+- [ ] `arva/A9-v0-tuning` (reviewer Ayo, Wed Nov 4): PR open, stacked on `arva/A8-feature-errors`
 - [ ] `ayo/Y7-supervised-models` (reviewer Supriye, Thu Nov 5): PR open
 - [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6): PR open, stacked on `ayo/Y7-supervised-models`
-- [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6)
+- [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6): PR open, stacked on `arva/A9-v0-tuning`
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
 - [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7)
-- [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7)
+- [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7): PR open, stacked on `arva/A11-pipeline`
 - [ ] `supriye/S17-baselines-v1` (reviewer Arva, Sun Nov 8)
 - [ ] `supriye/S21-v1-fixes` *(only if needed)* (reviewer Arva, Tue Nov 10, 12:00)
 - [ ] `arva/A15-final-models` (reviewer Supriye, Tue Nov 10)

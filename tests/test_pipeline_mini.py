@@ -1,4 +1,4 @@
-"""End-to-end test of S4 -> S9 on a miniature CERT r4.2 archive (no real data needed).
+"""End-to-end test of S4 -> S9 (and the v1 behavior features, S10-S16) on a miniature CERT r4.2 archive (no real data needed).
 
 The fake archive has the same layout, file names, columns and date format as r4.2:
 8 users, one insider per scenario, weekly activity from Jan 2010 to May 2011, and each insider
@@ -119,6 +119,7 @@ def mini(tmp_path, monkeypatch):
     monkeypatch.setattr(labels, "PROCESSED_DIR", processed)
     monkeypatch.setattr(labels, "TABLES_DIR", tables)
     monkeypatch.setattr(features, "PROCESSED_DIR", processed)
+    monkeypatch.setattr(features, "TABLES_DIR", tables)
     monkeypatch.setattr(features, "V0_N_INSIDERS", 3)
     monkeypatch.setattr(features, "V0_N_NORMAL", 4)
     return tmp_path
@@ -181,3 +182,27 @@ def test_s9_feature_table_v0(mini):
     assert df.loc[df["user"] == "AAA0001", "insider"].eq(1).all()
     X, y, cols = features.get_model_matrix(df, split="train")
     assert len(X) == (df["split"] == "train").sum() and int(y.sum()) == 3
+
+
+def test_s10_s16_feature_table_v1(mini):
+    data_loader.convert_cert_to_parquet()
+    labels.main()
+    features.main(["v1"])
+    df = pd.read_parquet(mini / "processed" / "features_v1.parquet")
+    assert list(df.columns[:8]) == features.META_COLUMNS
+    assert df["user"].nunique() == len(USERS) and not df.duplicated(["user", "date"]).any()
+    assert df[features.feature_columns(df)].notna().all().all()
+    mal = df[(df["label"] == 1) & df["user"].isin(INSIDERS)]
+    assert len(mal) == 9
+    assert (mal["f_usb_connect"] == 1).all() and (mal["f_usb_afterhours"] == 1).all()
+    assert (mal["f_file_doc"] == 1).all() and (mal["f_email_external_attach"] == 1).all()
+    assert (mal["f_http_leak"] == 1).all() and (mal["f_afterhours_logon"] == 1).all()
+    # 22:30 logon, then USB connect, file copy, email, web visit: 5 after-hours events of 9
+    assert (mal["f_afterhours_events"] == 5).all()
+    assert mal["f_afterhours_ratio"].tolist() == pytest.approx([5 / 9] * 9)
+    assert (mal["f_usb_duration"] == 85).all()          # 22:35 connect, no disconnect -> midnight
+    normal = df[df["label"] == 0]
+    assert (normal["f_http_leak"] == 0).all() and (normal["f_work_duration"] == 9).all()
+    assert (df["f_ctx_O"] == 30).all() and set(df["f_weekend"]) == {0}
+    assert (mini / "processed" / "http_user_day_domain.parquet").exists()
+    assert (mini / "tables" / "v1_behavior_checks.csv").exists()
