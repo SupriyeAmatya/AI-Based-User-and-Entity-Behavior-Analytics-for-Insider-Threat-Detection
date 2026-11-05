@@ -102,3 +102,28 @@ def test_hyperparameter_table_draft(df, tmp_outputs):
     table = ms.hyperparameter_table().set_index("model")
     assert table.loc["xgboost", "runs"] == 2 and "best_params" in table.columns
     assert (tmp_outputs / "tables" / "T4_hyperparameters_supervised.csv").exists()
+
+
+# ---------------------------------------------------------------- Y12: LOSO
+@pytest.mark.parametrize("held_out", [1, 2, 3])
+def test_loso_never_trains_on_the_held_out_accounts(df, held_out, tmp_outputs):
+    train, val, test, held = ms.loso_masks(df, held_out)
+    assert held and not df.loc[train | val, "user"].isin(held).any()
+    assert set(df.loc[test, "scenario"]) == {0, held_out} and set(df.loc[test, "split"]) == {"test"}
+    assert df.loc[train, "label"].sum() > 0                        # other scenarios still teach it
+    scores, metrics = ms.run_loso(df, "xgboost", held_out=held_out)
+    assert len(scores) == int(test.sum()) and metrics["n_train"] == int(train.sum())
+    assert set(scores.loc[scores["label"] == 1, "scenario"]) == {held_out}
+    assert (tmp_outputs / "scores" / f"xgboost_loso_s{held_out}.parquet").exists()
+    assert 0 <= metrics["pr_auc"] <= 1 and 0 <= metrics["recall_top1pct"] <= 1
+
+
+def test_loso_table_puts_unsupervised_on_the_same_rows(df, tmp_outputs):
+    from src.models_unsupervised import train_and_score
+    iforest, _ = train_and_score(df, "iforest", save=False)
+    table = ms.loso_table(df, unsupervised={"iforest": iforest},
+                          params={"random_forest": {"n_estimators": 50}})
+    assert len(table) == 9 and set(table["held_out"]) == {1, 2, 3}
+    for s, rows in table.groupby("held_out"):
+        assert rows["n_rows"].nunique() == 1 and rows["n_malicious"].nunique() == 1  # same test rows
+    assert (tmp_outputs / "tables" / ms.LOSO_TABLE).exists()

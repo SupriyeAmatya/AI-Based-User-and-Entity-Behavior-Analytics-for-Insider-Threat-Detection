@@ -1,4 +1,4 @@
-"""Supervised detectors (owner: Ayo; Y7 models, Y9 tuning, Y10 imbalance experiment).
+"""Supervised detectors (owner: Ayo; Y7 models, Y9 tuning, Y10 imbalance experiment, Y12 LOSO).
 
 Usage:
     from src.models_supervised import train_and_score_supervised
@@ -16,6 +16,10 @@ XGBoost stops early on the val rows (eval_metric="aucpr", 50 rounds).
 Tuning (Y9) and the imbalance experiment (Y10) evaluate on val only and log to results/tables/:
     log, best = tune_supervised(df, "xgboost")       # -> tuning_log_supervised.csv
     table = imbalance_experiment(df)                 # -> imbalance.csv
+
+Leave-one-scenario-out (Y12), the "unseen anomaly" experiment:
+    scores, metrics = run_loso(df, "xgboost", held_out=2)   # -> results/scores/xgboost_loso_s2.parquet
+    table = loso_table(df, unsupervised={"iforest": iforest_scores})
 
 Demo on Arva's synthetic features (the Y7 "done when" check):
     python -m src.models_supervised demo
@@ -98,17 +102,19 @@ def predict_scores(pipeline, X) -> np.ndarray:
 
 
 def train_and_score_supervised(df, model_name, params=None, save=True, save_as=None,
-                               columns=None, weighting=True, smote=False, train_mask=None):
+                               columns=None, weighting=True, smote=False, train_mask=None,
+                               val_mask=None):
     """Fit on the training rows, score every row, optionally save the score file.
 
-    train_mask (default: split == "train") restricts the training rows, e.g. for LOSO (Y12).
+    train_mask (default: split == "train") and val_mask (default: split == "val", used only for
+    XGBoost's early stopping) restrict the rows, e.g. for LOSO (Y12).
     Returns (scores, info) like Arva's train_and_score(); info["pipeline"] is the fitted model.
     """
     if model_name not in MODELS:
         raise ValueError(f"unknown model {model_name!r}; choose from {MODELS}")
     X_all, y_all, feature_names = get_model_matrix(df, columns=columns)
     train = (df["split"] == "train") if train_mask is None else train_mask
-    val = df["split"] == "val"
+    val = (df["split"] == "val") if val_mask is None else val_mask
     started = time.perf_counter()
     pipeline = fit_pipeline(model_name, X_all[train], y_all[train], X_all[val], y_all[val],
                             params, weighting, smote)
@@ -183,6 +189,70 @@ def imbalance_experiment(df, models=MODELS, params=None, dataset="v0", save=True
     if save:
         TABLES_DIR.mkdir(parents=True, exist_ok=True)
         table.to_csv(TABLES_DIR / IMBALANCE_TABLE, index=False)
+    return table
+
+
+# ---------------------------------------------------------------- Y12: leave-one-scenario-out
+LOSO_TABLE = "loso.csv"
+
+
+def loso_masks(df, held_out):
+    """Rows for one LOSO run. The held-out scenario's accounts (every user with a malicious day of
+    that scenario, including scenario 3's hijacked supervisor accounts) are removed from training
+    and early stopping completely, normal days included, so the model never sees those people.
+    Test = split == "test" with scenario 0 or `held_out`: only the unseen attack is measured."""
+    held_users = set(df.loc[df["scenario"] == held_out, "user"])
+    unseen = ~df["user"].isin(held_users)
+    train = (df["split"] == "train") & unseen
+    val = (df["split"] == "val") & unseen
+    test = (df["split"] == "test") & df["scenario"].isin([0, held_out])
+    return train, val, test, held_users
+
+
+def loso_metrics(scores: pd.DataFrame, k: float = 0.01) -> dict:
+    """PR-AUC, ROC-AUC and recall at the top k of the given rows (no val threshold needed)."""
+    m = ranking_metrics(scores["label"], scores["score"])
+    recall = threshold_metrics(scores["label"], scores["score"],
+                               threshold_top_k(scores, k))["recall"]
+    return {"n_rows": len(scores), "n_malicious": int(scores["label"].sum()),
+            "pr_auc": m["pr_auc"], "roc_auc": m["roc_auc"], "recall_top1pct": recall}
+
+
+def run_loso(df, model_name, params=None, held_out=1, save=True, **kwargs):
+    """Train without scenario `held_out`, score its test rows (Y12 step 1). Saves the scored test
+    rows as results/scores/<model>_loso_s<held_out>.parquet. Returns (scores, metrics)."""
+    train, val, test, held_users = loso_masks(df, held_out)
+    scores, info = train_and_score_supervised(df, model_name, params, save=False,
+                                              train_mask=train, val_mask=val, **kwargs)
+    scores = scores[test.to_numpy()]
+    if save:
+        SCORES_DIR.mkdir(parents=True, exist_ok=True)
+        scores.to_parquet(SCORES_DIR / f"{model_name}_loso_s{held_out}.parquet", index=False)
+    metrics = {"held_out": held_out, "model": model_name, "kind": "supervised (LOSO)",
+               "n_train": int(train.sum()), "held_out_accounts": len(held_users),
+               **loso_metrics(scores)}
+    return scores, metrics
+
+
+def loso_table(df, models=MODELS, unsupervised=None, params=None, held_out=(1, 2, 3), save=True):
+    """Y12 step 2: per held-out scenario, RF and XGB trained without it next to the unsupervised
+    models evaluated on the same test rows (they never use labels, so every scenario is unseen
+    for them). `unsupervised` maps a model name to its score DataFrame or score-file path."""
+    rows = []
+    for s in held_out:
+        for model_name in models:
+            _, metrics = run_loso(df, model_name, (params or {}).get(model_name), s, save=save)
+            rows.append(metrics)
+        test_keys = df.loc[loso_masks(df, s)[2], ["user", "date"]]
+        for name, source in (unsupervised or {}).items():
+            scores = source if isinstance(source, pd.DataFrame) else pd.read_parquet(source)
+            same_rows = scores.merge(test_keys, on=["user", "date"])
+            rows.append({"held_out": s, "model": name, "kind": "unsupervised",
+                         **loso_metrics(same_rows)})
+    table = pd.DataFrame(rows)
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        table.to_csv(TABLES_DIR / LOSO_TABLE, index=False)
     return table
 
 

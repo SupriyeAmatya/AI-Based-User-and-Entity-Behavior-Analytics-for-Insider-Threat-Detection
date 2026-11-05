@@ -268,6 +268,8 @@
 - [x] **Y10** (Thu Nov 5) Imbalance experiment → `results/tables/imbalance.csv` (6 rows: RF and XGB × no weighting / class weights / SMOTE on training rows only, via an imblearn Pipeline) **(Claude, branch `ayo/Y7-supervised-models`)**. **Human-only (Ayo):** pick the set-up for the final models
 - [ ] **Y11** (Fri Nov 6) `src/explain.py` (SHAP) → Arva
 - [ ] **Y12** (Sat Nov 7) Leave-one-scenario-out (LOSO) code. **Human-only:** design and justify the experiment
+  - [x] `run_loso()` (held-out scenario's accounts removed from training and early stopping; test = test rows of scenario 0 + the held-out one; saves `<model>_loso_s<k>.parquet`) and `loso_table()` (RF/XGB next to the unsupervised models on the same rows); work on synthetic data and on v0 **(Claude, branch `ayo/Y12-loso`)**
+  - [ ] **Human-only (Ayo):** justify the design; L7 notes
 - [ ] **Y13** (Sun Nov 8) Hyperparameter table T4 draft + section notes
   - [x] T4 draft: `hyperparameter_table()` → `results/tables/T4_hyperparameters_supervised.csv` **(Claude, branch `ayo/Y7-supervised-models`)**
   - [ ] **Human-only (Ayo):** IV-C/V notes in `paper/notes_ayo.md`; L8 and L11a notes
@@ -319,7 +321,7 @@ Tick when the PR is **merged** into `main`.
 - [ ] `ayo/Y11-explain` (reviewer Arva, Fri Nov 6)
 - [ ] `arva/A11-pipeline` (reviewer Supriye, Fri Nov 6)
 - [ ] `supriye/S10-behavior-features` (reviewer Arva, Sat Nov 7)
-- [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7)
+- [ ] `ayo/Y12-loso` (reviewer Arva, Sat Nov 7): PR open, stacked on `ayo/Y7-supervised-models`
 - [ ] `arva/A13-ocsvm` *(optional)* (reviewer Ayo, Sat Nov 7)
 - [ ] `supriye/S17-baselines-v1` (reviewer Arva, Sun Nov 8)
 - [ ] `supriye/S21-v1-fixes` *(only if needed)* (reviewer Arva, Tue Nov 10, 12:00)
