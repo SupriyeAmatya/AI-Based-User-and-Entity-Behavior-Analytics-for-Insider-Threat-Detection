@@ -51,6 +51,12 @@ from src.features import get_model_matrix
 
 SCORE_KEYS = ["user", "date", "split", "label", "scenario"]
 
+# On macOS, PyTorch and xgboost (src/models_supervised.py) each load their own copy of the OpenMP
+# runtime. Once xgboost has run, a multi-threaded PyTorch step in the same process waits forever
+# (e.g. `python -m pytest tests` stalled in the autoencoder tests). This small network trains just
+# as fast on one thread, so PyTorch always uses one.
+torch.set_num_threads(1)
+
 
 # ---------------------------------------------------------------- A4: common interface
 class UnsupervisedDetector:
