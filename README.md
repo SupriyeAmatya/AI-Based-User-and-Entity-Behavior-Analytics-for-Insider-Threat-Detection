@@ -90,6 +90,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── synthetic.py          # Synthetic feature table for testing        (done)
 │   ├── evaluate.py           # Metrics, plots, detection delay            (done)
 │   ├── baseline.py           # Per-user / peer-group baselines, new_* flags (done)
+│   ├── ablation.py           # Feature-group ablation (T7) + data time (T8) (code done)
 │   ├── models_unsupervised.py# Isolation Forest, Autoencoder (+ tuning)    (done)
 │   ├── models_supervised.py  # Random Forest, XGBoost (+ tuning, imbalance) (done)
 │   ├── risk_scoring.py       # Convert model output to a 0–100 risk score (done)

@@ -155,6 +155,8 @@ Branch: `supriye/S22-ablation`, from `main` **after** `arva/A15-final-models` an
 6. **Write** 3–5 sentences on (a) vs. (b) vs. (c) and the biggest group drops in the PR and in your notes [H].
 7. **Tag** `m3-all-scores` once `ayo/Y16-loso-results` is merged too.
 
+*Status Nov 5:* steps 1–3 and 5 are done on `supriye/S22-ablation` (code, tests, `data_processing_time.csv`). Steps 4, 6 and 7 wait for the tuned defaults (A16, Y15).
+
 **Done when:**
 - **Table:** `ablation.csv` has 10 feature sets × 2 models;
 - **Answer:** the (a)/(b)/(c) comparison says whether baselining helps;
