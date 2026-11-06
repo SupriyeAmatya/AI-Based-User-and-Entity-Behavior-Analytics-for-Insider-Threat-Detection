@@ -33,11 +33,14 @@ Final score files (A16), every row, with the detector defaults:
     python -m src.models_unsupervised final data/processed/features_v1_1.parquet
 """
 import json
+import platform
+import subprocess
 import sys
 import time
 from pathlib import Path
 
 import joblib
+import psutil
 
 import numpy as np
 import pandas as pd
