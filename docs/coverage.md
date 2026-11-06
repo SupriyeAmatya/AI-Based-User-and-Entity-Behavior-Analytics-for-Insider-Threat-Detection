@@ -1,6 +1,6 @@
 # UEBA assignment coverage
 
-> **Snapshot from Thu Nov 5, 2026** (repo at `c7f38cf`). This file does not update itself. [`Tasks/PROGRESS.md`](../Tasks/PROGRESS.md) is still the tracker of record.
+> **Snapshot from Thu Nov 5, 2026** (repo at `8060fc3`). This file does not update itself. [`Tasks/PROGRESS.md`](../Tasks/PROGRESS.md) is still the tracker of record.
 
 It maps each requirement in the CSCI 561 assignment brief to how it's measured, the deliverable, the proof that it's met, and where it stands. It's built from the brief, `Tasks/TEAM_PLAN.md`, `Tasks/PROGRESS.md` and the code on `main`. Tests weren't re-run for this snapshot.
 
@@ -58,7 +58,7 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 | Login patterns | Logon counts, first and last logon, PCs used, logons on unusual PCs | `f_logon_*` and related columns in v1 | Feature dictionary T3 | **Done**<br>In v1 (PR #17): logon and logoff counts, first-logon and last-logoff hour, PCs used, logons on other PCs. Documented in `docs/feature_dictionary.md`. | Supriye · S10 |
 | Authentication failures | Failed logins per user-day | LANL features, or a stated limitation | LANL feature columns, or Limitations text | **Gap**<br>CERT has no failed logins. LANL is a stretch goal, decided at the Nov 9 stand-up. | Supriye · S24 |
 | File and resource access | File copies to removable media, USB connects | `f_file_*`, `f_usb_*` | Feature dictionary T3 | **Done**<br>In v1: file copies by type and after hours; USB connects, after-hours connects, PCs and minutes connected. | Supriye · S12, S13 |
-| Application usage | Web categories (job, leak, cloud, hacking), email volume, external email | `f_http_*`, `f_email_*` | Feature dictionary T3 | **Partial**<br>In v1: 8 web and 8 email features. The web keyword lists and the email-count rule are still PROVISIONAL (S14, S15). CERT has no application logs, so web and email stand in. | Supriye · S14, S15 |
+| Application usage | Web categories (job, leak, cloud, hacking), email volume, external email | `f_http_*`, `f_email_*` | Feature dictionary T3 | **Partial**<br>In v1: 7 web and 8 email features. The web keyword lists and the email-count rule are still PROVISIONAL (S14, S15). CERT has no application logs, so web and email stand in. | Supriye · S14, S15 |
 | Activity times | After-hours and weekend activity, work duration | `f_afterhours_*`, `f_weekend`, `f_work_duration` | T3, with the reason for the chosen hours | **Partial**<br>In v1: after-hours counts and ratio, weekend flag, work duration. Built on the PROVISIONAL 07:00–19:00 window, and the reason isn’t written yet (S11). | Supriye · S11 |
 | Changes from normal behavior | Deviation from the user’s own past 30 days and from same-role peers; novelty flags | `z_user_*`, `z_peer_*`, `new_*` | T3, figure F3 | **Done**<br>In v1 (PR #18): 14 `z_user_*`, 14 `z_peer_*` and 4 `new_*` columns, and figure F3. | Supriye · S17, S18 |
 
@@ -76,7 +76,7 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
 | Accuracy, precision, recall, F1, FPR, FNR, ROC-AUC, confusion matrix | Each on the test split at the best-F1 and top-1% thresholds, overall and per scenario | `evaluate.py`; T5, F4, F5 | Hand-checked unit test; v0 smoke test | **Partial**<br>Code done and run on v0 scores. Test-split tables and figures (T5, F4, F5) due Nov 12. | Ayo · Y3–Y6, Y17 |
-| Detection time | Train time and inference time per 1,000 user-days; days from an insider’s first malicious day to their first alert | Table T8 | Timing log; `detection_delay()` | **Partial**<br>Delay is built, and every model now logs its fit time and scoring time per 1,000 user-days. T8 due Nov 12. | Arva, Ayo · A17, Y15, Y17 |
+| Detection time | Train time and inference time per 1,000 user-days; days from an insider’s first malicious day to their first alert | Table T8 | Timing log; `detection_delay()` | **Partial**<br>Delay is built. Each training run measures fit time and scoring time per 1,000 user-days, but only fit time is saved (in the tuning logs) until A17 and Y15. T8 due Nov 12. | Arva, Ayo · A17, Y15, Y17 |
 | Explain why precision and recall matter on imbalanced data | A paragraph with our base rate: 0.298% malicious, so always answering “normal” scores 99.70% accuracy with 0 recall | Paper §V | `class_imbalance.csv` | **Partial**<br>Number ready and quoted in TEAM_PLAN §10.2. Paper text due Nov 16. | Ayo · Y22 |
 | Detect previously unseen anomalous behavior | Leave-one-scenario-out: PR-AUC, ROC-AUC and recall at top 1% on the held-out scenario | `run_loso()`, `<model>_loso_s<1–3>` score files | Table T6 | **Partial**<br>`run_loso()` and `loso_table()` are merged and run on v0. Results (T6) due Nov 11; Ayo still has to justify the design. | Ayo · Y12, Y16 |
 
@@ -93,7 +93,7 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
 | UEBA prototype | One command goes from features to ranked alerts with reasons, and it runs from a fresh clone | `src/pipeline.py`, README “Run the prototype” | Fresh-clone run; top-20 users with precision@20 | **Partial**<br>`src/pipeline.py` prints the top users with 3 reasons each, on v0 and v1. Precision@20 due Nov 12; README section and fresh-clone test due Nov 16–17. | Arva · A11, A18, A23, A24 |
-| Research paper | Every planned section drafted (dataset, features, models, experiments, results, limitations) with all 16 figures and tables | IEEE-format PDF | The PDF | **Not started**<br>`paper/` has only an empty `lit_notes/`, and Overleaf isn’t set up. F1, F3 and the two T4 drafts exist. Sections due Nov 16. | Everyone · M4, M5 |
+| Research paper | Every planned section drafted (dataset, features, models, experiments, results, limitations) with all 16 figures and tables | IEEE-format PDF | The PDF | **Not started**<br>`paper/` has only an empty `lit_notes/`, and Overleaf isn’t set up. F1, T2 (`class_imbalance.csv`), F3, T3 (`docs/feature_dictionary.md`) and the two T4 drafts exist. Sections due Nov 16. | Everyone · M4, M5 |
 | Limitations | Covers the missing failed logins, label-filtered training, synthetic data and the thin test set | Paper §VII | Section text | **Not started**<br>Due Nov 13. | Supriye · S27 |
 | Answer the research question | How well the models detect (PR-AUC, LOSO) and which features and models are most reliable (SHAP, ablation, T5) | Paper §VIII Conclusion | A conclusion backed by numbers | **Not started**<br>Human-only. Agreed at the Nov 14 results walkthrough. | Everyone · S28, A23 |
 
@@ -102,14 +102,14 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 ### Can't be fully met by the current plan
 
 - **Authentication failures.** CERT's logon log has no failed logins. Either do the LANL extension (S24) or state the gap in Methodology and Limitations. The plan defaults to the second; the team decides at the Nov 9 stand-up.
-- **Application usage.** CERT r4.2 has no application or process logs. Web browsing (8 `f_http_*` features) and email stand in, and the paper has to say so. The web keyword lists are still PROVISIONAL (S15).
+- **Application usage.** CERT r4.2 has no application or process logs. Web browsing (7 `f_http_*` features) and email stand in, and the paper has to say so. The web keyword lists are still PROVISIONAL (S15).
 - **"Recent" papers.** The plan counts 11+ papers, but only L9a, L10a and L11a are from 2022–2026. L7 is from 2021 and the rest from 2013–2020. If the instructor reads "recent" as the last five years, that's 3 or 4. Either make L9b, L10b and L11b required, or confirm the meaning with the instructor.
 - **Compromised accounts.** Without LANL, the only compromised-account evidence is scenario 3, where the system administrator logs in as their supervisor. Since Nov 4 the two supervisor accounts (FAW0032, FBA0348) no longer count as insiders, but their 20 days are still labeled malicious: half of scenario 3's labeled days. Whether they stay that way is Supriye's open S6 decision.
 
 ### Still to do
 
-- **Arva:** read and be able to explain the Claude-written `models_unsupervised.py`, `risk_scoring.py` and `pipeline.py`; decide the autoencoder architecture, tuning grids and alert levels. Next: retrain and tune on v1 (Nov 9), final scores (Nov 10), per-scenario results, alert volume and timing (Nov 11), the F2 diagram, and the case studies (Nov 13–14).
-- **Ayo:** no commits yet. Read and be able to explain `models_supervised.py`, `explain.py` and the LOSO code; pick the imbalance set-up and justify the LOSO design. Next: retrain on v1 (Nov 9), final scores (Nov 10), LOSO results T6 (Nov 11), and T5, F4, F5 and T8 (Nov 12).
+- **Arva:** read and be able to explain the Claude-written `models_unsupervised.py`, `risk_scoring.py` and `pipeline.py`; decide the autoencoder architecture, tuning grids and alert levels. Next: retrain and tune on v1 (Nov 9), final scores (Nov 10), per-scenario results, alert volume and timing (Nov 11), the F2 diagram, and the case studies (Nov 13–14). The A-LIT1–4 reading notes are overdue.
+- **Ayo:** no commits yet. Read and be able to explain `models_supervised.py`, `explain.py` and the LOSO code; pick the imbalance set-up and justify the LOSO design. Next: retrain on v1 (Nov 9), final scores (Nov 10), LOSO results T6 (Nov 11), and T5, F4, F5 and T8 (Nov 12). The Y-LIT1–2 reading notes are overdue.
 - **Supriye:** the human-only decisions (after-hours window, split dates, web keyword lists, email-count rule, hijacked-account labels), EDA observations, the label hand-check and leakage check 4; upload v1 to the drive; the v1 walkthrough (Nov 9) and the T7 ablation (Nov 11).
 - **Not started anywhere:** notebooks 04–05, figures F2 and F8, the case studies, and any paper text.
 
@@ -117,7 +117,7 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 
 - The data isn't on the shared drive yet (S4, S20): no Parquet, v0 or v1. Until it is, Arva and Ayo can only work on real data by rebuilding it themselves (4.8 GB download, about 8 GB free disk).
 - Four values are still PROVISIONAL: the after-hours window, the split dates, the web keyword lists and the email-count rule. Every score so far uses them, so they need deciding before the final v1 runs on Nov 9–10.
-- None of PRs #1–#26 has a GitHub review, so the post-merge reviews in PROGRESS §9 are all open. Most Week 0–1 code in every lane was written by Claude at Supriye's request, so each owner still has to read it and be able to explain it (TEAM_PLAN §12).
+- None of PRs #1–#28 has a GitHub review, so the post-merge reviews in PROGRESS §9 are all open. Most Week 0–1 code in every lane was written by Claude at Supriye's request, so each owner still has to read it and be able to explain it (TEAM_PLAN §12).
 - Scenario 3 is thinner than first reported: the test split has 1 real insider (JLM0364) with 2 days, plus 2 days on the hijacked account FBA0348. Its per-scenario and LOSO results rest on very few rows, so say so in Limitations.
 - Branch protection on `main` is still off, so the PR rule holds by agreement only. Overleaf and Zotero aren't set up, and there are no milestone tags yet.
 
@@ -128,4 +128,4 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 - Feature table v1: 1,000 users, 330,268 user-days, 73 model inputs (41 `f_*`, 14 `z_user_*`, 14 `z_peer_*`, 4 `new_*`), with [`docs/feature_dictionary.md`](feature_dictionary.md); leakage checks 1, 2, 3 and 5 pass.
 - All five models (Isolation Forest, autoencoder, One-Class SVM, Random Forest, XGBoost) with tuning workflows, run on v0; the contamination variant, the imbalance experiment and the LOSO code.
 - `explain.py` (SHAP), the autoencoder's per-feature error, and the prototype `pipeline.py` with 3 reasons per alert.
-- `evaluate.py` computes every metric the assignment lists plus PR-AUC, detection delay and user-level recall, and every model logs its fit and scoring time.
+- `evaluate.py` computes every metric the assignment lists plus PR-AUC, detection delay and user-level recall, and each training run measures its fit and scoring time (only fit time is saved so far).
