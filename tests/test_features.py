@@ -42,7 +42,7 @@ def test_get_model_matrix_columns_argument_and_guard():
 
 
 def test_after_hours():
-    # PROVISIONAL hours in src/config.py: 07:00-19:00 (S11)
+    # working hours in src/config.py: 07:00-19:00 (decided Nov 6, S11)
     assert is_after_hours(pd.Series([6.9, 7.0, 18.99, 19.0])).tolist() == [True, False, False, True]
 
 

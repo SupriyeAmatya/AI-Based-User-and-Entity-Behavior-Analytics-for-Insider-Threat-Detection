@@ -75,7 +75,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 |---|---|---|---|---|---|
 | M0 | Sat Oct 31 | **Setup complete** | Supriye | Everyone cloned and installed; Parquet data on the drive | Open (drive, Ayo) |
 | — | Sun Nov 1 | `evaluate.py` ready | Ayo | Merged and tested | Done Nov 3 |
-| — | Mon Nov 2 | Split dates final | Supriye | Dates written into 2.5.3 | Open (PROVISIONAL) |
+| — | Mon Nov 2 | Split dates final | Supriye | Dates written into 2.5.3 | Decided Nov 6; reason to write |
 | M1 | Tue Nov 3 | **Feature table v0** | Supriye | v0 + `get_model_matrix()` load in Arva's and Ayo's code | Open (confirmations) |
 | — | Fri Nov 6 | `explain.py` ready | Ayo | Merged; Arva confirms it for the case studies | Code merged |
 | M2 | Sun Nov 8 | **Feature table v1 frozen** | Supriye | v1 + dictionary on the drive; decisions final; both teammates load it | Built, not shared |
@@ -136,12 +136,13 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 - **Columns:** `user, date, split, label, scenario, score`. Higher `score` = more suspicious.
 - **Coverage:** score **every** row (train, val, test). LOSO files hold only their test rows.
 
-#### 2.5.3 Split rule (PROVISIONAL until Supriye decides)
+#### 2.5.3 Split rule (final, decided by Supriye on Fri Nov 6)
 - **By date, never shuffled.** `train` ≤ `TRAIN_END`, `val` ≤ `VAL_END`, else `test`.
-- **Current values:** `TRAIN_END = 2010-10-31`, `VAL_END = 2011-01-31` (the 60/15/25 month rule).
+- **Values:** `TRAIN_END = 2010-10-31`, `VAL_END = 2011-01-31` (the 60/15/25 month rule).
 - **Requirement:** every split has malicious days from every scenario (`python -m src.labels` checks it).
 - **Known weakness:** scenario 3 in test is 1 real insider (`JLM0364`) with 2 days, plus 2 days on the hijacked account `FBA0348`.
-- **Final values:** `train` = ______, `val` = ______, `test` = ______ *(Supriye fills in by Fri Nov 6)*.
+- **Final values:** `train` = Jan 2 2010 – Oct 31 2010, `val` = Nov 1 2010 – Jan 31 2011, `test` = Feb 1 2011 – May 17 2011.
+- **Reason (Supriye):** *to be written.*
 
 #### 2.5.4 Training-data rule
 - **Unsupervised models** train on `split == "train"` and `label == 0`; the `_contam` variants train on all train rows.

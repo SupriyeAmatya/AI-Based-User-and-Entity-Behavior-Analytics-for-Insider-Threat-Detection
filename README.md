@@ -83,7 +83,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── 04_evaluation.ipynb
 │   └── 05_anomaly_investigation.ipynb
 ├── src/
-│   ├── config.py             # Paths, seed, PROVISIONAL decisions        (done)
+│   ├── config.py             # Paths, seed, the S8 decisions (final Nov 6) (done)
 │   ├── data_loader.py        # Convert the archive; load and clean logs   (done)
 │   ├── labels.py             # Ground-truth labels, split check           (done)
 │   ├── features.py           # Feature tables v0/v1 + get_model_matrix()  (done)

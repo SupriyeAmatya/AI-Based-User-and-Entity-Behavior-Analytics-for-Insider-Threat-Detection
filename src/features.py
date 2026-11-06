@@ -65,7 +65,7 @@ def get_model_matrix(df, split=None, columns=None):
 
 # ---------------------------------------------------------------- shared helpers
 def is_after_hours(hour: pd.Series) -> pd.Series:
-    """Outside working hours as set in src/config.py (PROVISIONAL until Supriye decides, S11)."""
+    """Outside working hours as set in src/config.py (07:00-19:00, decided Nov 6, S11)."""
     return (hour < WORK_START_HOUR) | (hour >= WORK_END_HOUR)
 
 
