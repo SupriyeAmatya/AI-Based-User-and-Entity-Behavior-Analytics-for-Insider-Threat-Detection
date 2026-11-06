@@ -20,7 +20,8 @@ KEY = ["user", "date"]
 KEY_FEATURES = [
     "f_logon_count", "f_first_logon_hour", "f_work_duration", "f_afterhours_events",
     "f_usb_connect", "f_file_copy", "f_email_external", "f_email_recipients", "f_http_count",
-    "f_http_job", "f_http_leak", "f_http_cloud", "f_http_hack", "f_logon_other_pc",
+    "f_http_job", "f_http_leak", "f_http_cloud", "f_http_hack", "f_http_competitor",
+    "f_logon_other_pc",
 ]
 WINDOW = 30          # previous active days in the per-user baseline
 MIN_PERIODS = 10     # fewer past days than this = cold start (S17 step 3)

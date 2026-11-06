@@ -37,10 +37,10 @@ Progress is tracked in [PROGRESS.md](PROGRESS.md). This file replaces the Oct 28
 ### 1.2 What we build
 - **Data:** CERT Insider Threat r4.2 (1,000 users, Jan 2 2010 – May 17 2011, 32.8M log rows). 70 insiders in 3 scenarios (30 / 30 / 10). 984 malicious user-days out of 330,268 (**0.298%**).
 - **Unit of analysis:** one row per **user-day** with at least one logon.
-- **Features (v1):** 73 model inputs:
-  - **41 `f_*` behavior counts** across logon, time, USB, file, email, web and personality context;
-  - **14 `z_user_*`** deviations from the user's own previous 30 active days;
-  - **14 `z_peer_*`** deviations from same-role peers that day;
+- **Features (v1):** 76 model inputs:
+  - **42 `f_*` behavior counts** across logon, time, USB, file, email, web and personality context;
+  - **15 `z_user_*`** deviations from the user's own previous 30 active days;
+  - **15 `z_peer_*`** deviations from same-role peers that day;
   - **4 `new_*`** first-time flags.
 - **Models:** Isolation Forest, autoencoder and One-Class SVM (unsupervised, Arva); Random Forest and XGBoost (supervised, Ayo).
 - **Risk scoring:** 0–100 daily risk, 7-day user risk, alert levels, and 3 readable reasons per alert (`src/pipeline.py`).
@@ -49,7 +49,7 @@ Progress is tracked in [PROGRESS.md](PROGRESS.md). This file replaces the Oct 28
 
 ### 1.3 Where we stand (Thu Nov 5, `main` at `8060fc3`)
 - **Weeks 0–1 code is done and merged** (PRs #1–#28). 83/83 tests pass. Most of it was written by Claude at Supriye's request, so **each owner must still read it and be able to explain every line** (2.6).
-- **Feature table v1 exists** locally: 330,268 user-days, 73 inputs. Leakage checks 1, 2, 3 and 5 pass.
+- **Feature table v1 exists** locally: 330,268 user-days, 76 inputs (73 until the `competitor` web category was added on Nov 6). Leakage checks 1, 2, 3 and 5 pass.
 - **All 5 models run on v0** (100-user sample). Best val PR-AUC so far: IF 0.063, AE 0.122, RF 0.273, XGB 0.324.
 - **No v1 model results yet.** No final score files, T5–T8, F4–F8, case studies or paper text exist yet.
 - **Open human items:**
@@ -142,7 +142,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 - **Requirement:** every split has malicious days from every scenario (`python -m src.labels` checks it).
 - **Known weakness:** scenario 3 in test is 1 real insider (`JLM0364`) with 2 days, plus 2 days on the hijacked account `FBA0348`.
 - **Final values:** `train` = Jan 2 2010 – Oct 31 2010, `val` = Nov 1 2010 – Jan 31 2011, `test` = Feb 1 2011 – May 17 2011.
-- **Reason:** we kept the 60/15/25 month rule so the models train on the longest possible history, and every split contains malicious days from all three scenarios. Moving the boundaries earlier (e.g. 2010-07-31 / 2010-11-30) would add only two scenario-3 test days while cutting scenario-1 training days from 59 to 19. Scenario 3's small test set (2 real-insider days) is reported as a limitation (VII) and covered by the leave-one-scenario-out experiment (T6).
+- **Reason** (drafted by Claude at Supriye's request): we kept the plan's default 60/15/25 month rule, and every split contains malicious days from all three scenarios. Counting real insiders only, moving the boundaries earlier (e.g. 2010-07-31 / 2010-11-30) would add only two scenario-3 test days (2 → 4) while cutting scenario-1 training days from 59 to 19. Scenario 3's small test set (2 real-insider days) will be reported as a limitation in VII and is covered by the leave-one-scenario-out experiment (T6).
 
 #### 2.5.4 Training-data rule
 - **Unsupervised models** train on `split == "train"` and `label == 0`; the `_contam` variants train on all train rows.

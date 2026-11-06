@@ -141,7 +141,7 @@ Aggregate raw events into one row per **user-day** (recommended). Alternatives: 
 | Category | Example features |
 |---|---|
 | **Login patterns** | # logons, # logoffs, first logon hour, last logoff hour, session duration, # distinct PCs, logons on a PC that isn't the user's usual PC |
-| **Activity time** | # events after hours (e.g., before 07:00 / after 19:00, PROVISIONAL in `src/config.py`), weekend activity flag |
+| **Activity time** | # events after hours (before 07:00 / from 19:00, decided Nov 6 in `src/config.py`), weekend activity flag |
 | **Removable media** | # USB connects, # USB connects after hours, # files copied to removable media, # `.exe` / `.zip` / `.doc` files copied |
 | **Email** | # emails sent, # external recipients, # attachments, total attachment size, # emails to non-company domains |
 | **Web / application usage** | # HTTP requests, # visits to job-search sites, # visits to cloud-storage / leak sites (e.g., wikileaks, dropbox), # keylogger-related URLs |

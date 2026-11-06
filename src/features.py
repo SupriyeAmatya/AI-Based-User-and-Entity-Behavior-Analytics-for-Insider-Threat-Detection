@@ -463,7 +463,8 @@ def behavior_checks(features: pd.DataFrame) -> pd.DataFrame:
     """The "Done when" checks of S12, S14 and S15: per scenario, a feature's mean on the
     malicious days of the labeled accounts vs. the same accounts' other days."""
     checks = [(1, "f_usb_connect"), (1, "f_http_leak"), (1, "f_afterhours_logon"),
-              (2, "f_http_job"), (2, "f_usb_connect"), (3, "f_email_recipients"),
+              (2, "f_http_job"), (2, "f_http_competitor"), (2, "f_usb_connect"),
+              (3, "f_email_recipients"),
               (3, "f_http_hack"), (3, "f_logon_other_pc")]
     rows = []
     for scenario, col in checks:

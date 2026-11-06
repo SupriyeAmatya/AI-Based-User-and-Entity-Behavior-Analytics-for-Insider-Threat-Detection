@@ -27,7 +27,7 @@ Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tic
 - **S7:** EDA notebook with F1 and T2 data.
 - **S8:** split proposal and the split check.
 - **S9:** v0 table (100 users) + `get_model_matrix()`.
-- **S10–S16:** 41 behavior features for all users (PR #17).
+- **S10–S16:** 41 behavior features for all users (PR #17); 42 since `f_http_competitor` was added Nov 6.
 - **S17–S20:** `src/baseline.py` (`z_user_*`, `z_peer_*`, `new_*`), F3, leakage checks 1/2/3/5 and the feature dictionary (PR #18).
 - **Tracker:** PROGRESS audit (#16), the Week 1 tracker (#26), and the web-count fix (#28).
 
@@ -80,7 +80,7 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 
 **Done when:** no PROVISIONAL tag is left in `src/config.py`, and TEAM_PLAN 2.5.3 shows the dates.
 
-*Status Nov 6:* option A chosen for all five (the values already in the code), recorded in `src/config.py`, TEAM_PLAN 2.5.3 and the feature dictionary. Left: the reasons (marked *to be written*). No value changed, so S20b's rebuild is not needed.
+*Status Nov 6:* option A chosen for all five; after the review, `competitor` was added to the web lists (S15). Recorded in `src/config.py`, TEAM_PLAN 2.5.3 and the feature dictionary, with reasons drafted by Claude at Supriye's request. v1 was rebuilt (76 inputs) with `scripts/rebuild_data.sh`.
 
 #### S20b · Fri Nov 6 – Sat Nov 7 · Rebuild after the decisions (only if a value changed)
 1. **Run** `bash scripts/rebuild_data.sh` (~5 min). It runs `python -m src.labels`, `python -m src.features v0` and `v1`, re-executes notebooks 01 and 02, runs the tests, and ends with a check of `split_check.csv` and `v1_validation_checks.csv`. The web-log cache rebuilds itself if the working hours changed.
