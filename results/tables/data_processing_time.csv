@@ -1,0 +1,5 @@
+step,seconds,user_days,seconds_per_1000_user_days,cpu,threads,ram_gb
+"archive -> Parquet conversion (S4, one-off, Nov 3)",600.0,330268,1.817,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+labels (S6),0.0,330268,0.0,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+"web-log pass, 28.4M rows (S15)",21.8,330268,0.066,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+feature table v1 incl. baselines (S10-S18),72.4,330268,0.219,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
