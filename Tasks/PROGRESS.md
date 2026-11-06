@@ -60,7 +60,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [ ] **Repo cloned + installed:** Ayo (Y1)
   - [ ] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20)
 - [x] **`evaluate.py` ready** (Sun Nov 1): merged Nov 3 (#3 via #7)
-- [ ] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Dates decided and written Nov 6; reason to write*
+- [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request*
 - [ ] **M1 Feature table v0** (Tue Nov 3)
   - [x] **v0 + `get_model_matrix()` merged** (#6 via #7, sampler fix #11)
   - [ ] **Arva and Ayo confirm** v0 loads in their code
@@ -69,7 +69,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [ ] **Arva confirms** it for the case studies
 - [ ] **M2 Feature table v1 frozen** (Sun Nov 8)
   - [x] **v1 built**, feature dictionary, leakage checks 1/2/3/5 pass (#17, #18)
-  - [ ] **Decisions final** and v1 rebuilt if needed (S8, S20b) *Decided Nov 6, all values unchanged, so no rebuild is needed; reasons to write*
+  - [x] **Decisions final** and v1 rebuilt if needed (S8, S20b) *Decided Nov 6 (#36); values unchanged, rebuild ran clean; reasons written*
   - [ ] **Data drop uploaded**; both teammates load v1
   - [ ] **Tag** `m2-features-v1`
 - [ ] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
@@ -133,11 +133,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 **Open:**
 - [ ] **S2-rest** branch protection; Overleaf + Zotero created and invites sent
 - [ ] **S3-rest** page limit, AI policy, submission contents confirmed
-- [ ] **S8** decide split dates (2.5.3) [H] *Decided Nov 6: 2010-10-31 / 2011-01-31 (PR `supriye/S8-decisions`); reason to write, then tick.*
-- [ ] **S11** decide the after-hours window + write the reason [H] *Decided Nov 6: 07:00–19:00 (PR `supriye/S8-decisions`); reason to write, then tick.*
-- [ ] **S14** decide the email-count rule [H] *Decided Nov 6: count all emails incl. webmail (PR `supriye/S8-decisions`); reason to write, then tick.*
-- [ ] **S15** check the web keyword lists (7 `f_http_*` features built) [H] *Decided Nov 6: the lists as built (job boards only) (PR `supriye/S8-decisions`); reason to write, then tick.*
-- [ ] **S6** decide the hijacked-account labels [H] *Decided Nov 6: keep the 20 days on FAW0032/FBA0348 (PR `supriye/S8-decisions`); reason to write, then tick.*
+- [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S14** decide the email-count rule [H] *Decided by Supriye Nov 6: count all emails incl. webmail (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S15** check the web keyword lists (7 `f_http_*` features built) [H] *Decided by Supriye Nov 6: the lists as built (job boards only) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S6** decide the hijacked-account labels [H] *Decided by Supriye Nov 6: keep the 20 days on FAW0032/FBA0348 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
 - [ ] **S20b** rebuild labels/v0/v1 + notebooks 01–02 if a value changed
   - [x] **Tooling:** `bash scripts/rebuild_data.sh` runs labels → v0 → v1 → notebooks 01–02 → tests → a final check that stops (exit 1) on an invalid split or a failed v1 check (run Nov 5: same counts, all pass). The web-log cache now rebuilds itself when the working hours change, or when it has no working-hours stamp on `supriye/S20-rebuild-data-drop` **(Claude)**
   - [ ] **Run** it after the S8 decisions and commit the regenerated tables, figures and notebooks
