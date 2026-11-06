@@ -8,7 +8,7 @@ from src import ablation
 from src.features import feature_columns
 from src.synthetic import make_synthetic_features
 
-# The 73 model inputs of features_v1.parquet (frozen Nov 8, TEAM_PLAN 2.5.9).
+# The 76 model inputs of features_v1.parquet (frozen Nov 8, TEAM_PLAN 2.5.9).
 V1_INPUTS = [
     "f_logon_count", "f_logoff_count", "f_first_logon_hour", "f_last_logoff_hour", "f_n_pcs",
     "f_logon_other_pc", "f_afterhours_logon", "f_work_duration", "f_usb_connect", "f_usb_afterhours",
@@ -16,15 +16,15 @@ V1_INPUTS = [
     "f_file_img", "f_file_afterhours", "f_email_sent", "f_email_recipients", "f_email_external",
     "f_email_attach", "f_email_external_attach", "f_email_size", "f_email_bcc", "f_email_afterhours",
     "f_http_count", "f_http_domains", "f_http_afterhours", "f_http_job", "f_http_leak", "f_http_cloud",
-    "f_http_hack", "f_afterhours_events", "f_afterhours_ratio", "f_weekend", "f_ctx_O", "f_ctx_C",
+    "f_http_hack", "f_http_competitor", "f_afterhours_events", "f_afterhours_ratio", "f_weekend", "f_ctx_O", "f_ctx_C",
     "f_ctx_E", "f_ctx_A", "f_ctx_N",
     *[f"{p}_{x}" for p in ("z_user", "z_peer") for x in (
         "logon_count", "first_logon_hour", "work_duration", "afterhours_events", "usb_connect",
         "file_copy", "email_external", "email_recipients", "http_count", "http_job", "http_leak",
-        "http_cloud", "http_hack", "logon_other_pc")],
+        "http_cloud", "http_hack", "http_competitor", "logon_other_pc")],
     "new_usb_user", "new_pc", "new_leak_site", "new_afterhours",
 ]
-GROUP_SIZES = {"logon": 16, "time": 7, "usb": 7, "file": 8, "email": 12, "http": 18, "context": 5}
+GROUP_SIZES = {"logon": 16, "time": 7, "usb": 7, "file": 8, "email": 12, "http": 21, "context": 5}
 
 
 def test_v1_input_list_matches_the_real_table():
@@ -41,7 +41,7 @@ def test_v1_input_list_matches_the_real_table():
 
 def test_every_v1_input_has_a_group():
     groups = pd.Series({c: ablation.feature_group(c) for c in V1_INPUTS})
-    assert len(V1_INPUTS) == 73 and groups.value_counts().to_dict() == GROUP_SIZES
+    assert len(V1_INPUTS) == 76 and groups.value_counts().to_dict() == GROUP_SIZES
     assert groups["z_user_usb_connect"] == "usb" and groups["new_leak_site"] == "http"
     assert groups["new_pc"] == "logon" and groups["new_afterhours"] == "time"
     assert groups["f_ctx_O"] == "context" and groups["f_afterhours_ratio"] == "time"

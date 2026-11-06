@@ -12,7 +12,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - **Weeks 0–1 are complete and merged:** PRs #1–#28, 83/83 tests on `main`.
   - **Week 2 has not started:** no v1 model results, final score files, T5–T8, F4–F8 or notebooks 04–05.
 - **Data:**
-  - **Feature table v1** is built on Supriye's laptop: 330,268 user-days, 73 inputs.
+  - **Feature table v1** is built on Supriye's laptop: 330,268 user-days, 73 inputs (76 since Nov 6).
   - **The data drop** is not on the shared drive yet.
 - **People:**
   - **Reviews:** none of the 28 merged PRs has a review.
@@ -99,7 +99,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [x] | Nov 1 → Nov 3 | `src/evaluate.py` merged | Ayo → all |
 | [x] | Oct 29 → Nov 4 | `src/synthetic.py` merged (#10) | Arva → Ayo |
 | [ ] | Thu Nov 5 | Overleaf + Zotero invites | Supriye → Arva, Ayo |
-| [ ] | Fri Nov 6 | Final PROVISIONAL values | Supriye → all |
+| [ ] | Fri Nov 6 | Final decision values (#36, #37 + competitor category) announced in chat | Supriye → all |
 | [ ] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~360 MB, checksums) | Supriye → Arva, Ayo |
 | [ ] | Sun Nov 8 | v1 frozen + feature dictionary | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* | Supriye → Arva, Ayo |
@@ -136,11 +136,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.*
 - [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
 - [x] **S14** decide the email-count rule [H] *Decided by Supriye Nov 6: count all emails incl. webmail (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S15** check the web keyword lists (7 `f_http_*` features built) [H] *Decided by Supriye Nov 6: the lists as built (job boards only) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S15** check the web keyword lists (7 `f_http_*` features built) [H] *Decided by Supriye Nov 6: the lists as built + a `competitor` category (5 defense contractors; added after the review) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
 - [x] **S6** decide the hijacked-account labels [H] *Decided by Supriye Nov 6: keep the 20 days on FAW0032/FBA0348 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
 - [ ] **S20b** rebuild labels/v0/v1 + notebooks 01–02 if a value changed
   - [x] **Tooling:** `bash scripts/rebuild_data.sh` runs labels → v0 → v1 → notebooks 01–02 → tests → a final check that stops (exit 1) on an invalid split or a failed v1 check (run Nov 5: same counts, all pass). The web-log cache now rebuilds itself when the working hours change, or when it has no working-hours stamp on `supriye/S20-rebuild-data-drop` **(Claude)**
-  - [ ] **Run** it after the S8 decisions and commit the regenerated tables, figures and notebooks
+  - [x] **Run** it after the S8 decisions and commit the regenerated tables, figures and notebooks *(Nov 6, after adding `competitor`: v1 now 76 inputs; every check passes)* **(Claude)**
 - [ ] **S6-H / S19-H** hand-check 3 insiders [H]
 - [ ] **S7-H** EDA observation cells [H]
 - [ ] **S4/S20** data drop uploaded with checksums
@@ -152,7 +152,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **S21** bug-fix window closed (Tue Nov 10 12:00)
 - [ ] **S23a** III. Dataset [H]
 - [ ] **S22** `src/ablation.py` + tests → `ablation.csv` (T7) + `data_processing_time.csv`
-  - [x] **Code:** `feature_group()` (all 73 v1 inputs → 7 groups), `feature_sets()` (a, b, c + 7 × d = 10 sets), `run_ablation()` (XGBoost + Isolation Forest retrained with their module defaults, test PR-AUC / ROC-AUC / recall at top 1% and best-F1; each row records the model settings and commit), tests on `supriye/S22-ablation` **(Claude)**
+  - [x] **Code:** `feature_group()` (all v1 inputs → 7 groups; 76 since Nov 6), `feature_sets()` (a, b, c + 7 × d = 10 sets), `run_ablation()` (XGBoost + Isolation Forest retrained with their module defaults, test PR-AUC / ROC-AUC / recall at top 1% and best-F1; each row records the model settings and commit), tests on `supriye/S22-ablation` **(Claude)**
   - [x] **T8 data time:** `data_processing_time.csv` (3-run means): Parquet logs → v1 in ~138 s (labels 0.07 s, web-log pass 26 s, v1 incl. baselines 112 s) + the one-off conversion, an untimed ~10 min estimate (`measured` = False); 24 threads, 31.4 GB RAM on `supriye/S22-ablation` **(Claude)**
   - [ ] **Run** `python -m src.ablation` once A16 and Y15 (tuned defaults) are merged → `ablation.csv`
 - [ ] **S22-H** interpret the ablation [H]

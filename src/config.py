@@ -30,19 +30,21 @@ RANDOM_STATE = 42
 # Decided by Supriye, Fri Nov 6 (S8/S11): working hours 07:00-19:00. Events with hour <
 # WORK_START_HOUR or hour >= WORK_END_HOUR count as "after hours". Data behind it: 61% of normal
 # logons start between 07:00 and 09:00; 6.7% of normal logons vs 15.4% of logons on malicious days
-# fall outside this window. The reason is written in docs/feature_dictionary.md (Supriye).
+# fall outside this window (Logon events only; logoffs spread later). The reason is in
+# docs/feature_dictionary.md (drafted by Claude at Supriye's request).
 WORK_START_HOUR = 7
 WORK_END_HOUR = 19
 
 # Decided by Supriye, Fri Nov 6 (S8): temporal split boundaries (TEAM_PLAN 2.5.3), the plan's
 # default rule (first ~60% of months = train, next ~15% = val, rest = test). Every split has every
-# scenario; scenario 3 has 2 real-insider days in test (stated in III/VII, LOSO covers it).
+# scenario; scenario 3 has 2 real-insider days in test (to be stated in III/VII; LOSO covers it).
 # A user-day goes to train if date <= TRAIN_END, to val if date <= VAL_END, otherwise to test.
 TRAIN_END = "2010-10-31"
 VAL_END = "2011-01-31"
 
-# Decided by Supriye, Fri Nov 6 (S6): scenario-3 labels. The 20 malicious days the sysadmin spent
-# logged in as their supervisor stay labeled on the supervisor accounts FAW0032 and FBA0348
+# Decided by Supriye, Fri Nov 6 (S6): scenario-3 labels. The 20 malicious days the 10 scenario-3
+# sysadmins spent logged in as their supervisor stay labeled on the supervisor accounts FAW0032 and
+# FBA0348
 # (compromised-account view); those two accounts are not insiders (`insider` = 0).
 # src/labels.py implements this; there is no switch.
 
@@ -59,13 +61,14 @@ V0_N_NORMAL = 80
 # personal webmail from the work PC (37.6% of emails). True = count both; False = work address only.
 EMAIL_COUNT_PERSONAL = True
 
-# Decided by Supriye, Fri Nov 6 (S15): web keyword lists. A domain is in a category when it equals
-# an entry or is a sub-domain of one. Built from data/processed/http_domain_counts.csv (every domain
-# in the http log with its visit count). The log has only 475 domains, so every one was read.
-# Left out on purpose:
-# linkedin.com (visited by nearly everyone), the defense-contractor sites raytheon.com,
-# lockheedmartin.com, northropgrumman.com, boeing.com, harris.com (competitors, not job boards),
-# freelance sites (elance, odesk, freelancer, fiverr), torrent indexes and download.cnet.com.
+# Decided by Supriye, Fri Nov 6 (S15; `competitor` added Nov 6 after the review): web keyword
+# lists. A domain is in a category when it equals an entry or is a sub-domain of one. The lists were
+# drafted by Claude from all 475 domains in data/processed/http_domain_counts.csv and confirmed by
+# Supriye. `competitor` = the five defense contractors: together they appear on 65.6% of
+# scenario-2 malicious user-days vs 14.7% of normal ones (scenario 2 contacts a competitor).
+# Left out on purpose: linkedin.com (727 of 1,000 users, 30% of normal user-days), freelance sites
+# (elance, odesk, freelancer, fiverr: gig work, not job search), torrent indexes (not cloud storage)
+# and download.cnet.com (a general download site).
 HTTP_CATEGORIES = {
     "job": ["careerbuilder.com", "monster.com", "simplyhired.com", "indeed.com", "job-hunt.org",
             "jobhuntersbible.com", "taleo.net"],
@@ -75,4 +78,6 @@ HTTP_CATEGORIES = {
     "hack": ["refog.com", "blackhatworld.com", "dailykeylogger.com", "wellresearchedreviews.com",
              "relytec.com", "actualkeylogger.com", "keylogpc.com", "softactivity.com",
              "webwatchernow.com", "spectorsoft.com", "actionalert.com", "best-spy-soft.com"],
+    "competitor": ["raytheon.com", "lockheedmartin.com", "northropgrumman.com", "boeing.com",
+                   "harris.com"],
 }
