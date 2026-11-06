@@ -93,7 +93,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 
 ### 2.1 Access
 - **GitHub:** collaborator access to `SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection` (all three have it, checked Nov 4).
-- **Shared drive:** read access to one file, `ueba_data_v1.zip` (~380 MB, the only data that moves between laptops; 2.5.12). **Supriye uploads it once, by Sat Nov 7.**
+- **Shared drive:** read access to one file, `ueba_data_v1.zip` (~360 MB, the only data that moves between laptops; 2.5.12). **Supriye uploads it once, by Sat Nov 7.**
 - **Overleaf:** the team project on the IEEE conference template (Supriye creates it and invites both).
 - **Zotero:** the shared group library (Supriye creates it), exporting IEEE style.
 - **StFX library login:** for paywalled papers.
@@ -114,8 +114,8 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 2. **Create** the environment outside the repo: `python -m venv %USERPROFILE%\.venvs\ueba` (macOS/Linux: `python3 -m venv ~/.venvs/ueba`).
 3. **Activate** it: `%USERPROFILE%\.venvs\ueba\Scripts\activate` (macOS/Linux: `source ~/.venvs/ueba/bin/activate`).
 4. **Install** packages: `pip install -r requirements.txt`.
-5. **Unzip** `ueba_data_v1.zip` into the repo root (it creates `data/processed/` and `data/parquet/`) and check `sha256sum -c data/CHECKSUMS.txt`. Or rebuild everything yourself (2.5.11).
-6. **Run** `python -m pytest tests` from the repo root. Expect **83 passed** with the data present (2 v0 smoke tests skip without it).
+5. **Unzip** `ueba_data_v1.zip` into the repo root (it creates `data/processed/` and `data/parquet/`) and run `python scripts/data_drop.py verify`. Or rebuild everything yourself (2.5.11).
+6. **Run** `python -m pytest tests` from the repo root. Expect every test to pass (without `data/`, the 2 v0 smoke tests skip).
 7. **Set** your Git identity: `git config user.name "Your Name"` and `git config user.email "you@example.com"`.
 
 ### 2.4 Hardware
@@ -187,10 +187,10 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 4. **Run** `python -m src.features v0` and `python -m src.features v1` (~2 min; the first v1 run makes a 30-second pass over the web log).
 
 #### 2.5.12 Minimal-transfer rule (send code, not data)
-- **One data drop, once:** after the decisions are final, Supriye uploads `ueba_data_v1.zip` (~380 MB):
+- **One data drop, once:** after the decisions are final, Supriye uploads `ueba_data_v1.zip` (~360 MB):
   - **`data/processed/`:** `labels.parquet`, `features_v0.parquet`, `features_v1.parquet` (35 MB), `http_user_day_domain.parquet` (18 MB), `http_domain_counts.csv`;
   - **`data/parquet/`:** `logon`, `device`, `file`, `email` + `manifest.json` (~325 MB);
-  - **`data/CHECKSUMS.txt`:** SHA-256 of every file.
+  - **`data/CHECKSUMS.txt`:** SHA-256 of every file, plus **`data/DROP_INFO.txt`** (commit and decisions). Built with `python scripts/data_drop.py make`, checked with `verify`.
 - **Left out on purpose:** `http.parquet` (907 MB; the 18 MB web cache replaces it) and the 4.5 GB raw archive. Only Supriye needs those.
 - **Tuned settings travel as code:** the merged module defaults (A16, Y15), never as parameter files or trained models.
 - **Score files are rebuilt, not sent:**
@@ -310,7 +310,7 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 | Due | What | From → To |
 |---|---|---|
 | Fri Nov 6 | Final PROVISIONAL values in `src/config.py` + 2.5.3 | Supriye → all |
-| Sat Nov 7 | **The only data drop:** `ueba_data_v1.zip` (labels, v0, v1, web cache, 4 small logs; ~380 MB) | Supriye → Arva, Ayo |
+| Sat Nov 7 | **The only data drop:** `ueba_data_v1.zip` (labels, v0, v1, web cache, 4 small logs; ~360 MB) | Supriye → Arva, Ayo |
 | Sun Nov 8 | v1 frozen + `docs/feature_dictionary.md` | Supriye → Arva, Ayo |
 | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed; 35 MB, the only allowed second drop)* | Supriye → Arva, Ayo |
 | Tue Nov 10 | Merged PR: tuned `models_unsupervised.py` defaults + `python -m src.models_unsupervised final` (rebuilds `iforest`, `autoencoder`, `*_contam`, `ocsvm`) | Arva → Ayo, Supriye (via Git) |
@@ -452,7 +452,8 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 - **Out of memory on the web log:** always pass `columns=` / `users=` to `load_http`, or use `iter_http_batches()`. The S15 cache (`data/processed/http_user_day_domain.parquet`) avoids re-reading it.
 - **Counts that look inconsistent:** 70 insiders vs. 72 accounts (2 hijacked supervisor accounts); 986 labeled malicious user-days vs. 984 in the feature table (2 days with no logon). Both are expected.
 - **Web features:** v1 has **7** `f_http_*` columns (count, domains, after-hours, job, leak, cloud, hack), not 8.
-- **Checksums don't match after unzipping:** re-download the zip once; if it still fails, ask Supriye to re-upload. Never send single files around.
+- **Checksums don't match after unzipping** (`python scripts/data_drop.py verify` lists `CHANGED`/`MISSING`): re-download the zip once; if it still fails, ask Supriye to re-upload. Never send single files around.
+- **The working hours changed but the after-hours web counts didn't:** fixed. The web-log cache records the window it was built with and rebuilds itself (S20b, Nov 5).
 - **A teammate's score file differs slightly from yours:** this is expected for the AE on another CPU. Use the results machine's tables (2.5.12) for the paper.
 - **Someone asks for a score file or model:** send the command instead (`python -m src.models_*  final`, `python src/pipeline.py --retrain`).
 

@@ -133,3 +133,50 @@ def test_http_domains_and_categories():
     h = http_features(visits, cats).iloc[0]
     assert (h["f_http_count"], h["f_http_domains"], h["f_http_afterhours"]) == (10, 3, 3)
     assert (h["f_http_job"], h["f_http_leak"], h["f_http_cloud"]) == (3, 2, 0)
+
+
+def test_http_cache_is_rebuilt_when_working_hours_change(tmp_path, monkeypatch):
+    from src import features
+    batch = pd.DataFrame({"user": ["A", "A"], "url": ["http://x.com/a", "http://y.com/b"],
+                          "date": pd.to_datetime(["2010-01-04 06:30", "2010-01-04 20:00"])})
+    calls = []
+
+    def fake_batches(columns):
+        calls.append(1)
+        yield batch.copy()
+
+    monkeypatch.setattr(features, "PROCESSED_DIR", tmp_path)
+    monkeypatch.setattr(features, "iter_http_batches", fake_batches)
+    first = features.http_user_day_domains()
+    assert first["afterhours"].sum() == 2 and len(calls) == 1      # 06:30 and 20:00, window 7-19
+    features.http_user_day_domains()
+    assert len(calls) == 1                                           # same window: cache reused
+    monkeypatch.setattr(features, "WORK_END_HOUR", 21)
+    rebuilt = features.http_user_day_domains()
+    assert len(calls) == 2 and rebuilt["afterhours"].sum() == 1      # 20:00 is now working time
+
+    assert features.cache_work_hours(tmp_path / "http_user_day_domain.parquet") == "7-21"
+    assert pd.read_csv(tmp_path / "http_domain_counts.csv")["domain"].tolist() == ["x.com", "y.com"]
+
+
+def test_http_cache_without_stamp_is_rebuilt_and_missing_log_is_explained(tmp_path, monkeypatch):
+    from src import features
+    monkeypatch.setattr(features, "PROCESSED_DIR", tmp_path)
+    legacy = pd.DataFrame({"user": ["A"], "date": pd.to_datetime(["2010-01-04"]), "domain": ["x.com"],
+                           "visits": [1], "afterhours": [0]})
+    legacy.to_parquet(tmp_path / "http_user_day_domain.parquet", index=False)   # no work_hours stamp
+    assert features.cache_work_hours(tmp_path / "http_user_day_domain.parquet") is None
+
+    def no_log(columns):
+        raise FileNotFoundError("data/parquet/http.parquet")
+        yield  # pragma: no cover
+
+    monkeypatch.setattr(features, "iter_http_batches", no_log)
+    with pytest.raises(FileNotFoundError, match="without a working-hours stamp.*says 7-19"):
+        features.http_user_day_domains()
+
+    batch = pd.DataFrame({"user": ["A"], "url": ["http://x.com/a"], "date": pd.to_datetime(["2010-01-04 21:00"])})
+    monkeypatch.setattr(features, "iter_http_batches", lambda columns: iter([batch]))
+    rebuilt = features.http_user_day_domains()
+    assert rebuilt["afterhours"].tolist() == [1]
+    assert features.cache_work_hours(tmp_path / "http_user_day_domain.parquet") == "7-19"
