@@ -1,8 +1,9 @@
 """Project-wide paths and settings (owner: Supriye).
 
-Every value marked PROVISIONAL is a placeholder for a decision that TEAM_PLAN Section 12
-reserves for a person. Change the value here, re-run the scripts, and nothing else needs
-editing. Search this file for "PROVISIONAL" to find them all.
+The judgement-call values (working hours, split dates, scenario-3 labels, the email rule and the
+web keyword lists) were decided by Supriye on Fri Nov 6 (S8; TEAM_PLAN 2.6 keeps such decisions for
+a person). To change one later: edit it here, run `bash scripts/rebuild_data.sh`, and rebuild the
+data drop with `python scripts/data_drop.py make`.
 """
 from pathlib import Path
 
@@ -26,18 +27,24 @@ LOGS = ["logon", "device", "file", "email", "http"]   # the big CSVs converted t
 RANDOM_STATE = 42
 
 # ---------------------------------------------------------------- decisions
-# PROVISIONAL (S11, human-only): working hours. Events with hour < WORK_START_HOUR or
-# hour >= WORK_END_HOUR count as "after hours". Values are the example from the S11 task card;
-# Supriye decides the real ones from the hour-of-day plot in notebooks/01_eda.ipynb.
+# Decided by Supriye, Fri Nov 6 (S8/S11): working hours 07:00-19:00. Events with hour <
+# WORK_START_HOUR or hour >= WORK_END_HOUR count as "after hours". Data behind it: 61% of normal
+# logons start between 07:00 and 09:00; 6.7% of normal logons vs 15.4% of logons on malicious days
+# fall outside this window. The reason is written in docs/feature_dictionary.md (Supriye).
 WORK_START_HOUR = 7
 WORK_END_HOUR = 19
 
-# PROVISIONAL (S8, human-only): temporal split boundaries (TEAM_PLAN 5.3).
-# Computed with the plan's default rule (first ~60% of months = train, next ~15% = val, rest = test)
-# by src/labels.py; Supriye confirms or moves them, then writes them into TEAM_PLAN 5.3.
+# Decided by Supriye, Fri Nov 6 (S8): temporal split boundaries (TEAM_PLAN 2.5.3), the plan's
+# default rule (first ~60% of months = train, next ~15% = val, rest = test). Every split has every
+# scenario; scenario 3 has 2 real-insider days in test (stated in III/VII, LOSO covers it).
 # A user-day goes to train if date <= TRAIN_END, to val if date <= VAL_END, otherwise to test.
 TRAIN_END = "2010-10-31"
 VAL_END = "2011-01-31"
+
+# Decided by Supriye, Fri Nov 6 (S6): scenario-3 labels. The 20 malicious days the sysadmin spent
+# logged in as their supervisor stay labeled on the supervisor accounts FAW0032 and FBA0348
+# (compromised-account view); those two accounts are not insiders (`insider` = 0).
+# src/labels.py implements this; there is no switch.
 
 # Company email domain (S14 step 1). Found in the data, not a judgement call: see the
 # recipient-domain table in notebooks/01_eda.ipynb.
@@ -48,15 +55,14 @@ V0_N_INSIDERS = 20
 V0_N_NORMAL = 80
 
 # ---------------------------------------------------------------- feature table v1 (S10-S16)
-# PROVISIONAL (S14, Supriye): which emails count as "sent". In r4.2 only 62.4% of a user's emails
-# come from their own dtaa.com address; the rest come from personal webmail on the work PC.
-# True = count every email the user sends (both); False = only work-address emails.
+# Decided by Supriye, Fri Nov 6 (S14): every email the user sends counts as "sent", including
+# personal webmail from the work PC (37.6% of emails). True = count both; False = work address only.
 EMAIL_COUNT_PERSONAL = True
 
-# PROVISIONAL (S15, human-only): web keyword lists. A domain is in a category when it equals an
-# entry or is a sub-domain of one. Built from data/processed/http_domain_counts.csv (every domain
-# in the http log with its visit count); Supriye checks and edits the lists.
-# The log has only 475 domains, so every one was read. Left out on purpose (Supriye to confirm):
+# Decided by Supriye, Fri Nov 6 (S15): web keyword lists. A domain is in a category when it equals
+# an entry or is a sub-domain of one. Built from data/processed/http_domain_counts.csv (every domain
+# in the http log with its visit count). The log has only 475 domains, so every one was read.
+# Left out on purpose:
 # linkedin.com (visited by nearly everyone), the defense-contractor sites raytheon.com,
 # lockheedmartin.com, northropgrumman.com, boeing.com, harris.com (competitors, not job boards),
 # freelance sites (elance, odesk, freelancer, fiverr), torrent indexes and download.cnet.com.

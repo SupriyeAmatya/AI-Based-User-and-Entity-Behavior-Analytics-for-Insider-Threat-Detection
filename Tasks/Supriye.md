@@ -80,6 +80,8 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 
 **Done when:** no PROVISIONAL tag is left in `src/config.py`, and TEAM_PLAN 2.5.3 shows the dates.
 
+*Status Nov 6:* option A chosen for all five (the values already in the code), recorded in `src/config.py`, TEAM_PLAN 2.5.3 and the feature dictionary. Left: the reasons (marked *to be written*). No value changed, so S20b's rebuild is not needed.
+
 #### S20b · Fri Nov 6 – Sat Nov 7 · Rebuild after the decisions (only if a value changed)
 1. **Run** `bash scripts/rebuild_data.sh` (~5 min). It runs `python -m src.labels`, `python -m src.features v0` and `v1`, re-executes notebooks 01 and 02, runs the tests, and ends with a check of `split_check.csv` and `v1_validation_checks.csv`. The web-log cache rebuilds itself if the working hours changed.
 2. **Stop** if the final check prints `STOP` (exit 1): fix the split or the failed check first.

@@ -2,11 +2,12 @@
 
 One row per **user-day** on which the user has at least one logon event (S9 step 2). Built by `python -m src.features v1` (`src/features.py` + `src/baseline.py`). Model inputs are the columns starting with `f_`, `z_user_`, `z_peer_` or `new_`; every model reads them through `get_model_matrix()`, which applies `log1p` to the `f_*` counts (all `f_*` except the non-count ones marked *(not logged)*) and fills missing values with 0 (TEAM_PLAN 5.5).
 
-**Settings these features depend on** (`src/config.py`, PROVISIONAL until Supriye confirms):
+**Settings these features depend on** (`src/config.py`, decided by Supriye on Fri Nov 6, S8):
 - **Working hours:** 07:00–19:00. An event is *after hours* when its hour is before 07:00 or at/after 19:00. *Reason (Supriye, S11): to be written from the hour-of-day plot in `notebooks/01_eda.ipynb`.*
 - **Company domain:** `dtaa.com` (found in the data, not a judgement call).
-- **Which emails count as sent:** all of them, including personal webmail sent from the work PC (`EMAIL_COUNT_PERSONAL = True`).
-- **Web keyword lists:** `HTTP_CATEGORIES` (job, leak, cloud, hack), drafted from all 475 domains in the log.
+- **Which emails count as sent:** all of them, including personal webmail sent from the work PC (`EMAIL_COUNT_PERSONAL = True`). *Reason (Supriye, S14): to be written.*
+- **Web keyword lists:** `HTTP_CATEGORIES` (job, leak, cloud, hack), built from all 475 domains in the log. *Reason (Supriye, S15): to be written.*
+- **Scenario-3 labels:** the 20 days the sysadmin spent logged in as their supervisor stay labeled on `FAW0032`/`FBA0348` (compromised-account view); those accounts have `insider` = 0. *Reason (Supriye, S6): to be written.*
 
 ## Metadata (never model inputs)
 
