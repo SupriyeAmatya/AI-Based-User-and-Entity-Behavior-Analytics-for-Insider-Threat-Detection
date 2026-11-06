@@ -114,7 +114,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 2. **Create** the environment outside the repo: `python -m venv %USERPROFILE%\.venvs\ueba` (macOS/Linux: `python3 -m venv ~/.venvs/ueba`).
 3. **Activate** it: `%USERPROFILE%\.venvs\ueba\Scripts\activate` (macOS/Linux: `source ~/.venvs/ueba/bin/activate`).
 4. **Install** packages: `pip install -r requirements.txt`.
-5. **Unzip** `ueba_data_v1.zip` into the repo root (it creates `data/processed/` and `data/parquet/`) and check `sha256sum -c data/CHECKSUMS.txt`. Or rebuild everything yourself (2.5.11).
+5. **Unzip** `ueba_data_v1.zip` into the repo root (it creates `data/processed/` and `data/parquet/`) and run `python scripts/data_drop.py verify`. Or rebuild everything yourself (2.5.11).
 6. **Run** `python -m pytest tests` from the repo root. Expect **83 passed** with the data present (2 v0 smoke tests skip without it).
 7. **Set** your Git identity: `git config user.name "Your Name"` and `git config user.email "you@example.com"`.
 
@@ -190,7 +190,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 - **One data drop, once:** after the decisions are final, Supriye uploads `ueba_data_v1.zip` (~380 MB):
   - **`data/processed/`:** `labels.parquet`, `features_v0.parquet`, `features_v1.parquet` (35 MB), `http_user_day_domain.parquet` (18 MB), `http_domain_counts.csv`;
   - **`data/parquet/`:** `logon`, `device`, `file`, `email` + `manifest.json` (~325 MB);
-  - **`data/CHECKSUMS.txt`:** SHA-256 of every file.
+  - **`data/CHECKSUMS.txt`:** SHA-256 of every file, plus **`data/DROP_INFO.txt`** (commit and decisions). Built with `python scripts/data_drop.py make`, checked with `verify`.
 - **Left out on purpose:** `http.parquet` (907 MB; the 18 MB web cache replaces it) and the 4.5 GB raw archive. Only Supriye needs those.
 - **Tuned settings travel as code:** the merged module defaults (A16, Y15), never as parameter files or trained models.
 - **Score files are rebuilt, not sent:**
@@ -452,7 +452,8 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 - **Out of memory on the web log:** always pass `columns=` / `users=` to `load_http`, or use `iter_http_batches()`. The S15 cache (`data/processed/http_user_day_domain.parquet`) avoids re-reading it.
 - **Counts that look inconsistent:** 70 insiders vs. 72 accounts (2 hijacked supervisor accounts); 986 labeled malicious user-days vs. 984 in the feature table (2 days with no logon). Both are expected.
 - **Web features:** v1 has **7** `f_http_*` columns (count, domains, after-hours, job, leak, cloud, hack), not 8.
-- **Checksums don't match after unzipping:** re-download the zip once; if it still fails, ask Supriye to re-upload. Never send single files around.
+- **Checksums don't match after unzipping** (`python scripts/data_drop.py verify` lists `CHANGED`/`MISSING`): re-download the zip once; if it still fails, ask Supriye to re-upload. Never send single files around.
+- **The working hours changed but the after-hours web counts didn't:** fixed. The web-log cache records the window it was built with and rebuilds itself (S20b, Nov 5).
 - **A teammate's score file differs slightly from yours:** this is expected for the AE on another CPU. Use the results machine's tables (2.5.12) for the paper.
 - **Someone asks for a score file or model:** send the command instead (`python -m src.models_*  final`, `python src/pipeline.py --retrain`).
 

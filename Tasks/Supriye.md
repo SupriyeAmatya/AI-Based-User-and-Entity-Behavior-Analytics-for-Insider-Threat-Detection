@@ -81,11 +81,9 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 **Done when:** no PROVISIONAL tag is left in `src/config.py`, and TEAM_PLAN 2.5.3 shows the dates.
 
 #### S20b · Fri Nov 6 – Sat Nov 7 · Rebuild after the decisions (only if a value changed)
-1. **Run** `python -m src.labels`.
-2. **Run** `python -m src.features v0`, then `python -m src.features v1` (~2 min).
-3. **Re-run** `notebooks/01_eda.ipynb` and `notebooks/02_feature_engineering.ipynb` with Restart & Run All.
-4. **Run** `python -m pytest tests`.
-5. **Commit** the regenerated tables and figures on `supriye/S8-decisions`, and note the changed numbers in the PR.
+1. **Run** `bash scripts/rebuild_data.sh` (~5 min). It runs `python -m src.labels`, `python -m src.features v0` and `v1`, re-executes notebooks 01 and 02, and runs the tests. The web-log cache rebuilds itself if the working hours changed.
+2. **Check** that `results/tables/split_check.csv` and `v1_validation_checks.csv` still pass.
+3. **Commit** the regenerated tables, figures and notebooks on `supriye/S8-decisions`, and note the changed numbers in the PR.
 
 **Done when:** tests pass, both notebooks run clean, and `v1_validation_checks.csv` still shows PASS.
 
@@ -103,9 +101,9 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 **Done when:** no Observation cell in notebook 01 is empty.
 
 #### S4-rest / S20-rest · Sat Nov 7 · The one data drop (TEAM_PLAN 2.5.12)
-1. **Write** checksums: `sha256sum data/processed/* data/parquet/logon.parquet data/parquet/device.parquet data/parquet/file.parquet data/parquet/email.parquet data/parquet/manifest.json > data/CHECKSUMS.txt`.
-2. **Zip** only those files plus `data/CHECKSUMS.txt` into `ueba_data_v1.zip` (~380 MB). Leave out `http.parquet` and `data/raw/`.
-3. **Upload** the zip once to the shared drive, and post the link with the commit it matches.
+1. **Run** `python scripts/data_drop.py make` after S8/S20b. It writes `data/ueba_data_v1.zip` (~360 MB), with `data/CHECKSUMS.txt` and `data/DROP_INFO.txt` (the commit and the decisions it was built with), and leaves out `http.parquet` and `data/raw/`.
+2. **Upload** the zip once to the shared drive, and post the link with the commit it matches.
+3. **Ask** Arva and Ayo to unzip it in the repo root and run `python scripts/data_drop.py verify`.
 
 **Done when:** Arva and Ayo confirm the checksums pass and `get_model_matrix(pd.read_parquet('data/processed/features_v1.parquet'), split='train')` works.
 
@@ -261,7 +259,7 @@ Branch: `supriye/S22-ablation`, from `main` **after** `arva/A15-final-models` an
 
 - **A decision changes the split:** rebuild labels, v0 and v1 (S20b) **before** Arva and Ayo tune on Mon Nov 9; tell them the new commit.
 - **Scenario 3 has no test day after moving the split:** `python -m src.labels` prints "NOT VALID". Move `VAL_END` earlier until every `insider_days_s*` cell is > 0.
-- **`build_v1` is slow or runs out of memory:** the first run makes one pass over the 28.4M-row web log (~30 s) and caches it. Later runs reuse `http_user_day_domain.parquet`. Pass `refresh=True` only after a keyword-list change.
+- **`build_v1` is slow or runs out of memory:** the first run makes one pass over the 28.4M-row web log (~30 s) and caches it. Later runs reuse `http_user_day_domain.parquet`; it rebuilds itself when the working hours change.
 - **Keyword lists changed:** delete nothing, and just re-run `python -m src.features v1`. Categories are applied from the cache.
 - **A conflict in `PROGRESS.md` or `README.md` when merging:** keep both sides' lines; never take a whole file from one side.
 - **Ablation numbers look too good:** supervised v1 runs reached val PR-AUC ≈ 0.99 in an unsaved Nov 5 test, while `f_*` alone gave 0.51 val / 0.38 test. Report (a) vs. (c) honestly and check against Ayo's SHAP (Y18).

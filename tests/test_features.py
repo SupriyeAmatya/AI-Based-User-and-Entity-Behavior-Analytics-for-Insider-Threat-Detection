@@ -133,3 +133,25 @@ def test_http_domains_and_categories():
     h = http_features(visits, cats).iloc[0]
     assert (h["f_http_count"], h["f_http_domains"], h["f_http_afterhours"]) == (10, 3, 3)
     assert (h["f_http_job"], h["f_http_leak"], h["f_http_cloud"]) == (3, 2, 0)
+
+
+
+def test_http_cache_is_rebuilt_when_working_hours_change(tmp_path, monkeypatch):
+    from src import features
+    batch = pd.DataFrame({"user": ["A", "A"], "url": ["http://x.com/a", "http://y.com/b"],
+                          "date": pd.to_datetime(["2010-01-04 06:30", "2010-01-04 20:00"])})
+    calls = []
+
+    def fake_batches(columns):
+        calls.append(1)
+        yield batch.copy()
+
+    monkeypatch.setattr(features, "PROCESSED_DIR", tmp_path)
+    monkeypatch.setattr(features, "iter_http_batches", fake_batches)
+    first = features.http_user_day_domains()
+    assert first["afterhours"].sum() == 2 and len(calls) == 1      # 06:30 and 20:00, window 7-19
+    features.http_user_day_domains()
+    assert len(calls) == 1                                           # same window: cache reused
+    monkeypatch.setattr(features, "WORK_END_HOUR", 21)
+    rebuilt = features.http_user_day_domains()
+    assert len(calls) == 2 and rebuilt["afterhours"].sum() == 1      # 20:00 is now working time

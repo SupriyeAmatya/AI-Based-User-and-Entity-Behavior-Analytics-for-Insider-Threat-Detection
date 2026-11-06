@@ -15,6 +15,8 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from src.config import (
     COMPANY_DOMAIN, EMAIL_COUNT_PERSONAL, HTTP_CATEGORIES, PROCESSED_DIR, RANDOM_STATE,
@@ -106,10 +108,15 @@ def http_user_day_domains(refresh=False) -> pd.DataFrame:
     http has ~28M rows, so it is read in batches and aggregated as it goes. The result is cached in
     data/processed/http_user_day_domain.parquet: the keyword lists (HTTP_CATEGORIES) are applied
     afterwards, so changing a list never needs another pass over the log.
+    The after-hours counts depend on the working hours, so the cache records the window it was built
+    with (Parquet metadata `work_hours`) and is rebuilt automatically when the window changes (S11).
     """
     cache = PROCESSED_DIR / "http_user_day_domain.parquet"
+    window = f"{WORK_START_HOUR}-{WORK_END_HOUR}"
     if cache.exists() and not refresh:
-        return pd.read_parquet(cache)
+        built_with = (pq.read_schema(cache).metadata or {}).get(b"work_hours", b"").decode()
+        if built_with == window:
+            return pd.read_parquet(cache)
     parts = []
     for batch in iter_http_batches(columns=("user", "date", "url")):
         batch = batch.dropna(subset=["user", "date"])
@@ -122,7 +129,9 @@ def http_user_day_domains(refresh=False) -> pd.DataFrame:
     out = pd.concat(parts).groupby(level=[0, 1, 2]).sum().reset_index()
     out = out.astype({"visits": "int32", "afterhours": "int32"})
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    out.to_parquet(cache, index=False)
+    table = pa.Table.from_pandas(out, preserve_index=False)
+    meta = {**(table.schema.metadata or {}), b"work_hours": window.encode()}
+    pq.write_table(table.replace_schema_metadata(meta), cache)
     return out
 
 
