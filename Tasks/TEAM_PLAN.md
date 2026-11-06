@@ -1,647 +1,545 @@
-# Team Plan — Work Split, Rules & Shared Reference
+# Team Plan: UEBA for Insider Threat Detection (v2, from Thu Nov 5)
 
-| Person | Role | Personal plan |
-|---|---|---|
-| **Supriye** | Data & Feature Engineering Lead + Paper Integrator | [Supriye.md](Supriye.md) |
-| **Arva** | Unsupervised Models, Risk Scoring & Prototype Lead | [Arva.md](Arva.md) |
-| **Ayo** | Supervised Models, Evaluation & Explainability Lead | [Ayo.md](Ayo.md) |
-
-> **Deadline: Friday, November 20, 2026.** That is just over three weeks from the start (Wed Oct 28). Aim to be **submission-ready on Thursday, November 19**, so Friday is only a buffer.
->
-> Because the schedule is tight, **optional items are cut first** if anyone falls behind: One-Class SVM, dashboard, LANL extension, the second recent paper each. LSTM is not planned; it goes in Future Work.
-
----
-
-## 1. How to Use These Files
-
-1. **Before the kickoff meeting (Thu Oct 29):** everyone reads this whole file once, then their own plan.
-2. Every task has an **ID**: `S` = Supriye, `A` = Arva, `Y` = Ayo (e.g. `S9`, `A21`, `Y14`).
-3. Each personal file has:
-   - a **day-by-day timeline** (date → task ID → short description), and
-   - **task cards** with the goal, numbered steps, and a **"Done when"** checklist. A task is only finished when every "Done when" item is true.
-4. Tick tasks off in your own file (`Tasks/<Name>.md`). Commit the change on the branch you're working on, so the team sees progress when it merges ([Section 14](#14-git-workflow--branching-pulling-and-pushing)).
-5. If you are going to miss a hand-off date, tell the team **as soon as you know**, not on the day.
-
----
-
-## 2. How the Three Streams Run in Parallel
-
-Models need features, and evaluation needs model scores. To avoid waiting on each other:
-
-1. **Kickoff (Thu Oct 29):** agree on the rules in [Section 5](#5-team-rules-agree-at-kickoff). They fix the file formats, so code written separately will fit together.
-2. **Oct 29 – Nov 2:** Arva and Ayo write and test their code on **synthetic data** in the agreed format while Supriye prepares the real data.
-3. **Tue Nov 3:** Supriye ships a small **v0 feature table** (real data, 100 users, basic features) so everyone switches to real data early.
-4. **Sun Nov 8:** Supriye ships the full **v1 feature table**. Arva and Ayo re-run their already-working code on it on Mon Nov 9.
-5. **Tue Nov 10 → Wed Nov 11:** all model scores flow to Ayo for the team-wide comparison.
-6. **Nov 12 – Nov 16:** analysis and paper writing. **Nov 17 – Nov 19:** merge, edit, final checks. **Fri Nov 20:** submit.
-
-```
-Week:     0 (Oct 28–Nov 1)      1 (Nov 2–8)               2 (Nov 9–15)               3 (Nov 16–20)
-Supriye   setup, data, labels → EDA, features, baselines → ablation, paper sections → merge, edit, SUBMIT
-                                  │ v0 Nov 3   │ v1 Nov 8
-Arva      IF + AE (synthetic) → risk score, AE on v0,    → tune on v1, final scores, → paper sections,
-                                prototype                  case studies               demo, SUBMIT
-                                                             │ scores Nov 10
-Ayo       evaluate.py         → RF + XGB, LOSO, SHAP     → tune on v1, compare all,  → paper sections,
-             │ Nov 1                                       FP/FN analysis             verify, SUBMIT
-                                                             │ all scores Nov 11
-```
-
----
-
-## 3. Milestones
-
-| ID | Date | Milestone | Owner | Done when |
-|---|---|---|---|---|
-| — | Thu Oct 29 | Kickoff done | All | Section 5 rules agreed and written in this file |
-| M0 | Sat Oct 31 | **Setup complete** | Supriye (all) | Repo cloned by all 3; everyone's environment installs from `requirements.txt`; CERT r4.2 Parquet files on the shared drive |
-| — | Sun Nov 1 | `evaluate.py` ready | Ayo | Merged to `main`; tested on synthetic scores |
-| — | Mon Nov 2 | Split dates final | Supriye | Train/val/test boundaries written in Section 5.3 |
-| M1 | Tue Nov 3 | **Feature table v0** | Supriye | `data/processed/features_v0.parquet` + `get_model_matrix()` shared; loads without errors in Arva's and Ayo's code |
-| — | Fri Nov 6 | `explain.py` ready | Ayo | SHAP helper merged to `main` |
-| M2 | Sun Nov 8 | **Feature table v1** | Supriye | `features_v1.parquet` + feature dictionary shared; leakage checks passed |
-| — | Tue Nov 10 | Unsupervised scores + tuned model code | Arva (scores), Arva & Ayo (code) | `iforest`, `autoencoder` (+ `ocsvm`) score files in `results/scores/`; tuned settings committed so Supriye can run the ablation |
-| M3 | Wed Nov 11 | **All score files final** | Arva, Ayo | All model score files incl. leave-one-scenario-out runs + timing numbers pushed; `evaluate.py` runs on every one |
-| — | Sat Nov 14 | Analysis done | All | Comparison table, SHAP, ablation, FP/FN and case studies finished; results walkthrough held |
-| M4 | Mon Nov 16 | **All paper sections drafted** | All | Every section in Section 11 is in Overleaf as a full draft (not bullet points) |
-| M5 | Wed Nov 18 | **Full paper draft** | Supriye | One merged PDF circulated by 18:00; all figures and references in place |
-| — | Thu Nov 19 | **Submission-ready** | All | Final fixes applied; code runs from a fresh clone |
-| — | Fri Nov 20 | **Submission** | All | Paper and code submitted |
-
----
-
-## 4. Meetings & Communication
-
-| Meeting | When | Length | Agenda |
+| Person | Role | Task file | Task IDs |
 |---|---|---|---|
-| Kickoff | Thu Oct 29 | 60 min | Walk through this file; agree on Section 5; confirm page limit and AI-use policy |
-| Stand-up | Every Mon, Wed & Fri | 15 min | Each person: what I finished / what's next / what's blocking me |
-| Features v1 walkthrough | Mon Nov 9 (with stand-up) | 30 min | Supriye explains every feature group and the feature dictionary |
-| Results walkthrough | Sat Nov 14 | 45 min | Ayo presents the comparison table; Arva presents case studies; Supriye presents the ablation; agree on the answer to the research question |
-| Final read-through | Thu Nov 19 | 60 min | Go through the paper page by page; assign and apply last fixes |
+| **Supriye** (`SupriyeAmatya`, repo owner) | Data & features lead, paper integrator | [Supriye.md](Supriye.md) | `S*` |
+| **Arva** (`arjasa1103`) | Unsupervised models, risk scoring, prototype | [Arva.md](Arva.md) | `A*` |
+| **Ayo** (`Bizzlefresh`) | Supervised models, evaluation, explainability | [Ayo.md](Ayo.md) | `Y*` |
 
-- Use **one group chat** for quick questions and **GitHub Issues** for bugs in someone else's code (assign the owner).
-- Post every hand-off in the chat with the file path and Git commit, e.g. *"features_v1 pushed, commit a1b2c3d"*.
+Progress is tracked in [PROGRESS.md](PROGRESS.md). This file replaces the Oct 28 plan. Task IDs are kept, so finished work and old PRs still match.
+
+**Old section numbers** (code comments, `CLAUDE.md`, the Guide and old PRs cite them):
+
+| Old reference | Now |
+|---|---|
+| TEAM_PLAN 5.1–5.8 (contracts) | 2.5.1–2.5.8 (same numbers) |
+| 5.9 Git rules | 3.9 |
+| 5.10 Feature freeze | 2.5.9 |
+| §3 Milestones | 1.5 |
+| §6 Dataset facts, §8 Models | 2.7 |
+| §7 Literature | 3.14 |
+| §9 Tools | 2.2 |
+| §10 Metrics, 10.2 Reporting protocol | 5.4 |
+| §11 Paper plan | 3.12–3.13 |
+| §12 Human-only work | 2.6 |
+| §13 Risks | 4 |
+| §14 Git workflow (14.6 reviewers, 14.7 tags) | 3.9 (3.10 reviewers; tags in 3.9 step 8) |
 
 ---
 
-## 5. Team Rules (agree at kickoff)
+## 1. Executive Summary
 
-These rules keep separately written code compatible and the results comparable. **Do not change a rule without telling the whole team.**
+### 1.1 Why
+- **The assignment:** build and evaluate an AI/ML UEBA prototype that learns normal behavior per user and flags insider-threat activity, then write an IEEE-style research paper about it.
+- **The research question:** *How effectively can AI/ML models detect anomalous user behavior associated with insider threats or compromised accounts, and which behavioral features and models provide the most reliable detection?*
+- **The deadline:** **submit Fri Nov 20, 2026**. Be submission-ready on **Thu Nov 19**; Friday is a buffer.
 
-### 5.1 Feature table (produced by Supriye)
-Path: `data/processed/features_v0.parquet` (sample) and `data/processed/features_v1.parquet` (full). One row = one **user-day**.
+### 1.2 What we build
+- **Data:** CERT Insider Threat r4.2 (1,000 users, Jan 2 2010 – May 17 2011, 32.8M log rows). 70 insiders in 3 scenarios (30 / 30 / 10). 984 malicious user-days out of 330,268 (**0.298%**).
+- **Unit of analysis:** one row per **user-day** with at least one logon.
+- **Features (v1):** 73 model inputs:
+  - **41 `f_*` behavior counts** across logon, time, USB, file, email, web and personality context;
+  - **14 `z_user_*`** deviations from the user's own previous 30 active days;
+  - **14 `z_peer_*`** deviations from same-role peers that day;
+  - **4 `new_*`** first-time flags.
+- **Models:** Isolation Forest, autoencoder and One-Class SVM (unsupervised, Arva); Random Forest and XGBoost (supervised, Ayo).
+- **Risk scoring:** 0–100 daily risk, 7-day user risk, alert levels, and 3 readable reasons per alert (`src/pipeline.py`).
+- **Evaluation:** test split only, at two operating points (best-F1 on val, top-1% alert budget), per scenario, plus leave-one-scenario-out (LOSO) for unseen behavior.
+- **Paper:** IEEE conference format, ~8 pages, 8 tables (T1–T8) and 8 figures (F1–F8).
 
-| Column | Type | Meaning |
-|---|---|---|
-| `user` | str | CERT user ID (e.g. `AAM0658`) |
-| `date` | date | Calendar day |
-| `split` | str | `train` / `val` / `test` (see 5.3) |
-| `label` | int | 1 = at least one malicious event that day, 0 = normal |
-| `scenario` | int | 0 = normal user-day; 1 / 2 / 3 = CERT insider scenario |
-| `insider` | int | 1 if this user is an insider (any day), else 0 — for analysis only, **never a model input** |
-| `role`, `department` | str | From LDAP for that month (peer groups and analysis only) |
-| `f_*` | float | Raw behavioral features, **unscaled** (e.g. `f_logon_count`) |
-| `z_user_*` | float | Deviation from the user's own past-30-day baseline (v1 only) |
-| `z_peer_*` | float | Deviation from same-role peers on that day (v1 only) |
-| `new_*` | int | Novelty flags, 0/1 (v1 only) |
+### 1.3 Where we stand (Thu Nov 5, `main` at `8060fc3`)
+- **Weeks 0–1 code is done and merged** (PRs #1–#28). 83/83 tests pass. Most of it was written by Claude at Supriye's request, so **each owner must still read it and be able to explain every line** (2.6).
+- **Feature table v1 exists** locally: 330,268 user-days, 73 inputs. Leakage checks 1, 2, 3 and 5 pass.
+- **All 5 models run on v0** (100-user sample). Best val PR-AUC so far: IF 0.063, AE 0.122, RF 0.273, XGB 0.324.
+- **No v1 model results yet.** No final score files, T5–T8, F4–F8, case studies or paper text exist yet.
+- **Open human items:**
+  - **Decisions:** the PROVISIONAL values;
+  - **Reviews:** all of them (none of #1–#28 has one);
+  - **Setup:** the data drop, Overleaf/Zotero and branch protection;
+  - **Literature:** all notes (`paper/lit_notes/` is empty).
+  - **Ayo:** no commits yet.
 
-**Model inputs are only the `f_*`, `z_user_*`, `z_peer_*` and `new_*` columns.** Never feed `user`, `date`, `split`, `label`, `scenario`, `insider`, `role` or `department` to a model.
+### 1.4 How the work flows from here
 
-### 5.2 Score files (produced by Arva and Ayo)
-Path: `results/scores/<model>.parquet`, where `<model>` is one of `iforest`, `autoencoder`, `ocsvm`, `random_forest`, `xgboost`. Variants: contamination runs `iforest_contam` / `autoencoder_contam` (TEAM_PLAN 5.4); leave-one-scenario-out runs `<model>_loso_s<1|2|3>`.
-
-| Column | Type | Meaning |
-|---|---|---|
-| `user`, `date` | — | Same keys as the feature table |
-| `split`, `label`, `scenario` | — | Copied from the feature table |
-| `score` | float | Raw model output, **higher = more suspicious** |
-
-Score **every** row (train, val and test), not just test. Thresholds are chosen on `val` and reported on `test`.
-
-### 5.3 Data split rule (temporal)
-- CERT r4.2 covers roughly Jan 2010 – May 2011. Rows are split **by date**, never randomly shuffled.
-- **Proposed default:** first ~60% of months = `train`, next ~15% = `val`, last ~25% = `test`.
-- Supriye checks how the insiders are spread over time (task `S6`) and posts the **final boundary dates here by Mon Nov 2**. Each split must contain malicious days from **every** scenario. If a scenario has none in one split, move the boundary.
-- Final boundaries (fill in on Nov 2): `train` = ______ to ______, `val` = ______ to ______, `test` = ______ to ______.
-
-### 5.4 Training-data rule
-- **Unsupervised models** (Isolation Forest, Autoencoder, One-Class SVM) train on `split == "train"` **and** `label == 0` only. Using labels to remove known-bad days is a simplification; it goes in the Limitations section. Arva also runs a variant trained on **all** train rows to show how much contamination hurts.
-- **Supervised models** (Random Forest, XGBoost) train on all `split == "train"` rows.
-- **Hyperparameters** are tuned on `val`. The `test` split is used **once**, for the final numbers.
-
-### 5.5 Preprocessing rule
-All models call the same helper so inputs are identical:
-```python
-from src.features import get_model_matrix
-X_train, y_train, feature_names = get_model_matrix(df, split="train")
 ```
-- `get_model_matrix()` (written by Supriye) selects the model-input columns, applies `log1p` to count features (`f_*`) and fills missing values with 0.
-- Each model then fits `StandardScaler` on the **training rows only** and applies it to val/test (use a scikit-learn `Pipeline`).
+Thu Nov 5 – Sun Nov 8   CATCH-UP   decisions, reviews, ONE data drop, reading, code read-throughs → M2 (v1 frozen)
+Mon Nov 9 – Wed Nov 11  MODELS     tune on v1 → final score files → LOSO, ablation, extra results → M3
+Thu Nov 12 – Sat Nov 14 ANALYSIS   comparison, SHAP, FP/FN, case studies, prototype on v1 → results walkthrough
+Sun Nov 15 – Wed Nov 18 PAPER      sections → M4 → full draft → M5 (code freeze Wed)
+Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archive → SUBMIT
+```
 
-### 5.6 Threshold rule
-Every model is reported at **two** operating points so the comparison is fair:
-1. **Best-F1 threshold:** the score threshold that maximizes F1 on `val`, applied unchanged to `test`.
-2. **Fixed alert budget:** flag the top **1%** of `test` user-days (simulates "an analyst can review ~1% of activity").
+### 1.5 Milestones
 
-ROC-AUC and PR-AUC need no threshold.
-
-### 5.7 Reproducibility rule
-- `random_state=42` / `seed=42` everywhere (NumPy, scikit-learn, XGBoost, PyTorch).
-- Pin versions: after setup, Supriye runs `pip freeze > requirements.txt` and commits it.
-- Every notebook must run **top to bottom** after "Restart & Run All" before it is merged.
-- No hard-coded personal paths (`C:\Users\...`); use paths relative to the repo root.
-
-### 5.8 Code ownership
-| File | Owner |
-|---|---|
-| `src/config.py` (paths, seed, PROVISIONAL decisions), `src/data_loader.py`, `src/labels.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py`, `tests/test_labels.py`, `tests/test_features.py`, `tests/test_v0_smoke.py` | Supriye |
-| `src/synthetic.py`, `src/models_unsupervised.py`, `src/risk_scoring.py`, `src/pipeline.py`, `app/dashboard.py`, their tests in `tests/` | Arva |
-| `src/models_supervised.py`, `src/evaluate.py`, `src/explain.py`, `tests/test_evaluate.py` and their other tests | Ayo |
-| `README.md`, `requirements.txt`, `.gitignore`, `paper/` (assembly), `Tasks/`, `Guide/` | Supriye |
-
-Everyone imports paths and `RANDOM_STATE` from `src/config.py`; nobody hard-codes `data/...` paths. Run all code from the repo root with the project environment active (Python 3.13 from `requirements.txt`, kept at a short path outside the repo such as `%USERPROFILE%\.venvs\ueba`; see the README) (e.g. `python -m src.labels`), and the tests with `python -m pytest tests`.
-
-Need a change in someone else's file? Open a GitHub Issue and assign the owner. Don't edit it directly.
-
-One agreed exception: Arva adds the "Run the prototype" section to `README.md` (task A23) through a pull request that Supriye reviews.
-
-### 5.9 Git rules (full how-to in [Section 14](#14-git-workflow--branching-pulling-and-pushing))
-1. `main` must always run. **Nobody pushes directly to `main`**; every change goes through a pull request (PR) with one reviewer.
-2. One branch per task: `<name>/<TaskID>-<short-description>`, e.g. `arva/A6-autoencoder`. Each person's branches are listed in their own file.
-3. Pull `main` every morning; push your branch every evening.
-4. **Code goes through Git; data goes through the shared drive.** Never commit data, score files or trained models (`.gitignore` blocks them; see 14.1).
-5. Commit messages start with the task ID, e.g. `S10: add login features`.
-6. A **code hand-off counts as delivered only when its PR is merged** into `main` and announced in chat.
-7. **Code freeze Wed Nov 18:** after that, only bug fixes are merged.
-
-### 5.10 Feature-table freeze rule
-After v1 (Sun Nov 8) the feature table is **frozen**. Only bugs that change results are fixed, released as `features_v1_1.parquet` **no later than Tue Nov 10, 12:00**, and announced in chat. After that, no feature changes.
+| ID | Due | Milestone | Owner | Done when | State (Nov 5) |
+|---|---|---|---|---|---|
+| M0 | Sat Oct 31 | **Setup complete** | Supriye | Everyone cloned and installed; Parquet data on the drive | Open (drive, Ayo) |
+| — | Sun Nov 1 | `evaluate.py` ready | Ayo | Merged and tested | Done Nov 3 |
+| — | Mon Nov 2 | Split dates final | Supriye | Dates written into 2.5.3 | Open (PROVISIONAL) |
+| M1 | Tue Nov 3 | **Feature table v0** | Supriye | v0 + `get_model_matrix()` load in Arva's and Ayo's code | Open (confirmations) |
+| — | Fri Nov 6 | `explain.py` ready | Ayo | Merged; Arva confirms it for the case studies | Code merged |
+| M2 | Sun Nov 8 | **Feature table v1 frozen** | Supriye | v1 + dictionary on the drive; decisions final; both teammates load it | Built, not shared |
+| — | Tue Nov 10 | Tuned models + scores | Arva, Ayo | Tuned defaults committed; final score files on the drive | — |
+| M3 | Wed Nov 11 | **All score files final** | Arva, Ayo | All score files incl. LOSO + timing; `evaluate.py` runs on each | — |
+| — | Sat Nov 14 | Analysis done | All | T5–T8, F4–F8, FP/FN, case studies; walkthrough held | — |
+| M4 | Mon Nov 16 | **All paper sections drafted** | All | Every section in 3.12 is full text in Overleaf | — |
+| M5 | Wed Nov 18 18:00 | **Full paper draft** | Supriye | One merged PDF circulated | — |
+| — | Thu Nov 19 | Submission-ready | All | Fresh-clone test passes; `final-submission` tag | — |
+| — | Fri Nov 20 | **Submitted** | All | Paper + code submitted | — |
 
 ---
 
-## 6. Dataset Facts Everyone Should Know
+## 2. Prerequisites / Required Tools
 
-### CERT Insider Threat Test Dataset r4.2 (primary)
-- **Where:** Carnegie Mellon University KiltHub, "Insider Threat Test Dataset" (search the title on `kilthub.cmu.edu`). Download **`r4.2.tar.bz2`** and **`answers.tar.bz2`**.
-- **Size (verified Nov 3):** `r4.2.tar.bz2` is 4.82 GB and holds ~16 GB of CSVs (`http.csv` is 14.5 GB). `python -m src.data_loader convert` never unpacks them; the Parquet copy is 1.2 GB. Needs ≥ 8 GB free disk and 16 GB RAM is comfortable.
-- **Scale (verified Nov 3):** 1,000 users, Jan 2 2010 – May 17 2011 (17 months), 32.8M log rows, **70 insiders: 30 / 30 / 10** per scenario, 984 malicious user-days out of 330,268 with a logon (0.298%).
+### 2.1 Access
+- **GitHub:** collaborator access to `SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection` (all three have it, checked Nov 4).
+- **Shared drive:** read access to one file, `ueba_data_v1.zip` (~380 MB, the only data that moves between laptops; 2.5.12). **Supriye uploads it once, by Sat Nov 7.**
+- **Overleaf:** the team project on the IEEE conference template (Supriye creates it and invites both).
+- **Zotero:** the shared group library (Supriye creates it), exporting IEEE style.
+- **StFX library login:** for paywalled papers.
+- **LANL data** *(only if S24 is agreed)*: each downloader accepts the terms at `csr.lanl.gov/data/cyber1/` personally.
 
-| File | Columns (verified against the data, Nov 3) |
+### 2.2 Software
+| Tool | Version / note | Used for |
+|---|---|---|
+| **Python** | 3.13 | Everything |
+| **Virtual environment** | At a short path **outside** the repo, e.g. `%USERPROFILE%\.venvs\ueba` (Windows path-length limit) | Installing `requirements.txt` |
+| **Packages** | Pinned in `requirements.txt`: pandas, numpy, pyarrow, scikit-learn, xgboost, imbalanced-learn, torch (CPU), shap, matplotlib, seaborn, jupyter, pytest, streamlit, psutil | Code, notebooks, tests |
+| **Git + GitHub CLI (optional)** | Any recent | Branches, PRs |
+| **Jupyter** | From `requirements.txt` | Notebooks 01–05 |
+| **draw.io or PowerPoint** | Any | Figure F2 (Arva) |
+
+### 2.3 One-time setup (each person)
+1. **Clone** the repo: `git clone https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection.git`
+2. **Create** the environment outside the repo: `python -m venv %USERPROFILE%\.venvs\ueba` (macOS/Linux: `python3 -m venv ~/.venvs/ueba`).
+3. **Activate** it: `%USERPROFILE%\.venvs\ueba\Scripts\activate` (macOS/Linux: `source ~/.venvs/ueba/bin/activate`).
+4. **Install** packages: `pip install -r requirements.txt`.
+5. **Unzip** `ueba_data_v1.zip` into the repo root (it creates `data/processed/` and `data/parquet/`) and check `sha256sum -c data/CHECKSUMS.txt`. Or rebuild everything yourself (2.5.11).
+6. **Run** `python -m pytest tests` from the repo root. Expect **83 passed** with the data present (2 v0 smoke tests skip without it).
+7. **Set** your Git identity: `git config user.name "Your Name"` and `git config user.email "you@example.com"`.
+
+### 2.4 Hardware
+- **Disk:** ≥ 8 GB free to rebuild the data (4.8 GB archive + 1.2 GB Parquet).
+- **RAM:** 16 GB is comfortable. The web log (28.4M rows) is always read in batches.
+- **CPU time:** tuning on v1 takes about an hour per model family on a 24-thread laptop. Run it in the background.
+
+### 2.5 Team contracts (every step must follow them; change only with the whole team)
+#### 2.5.1 Feature table (Supriye)
+- **Paths:** `data/processed/features_v0.parquet` (100-user sample), `features_v1.parquet` (all users).
+- **Rows:** one per user-day with ≥ 1 logon. Days without a logon are dropped (17 activity days, 2 malicious days in v1).
+- **Metadata columns (never model inputs):** `user, date, split, label, scenario, insider, role, department`.
+- **Model inputs:** only columns starting with `f_`, `z_user_`, `z_peer_` or `new_`.
+- **Definitions:** every column is in [docs/feature_dictionary.md](../docs/feature_dictionary.md).
+
+#### 2.5.2 Score files (Arva, Ayo)
+- **Path:** `results/scores/<model>.parquet`. Model stems: `iforest`, `autoencoder`, `ocsvm`, `random_forest`, `xgboost`, `iforest_contam`, `autoencoder_contam`, `<model>_loso_s<1|2|3>`.
+- **Columns:** `user, date, split, label, scenario, score`. Higher `score` = more suspicious.
+- **Coverage:** score **every** row (train, val, test). LOSO files hold only their test rows.
+
+#### 2.5.3 Split rule (PROVISIONAL until Supriye decides)
+- **By date, never shuffled.** `train` ≤ `TRAIN_END`, `val` ≤ `VAL_END`, else `test`.
+- **Current values:** `TRAIN_END = 2010-10-31`, `VAL_END = 2011-01-31` (the 60/15/25 month rule).
+- **Requirement:** every split has malicious days from every scenario (`python -m src.labels` checks it).
+- **Known weakness:** scenario 3 in test is 1 real insider (`JLM0364`) with 2 days, plus 2 days on the hijacked account `FBA0348`.
+- **Final values:** `train` = ______, `val` = ______, `test` = ______ *(Supriye fills in by Fri Nov 6)*.
+
+#### 2.5.4 Training-data rule
+- **Unsupervised models** train on `split == "train"` and `label == 0`; the `_contam` variants train on all train rows.
+- **Supervised models** train on all `split == "train"` rows.
+- **Tuning** uses `val` only. **Test** is used once, for the final numbers.
+
+#### 2.5.5 Preprocessing rule
+- **Every model** builds inputs with `get_model_matrix(df, split=..., columns=...)`: it applies `log1p` to `f_*` counts (not `NOT_COUNTS`) and fills NaN/inf with 0.
+- **Every model** fits `StandardScaler` on training rows only, inside a scikit-learn (or imblearn) `Pipeline`.
+
+#### 2.5.6 Threshold rule
+- **Best-F1:** the threshold maximizing F1 on `val`, applied unchanged to `test`.
+- **Top-1% budget:** flag the top 1% of `test` user-days.
+- **Both** are computed by `src/evaluate.py` (`evaluate_file`, `compare_files`).
+
+#### 2.5.7 Reproducibility rule
+- **Seed** 42 everywhere (`RANDOM_STATE` in `src/config.py`).
+- **Paths** come from `src/config.py`; no hard-coded `data/...` or `C:\Users\...`.
+- **Notebooks** run top to bottom after Restart & Run All before merge.
+
+#### 2.5.8 Code ownership (edit only your own files; otherwise open an Issue)
+| Owner | Files |
 |---|---|
-| `logon.csv` | `id, date, user, pc, activity` (Logon / Logoff) |
+| **Supriye** | `src/config.py`, `data_loader.py`, `labels.py`, `features.py`, `baseline.py`, `src/ablation.py` (new, S22), `src/lanl_features.py` (stretch); `tests/test_labels.py`, `test_features.py`, `test_baseline.py`, `test_pipeline_mini.py`, `test_v0_smoke.py`; notebooks `01`, `02`; `docs/feature_dictionary.md`; `README.md`, `requirements.txt`, `.gitignore`, `Tasks/`, `Guide/`, `paper/` assembly |
+| **Arva** | `src/synthetic.py`, `models_unsupervised.py`, `risk_scoring.py`, `pipeline.py`, `app/dashboard.py`; their tests; notebooks `03a`, `05`; `docs/coverage.md`; `CLAUDE.md` |
+| **Ayo** | `src/models_supervised.py`, `evaluate.py`, `explain.py`; their tests; notebooks `03b`, `04` |
+| **Exception** | Arva adds the README "Run the prototype" section (A23) through a PR that Supriye reviews |
+
+#### 2.5.9 Feature-table freeze
+- **Freeze:** after Sun Nov 8.
+- **Exception:** a result-changing bug reported as a GitHub Issue, fixed as `features_v1_1.parquet` by **Tue Nov 10 12:00**.
+
+#### 2.5.10 Data rule
+- **Git:** code, notebooks, small CSV tables (`results/tables/`), figures, notes. Every result table moves this way.
+- **Shared drive:** only `ueba_data_v1.zip` (and `features_v1_1.parquet` if S21 needs it, or `lanl_features.parquet` if S24 happens).
+- **Never shared:** raw archives, `http.parquet`, `results/scores/`, `models/`. Each laptop regenerates them (2.5.12).
+- **Overleaf:** the paper.
+
+#### 2.5.11 Rebuilding the data (if the drive copy is missing)
+1. **Run** `bash scripts/download_cert.sh` (4.8 GB, resumable, checksum-verified).
+2. **Run** `python -m src.data_loader convert` (~10 min).
+3. **Run** `python -m src.labels`.
+4. **Run** `python -m src.features v0` and `python -m src.features v1` (~2 min; the first v1 run makes a 30-second pass over the web log).
+
+#### 2.5.12 Minimal-transfer rule (send code, not data)
+- **One data drop, once:** after the decisions are final, Supriye uploads `ueba_data_v1.zip` (~380 MB):
+  - **`data/processed/`:** `labels.parquet`, `features_v0.parquet`, `features_v1.parquet` (35 MB), `http_user_day_domain.parquet` (18 MB), `http_domain_counts.csv`;
+  - **`data/parquet/`:** `logon`, `device`, `file`, `email` + `manifest.json` (~325 MB);
+  - **`data/CHECKSUMS.txt`:** SHA-256 of every file.
+- **Left out on purpose:** `http.parquet` (907 MB; the 18 MB web cache replaces it) and the 4.5 GB raw archive. Only Supriye needs those.
+- **Tuned settings travel as code:** the merged module defaults (A16, Y15), never as parameter files or trained models.
+- **Score files are rebuilt, not sent:**
+  - **Rebuild commands:** `python -m src.models_unsupervised final` and `python -m src.models_supervised final` regenerate them from `features_v1.parquet` with seed 42, in minutes, with no grid search.
+  - **Self-contained experiments:** LOSO, the ablation and SHAP retrain on their own.
+- **One results machine:** the paper's comparison numbers (T5, T6, T8, F4–F6) come from Ayo's laptop (notebook 04), so small CPU differences in the AE cannot make two versions of a table.
+- **Trained models (`models/`) are never shared:** `pipeline.py` retrains when one is missing (`--retrain`).
+- **A second drop is allowed only for** `features_v1_1.parquet` (S21) or `lanl_features.parquet` (S24).
+
+### 2.6 Human-only work (no AI agents)
+**Check the course's AI-use policy first; if it is stricter, it wins.** These stay 100% human:
+
+- **Reading papers** and writing literature notes and Related Work.
+- **Writing the paper:** ideas, structure, sentences, conclusions.
+- **Interpreting results** and answering the research question.
+- **Explaining flagged anomalies** (case-study narratives and verdicts, FP/FN root causes).
+- **Checking every citation:** it exists, the details are right, and it says what we claim.
+- **Design decisions and their reasons:** granularity, after-hours, split dates, keyword lists, labeling, thresholds, alert levels, AE architecture, imbalance set-up, LOSO design.
+- **Understanding every line of submitted code:** each owner explains their own code without notes.
+- **Presenting the demo** and your own parts.
+
+AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs it and can explain it** before it counts as done. Agents must leave every human-only box unticked.
+
+### 2.7 Dataset and model facts
+
+#### 2.7.1 CERT r4.2 files (columns verified Nov 3)
+| File | Columns |
+|---|---|
+| `logon.csv` | `id, date, user, pc, activity` (Logon / Logoff); **no failed logins** |
 | `device.csv` | `id, date, user, pc, activity` (Connect / Disconnect) |
-| `file.csv` | `id, date, user, pc, filename, content` (file copies to removable media) |
+| `file.csv` | `id, date, user, pc, filename, content` (copies to removable media; only doc/pdf/txt/jpg/zip/exe) |
 | `email.csv` | `id, date, user, pc, to, cc, bcc, from, size, attachments, content` |
-| `http.csv` | `id, date, user, pc, url, content` |
+| `http.csv` | `id, date, user, pc, url, content` (28.4M rows, 475 domains) |
 | `psychometric.csv` | `employee_name, user_id, O, C, E, A, N` |
 | `LDAP/YYYY-MM.csv` | `employee_name, user_id, email, role, business_unit, functional_unit, department, team, supervisor` |
-| `answers/insiders.csv` | `dataset, scenario, details, user, start, end` |
-| `answers/r4.2-<scenario>/…` | One file per insider listing their malicious log records |
+| `answers/insiders.csv` + `answers/r4.2-<s>/…` | One row per insider; one file per insider listing their malicious records |
 
-**Scenarios in r4.2:**
-1. A user who never worked after hours or used USB drives starts logging in after hours, using a USB drive and uploading data to `wikileaks.org`, then leaves the organization.
-2. A user starts browsing job websites and contacting a competitor; before leaving, they copy data to USB drives at a much higher rate than before.
-3. A disgruntled system administrator downloads a keylogger, uses a USB drive to put it on the supervisor's machine, then logs in as the supervisor to send an alarming mass email, and leaves. In the labels, this puts 20 malicious days on two supervisor accounts (`FAW0032`, `FBA0348`): half of scenario 3's labeled days (open decision S6).
+`content` is dropped from email and http during conversion. The company domain is `dtaa.com`. 14 senior staff have no LDAP department (their functional unit is used).
 
-**Important gap:** CERT `logon.csv` has **no failed logins**, so "authentication failures" (named in the assignment) cannot come from CERT. With the Nov 20 deadline, the default plan is to **state this gap clearly in Methodology and Limitations**, and use logon behavior on unusual PCs and at unusual times as the authentication signal. The LANL extension below is a **stretch goal**. At the Mon Nov 9 stand-up the team decides whether there is time for it.
+#### 2.7.2 Insider scenarios
+- **Scenario 1 (30 insiders):** someone who never worked after hours or used USB starts doing both and uploads data to `wikileaks.org`, then leaves.
+- **Scenario 2 (30 insiders):** someone browses job sites and contacts a competitor, then copies data to USB at a much higher rate before leaving.
+- **Scenario 3 (10 insiders):** a disgruntled sysadmin plants a keylogger via USB, logs in **as the supervisor** and sends an alarming mass email. 20 malicious days sit on the hijacked accounts `FAW0032`/`FBA0348` (decision S6).
 
-### LANL Comprehensive Cyber-Security Events (stretch goal)
-- **Where:** `csr.lanl.gov/data/cyber1/`. Each person who downloads it must read and accept the data-use terms themselves.
-- **Files used:** `auth.txt.gz` (~1 billion authentication events with a **Success/Failure** field) and `redteam.txt.gz` (~750 known compromise events = labels).
-- **Scope for this project:** a subset of the data (see task `S24`). This adds the authentication-failure and compromised-account angle that CERT lacks.
+#### 2.7.3 Models
+| Model | Type | Owner | Trains on | Score (higher = more suspicious) | Required? |
+|---|---|---|---|---|---|
+| Isolation Forest | Unsupervised | Arva | train, label 0 | `-decision_function(X)` | Yes |
+| Autoencoder (dense, PyTorch) | Unsupervised | Arva | train, label 0 | mean squared reconstruction error | Yes |
+| One-Class SVM | Unsupervised | Arva | ≤ 20k train rows, label 0 | `-decision_function(X)` | Optional |
+| `_contam` variants | Unsupervised | Arva | all train rows | same | Yes (contamination effect) |
+| Random Forest | Supervised | Ayo | all train rows | `predict_proba(X)[:, 1]` | Yes |
+| XGBoost | Supervised | Ayo | all train rows (early stopping on val) | `predict_proba(X)[:, 1]` | Yes |
+| LSTM | Sequence | — | — | — | Not planned (future work, cite L5) |
+
+- **Why both families:** unsupervised models match real deployments (labels are rare, attacks change); supervised models show the best case with labels. LOSO compares them on unseen attacks.
 
 ---
 
-## 7. Literature
+## 3. Step-by-Step Instructions
 
-The assignment requires **≥ 5 recent papers** on UEBA / insider-threat / anomaly detection from **IEEE Xplore, Springer, Elsevier or ACM DL**. Our plan: 8 assigned topical papers + **1 paper from 2022–2026 per person** (a second one only if time allows) = 11+ papers. That covers both "≥ 5" and "recent".
+### 3.1 Daily routine (everyone)
+1. **Pull** `main` every morning: `git checkout main`, then `git pull origin main`.
+2. **Start** each task on its own branch from the fresh `main`: `git checkout -b <name>/<TaskID>-<short-description>`.
+3. **Run** code from the repo root as modules: `python -m src.<module>`.
+4. **Run** `python -m pytest tests` before every push.
+5. **Check** `git status` before committing. Never commit data, score files or models.
+6. **Commit** with the task ID first: `git commit -m "A15: tune on v1"`.
+7. **Push** every evening: `git push -u origin <branch>`.
+8. **Tick** the matching line in [PROGRESS.md](PROGRESS.md) on the same branch.
+9. **Post** hand-offs in the group chat with the file path and commit or PR link.
 
-### 7.1 Assigned topical papers (the literature review)
-| ID | Paper | Venue | Topic | Reviewer |
-|---|---|---|---|---|
-| L1 | Glasser & Lindauer, "Bridging the Gap: A Pragmatic Approach to Generating Insider Threat Data" (2013) | IEEE Security & Privacy Workshops | How the CERT data was made | Supriye |
-| L2 | Le, Zincir-Heywood & Heywood, "Analyzing Data Granularity Levels for Insider Threat Detection Using Machine Learning" (2020) | IEEE Trans. on Network and Service Management | Features & granularity on CERT | Supriye |
-| L3 | Homoliak et al., "Insight into Insiders and IT: A Survey of Insider Threat Taxonomies, Analysis, Modeling, and Countermeasures" (2019) | ACM Computing Surveys | Insider-threat taxonomy | Supriye |
-| L4 | Tuor et al., "Deep Learning for Unsupervised Insider Threat Detection in Structured Cybersecurity Data Streams" (2017) | AAAI Workshops | Unsupervised deep learning on CERT | Arva |
-| L5 | Lu & Wong, "Insider Threat Detection with Long Short-Term Memory" (2019) | ACM ACSW | Sequence models | Arva |
-| L6 | Liu, De Vel, Han, Zhang & Xiang, "Detecting and Preventing Cyber Insider Threats: A Survey" (2018) | IEEE Communications Surveys & Tutorials | Survey of approaches | Ayo |
-| L7 | Yuan & Wu, "Deep Learning for Insider Threat Detection: Review, Challenges and Opportunities" (2021) | Computers & Security (Elsevier) | Survey; evaluation challenges | Ayo |
-| L8 | Liu et al., "Log2vec: A Heterogeneous Graph Embedding Based Approach for Detecting Cyber Threats within Enterprise" (2019) | ACM CCS | Strong CERT result to compare | Ayo |
-| L9a (L9b optional) | 2022–2026 paper(s): **insider-threat features / UEBA / compromised accounts** | IEEE / Springer / Elsevier / ACM | — | Supriye |
-| L10a (L10b optional) | 2022–2026 paper(s): **unsupervised / autoencoder / sequence anomaly detection for insider threats** | IEEE / Springer / Elsevier / ACM | — | Arva |
-| L11a (L11b optional) | 2022–2026 paper(s): **supervised / explainable (XAI) insider-threat detection** | IEEE / Springer / Elsevier / ACM | — | Ayo |
+### 3.2 Catch-up block: Thu Nov 5 – Sun Nov 8
+1. **Supriye: decide** the 5 PROVISIONAL values (split dates, after-hours window, web keyword lists, email-count rule, hijacked-account labels) by **Fri Nov 6**, and write them into `src/config.py` and 2.5.3.
+2. **Supriye: rebuild** labels, v0 and v1 if any value changed (Supriye.md S20b), then upload the **single** data drop `ueba_data_v1.zip` by **Sat Nov 7** (2.5.12).
+3. **Everyone: read** the Claude-written code in your own lane until you can explain it (your file, step 1).
+4. **Everyone: review** the merged PRs assigned to you in [PROGRESS.md §7](PROGRESS.md) and open new PRs for any fixes.
+5. **Ayo: clone, install and run** the tests (Y1). This is overdue.
+6. **Arva and Ayo: fix** the tuning-notebook log reset before running on v1 (Arva.md A15 step 1, Ayo.md Y14 step 1).
+7. **Everyone: catch up** on literature notes (your LIT tasks).
+8. **Supriye: freeze** v1 on **Sun Nov 8** (M2), then tag `m2-features-v1`.
 
-### 7.2 Method & supporting references (cite where used)
-| Reference | Used for | Owner |
+### 3.3 Models block: Mon Nov 9 – Wed Nov 11
+1. **Hold** the Mon stand-up with the 30-min v1 walkthrough. Decide whether the LANL stretch (S24) happens; the default is no.
+2. **Arva and Ayo: tune** on v1 (A15, Y14) on Mon.
+3. **Supriye: run** the bug-fix window until **Tue Nov 10 12:00** (S21); release `features_v1_1.parquet` only if a result-changing bug is reported.
+4. **Arva and Ayo: merge** the tuned settings as code defaults plus a one-line `final` command that rebuilds their score files (A16, Y15) on Tue. **No score files are sent**: anyone runs `python -m src.models_unsupervised final` and `python -m src.models_supervised final`.
+5. **Supriye: run** the feature-group ablation (S22) on Wed, after both tuned-defaults PRs merge.
+6. **Arva: send** per-scenario recall, contamination effect, alert volume and timing (A17) on Wed.
+7. **Ayo: run** LOSO and build T6 (Y16) on Wed → **M3**; Supriye tags `m3-all-scores`.
+
+### 3.4 Analysis block: Thu Nov 12 – Sat Nov 14
+1. **Ayo: build** T5, F4, F5, the detection-delay table and T8 (Y17) on Thu.
+2. **Arva: run** the prototype on v1, record precision@20 and draw F8 (A18) on Thu.
+3. **Ayo: run** the SHAP analysis (F6, `feature_importance.csv`, Y18) on Fri.
+4. **Arva: build** the 4 case studies with F7 (A19) on Fri–Sat.
+5. **Supriye: send** the data-processing time for T8 to Ayo on Fri.
+6. **Everyone: post** your Related Work paragraphs in Overleaf by Fri night.
+7. **Ayo: build** the FP/FN tables and causes (Y20) on Sat.
+8. **Hold** the results walkthrough (45 min) on Sat. Agree on the answer to the research question; Supriye tags `analysis-done`.
+
+### 3.5 Paper block: Sun Nov 15 – Wed Nov 18
+1. **Write** your sections in Overleaf (3.12) by **Mon Nov 16** → M4.
+2. **Supriye: integrate** and write the Abstract on Tue.
+3. **Ayo: verify** every number against `results/tables/` on Tue (Y23).
+4. **Arva: test** a fresh clone and rehearse the demo on Tue (A24).
+5. **Freeze** code on **Wed Nov 18**: bug fixes only from here.
+6. **Supriye: circulate** the full PDF by **Wed 18:00** → M5.
+
+### 3.6 Finish: Thu Nov 19 – Fri Nov 20
+1. **Hold** the final read-through (60 min) on Thu; fix everything assigned the same day.
+2. **Supriye: merge** the last PRs, run the fresh-clone test, tag `final-submission` and build the code archive (S34).
+3. **Supriye: submit** the paper and code on Fri, and post the confirmation in chat (S35).
+
+### 3.7 Hand-off calendar (from Nov 5)
+
+| Due | What | From → To |
 |---|---|---|
-| Liu, Ting & Zhou, "Isolation Forest," IEEE ICDM (2008) | Isolation Forest | Arva |
-| Schölkopf et al., "Estimating the Support of a High-Dimensional Distribution," Neural Computation (2001) | One-Class SVM | Arva |
-| Chandola, Banerjee & Kumar, "Anomaly Detection: A Survey," ACM Computing Surveys (2009) | Anomaly-detection background | Arva |
-| Breiman, "Random Forests," Machine Learning (Springer) (2001) | Random Forest | Ayo |
-| Chen & Guestrin, "XGBoost: A Scalable Tree Boosting System," ACM KDD (2016) | XGBoost | Ayo |
-| Lundberg & Lee, "A Unified Approach to Interpreting Model Predictions," NeurIPS (2017) | SHAP | Ayo |
-| Saito & Rehmsmeier, "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets," PLoS ONE (2015) | Why PR matters | Ayo |
-| Lindauer, "Insider Threat Test Dataset," Carnegie Mellon University (KiltHub) | CERT dataset citation | Supriye |
-| Kent, "Comprehensive, Multi-Source Cyber-Security Events," Los Alamos National Laboratory (2015) | LANL dataset citation | Supriye |
+| Fri Nov 6 | Final PROVISIONAL values in `src/config.py` + 2.5.3 | Supriye → all |
+| Sat Nov 7 | **The only data drop:** `ueba_data_v1.zip` (labels, v0, v1, web cache, 4 small logs; ~380 MB) | Supriye → Arva, Ayo |
+| Sun Nov 8 | v1 frozen + `docs/feature_dictionary.md` | Supriye → Arva, Ayo |
+| Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed; 35 MB, the only allowed second drop)* | Supriye → Arva, Ayo |
+| Tue Nov 10 | Merged PR: tuned `models_unsupervised.py` defaults + `python -m src.models_unsupervised final` (rebuilds `iforest`, `autoencoder`, `*_contam`, `ocsvm`) | Arva → Ayo, Supriye (via Git) |
+| Tue Nov 10 | Merged PR: tuned `models_supervised.py` defaults + `python -m src.models_supervised final` (rebuilds `random_forest`, `xgboost`) + `timing_supervised.csv` | Ayo → Supriye, Arva (via Git) |
+| Wed Nov 11 | Merged PR with `results/tables/unsupervised_extra.csv` | Arva → Ayo (via Git) |
+| Wed Nov 11 | Merged PR with `results/tables/loso.csv` (T6) | Ayo → team (via Git) |
+| Wed Nov 11 | Merged PR with `results/tables/ablation.csv` (T7) | Supriye → Ayo (via Git) |
+| Thu Nov 12 | T5, F4, F5 | Ayo → team |
+| Fri Nov 13 | Merged PR with `data_processing_time.csv` (for T8; part of S22) | Supriye → Ayo (via Git) |
+| Fri Nov 13 | Related Work paragraphs | Arva, Ayo → Supriye |
+| Sun Nov 15 | IV-C, IV-D, V, VI-B drafts | Arva, Ayo → Supriye |
+| Mon Nov 16 | VI-A, VI-C, VIII drafts + README "Run the prototype" | Arva, Ayo → Supriye |
+| Wed Nov 18 18:00 | Full paper PDF | Supriye → Arva, Ayo |
 
-### 7.3 How to find your 2022–2026 papers
-1. Open L2 or L7 in **Google Scholar** → click **"Cited by"** → set **"Since 2022"**.
-2. Or search IEEE Xplore / ACM DL / ScienceDirect / SpringerLink with: `insider threat detection`, `UEBA`, `user behavior anomaly detection`, `CERT insider threat dataset`, `compromised account detection`, `explainable insider threat`.
-3. Keep a paper only if: (a) its publisher is IEEE, Springer, Elsevier or ACM, (b) it's from 2022–2026, (c) it runs experiments (preferably on CERT or LANL).
-4. Access full text through the **StFX library** login if a paywall appears.
-5. Post the title in chat before reading it so nobody picks the same paper.
-
-### 7.4 Note template (one file per paper: `paper/lit_notes/<ID>.md`)
-```
-Citation (IEEE style):
-Problem addressed:
-Dataset (CERT version / LANL / other):
-Granularity (event / session / day / week):
-Features used:
-Models used:
-Evaluation metrics + key results (numbers):
-Strengths:
-Limitations / gaps:
-How it relates to our project (1–2 sentences):
-```
-Add each paper to the shared **Zotero** group library as you read it.
-
----
-
-## 8. Models
-
-| Model | Type | Owner | Required? | Anomaly score |
-|---|---|---|---|---|
-| Isolation Forest | Unsupervised | Arva | **Required** | `-decision_function(X)` |
-| Autoencoder (dense) | Unsupervised, deep | Arva | **Required** | Mean squared reconstruction error |
-| Random Forest | Supervised | Ayo | **Required** | `predict_proba(X)[:, 1]` |
-| XGBoost | Supervised | Ayo | **Required** | `predict_proba(X)[:, 1]` |
-| One-Class SVM | Unsupervised | Arva | Optional | `-decision_function(X)` |
-| LSTM | Sequence | — | **Not planned** (Future Work; cite L5) | — |
-
-**Justification for the paper:** unsupervised models match real deployments, where labels are rare and attacks change. Supervised models show the best case when labels exist. Comparing both, especially on **unseen scenarios**, answers the research question.
-
----
-
-## 9. Tools
-
-| Tool | Purpose | Who |
-|---|---|---|
-| Python 3.13 | Language (`requirements.txt` was built with 3.13; keep the environment outside the repo, see the README) | All |
-| pytest | Unit tests in `tests/` | All |
-| Pandas, NumPy, PyArrow | Data processing, Parquet I/O | All |
-| Scikit-learn | Isolation Forest, One-Class SVM, Random Forest, scaling, metrics | All |
-| XGBoost | Gradient-boosted trees | Ayo |
-| imbalanced-learn | SMOTE (training set only) | Ayo |
-| PyTorch (CPU build) | Autoencoder. TensorFlow/Keras is fine if the team prefers; decide at kickoff | Arva |
-| SHAP | Feature-level explanations | Ayo, Arva |
-| Matplotlib, Seaborn | Figures | All |
-| Jupyter Notebook | Experiments and analysis | All |
-| Streamlit *(optional)* | Prototype dashboard | Arva |
-| Git + GitHub | Version control, pull requests, issues | All |
-| Overleaf (IEEE conference template) | Writing the paper together | All |
-| Zotero (shared group library) | References, exported in IEEE style | All |
-
----
-
-## 10. Evaluation Metrics
-
-### 10.1 Definitions
-TP = malicious user-day flagged, FP = normal user-day flagged, TN = normal not flagged, FN = malicious not flagged.
-
-| Metric | Formula | What it tells us | Computed by |
+### 3.8 Meetings
+| Meeting | When | Length | Agenda |
 |---|---|---|---|
-| Accuracy | (TP + TN) / (TP + TN + FP + FN) | Reported but **misleading** under imbalance | `evaluate.py` |
-| Precision | TP / (TP + FP) | Share of alerts that are real threats | `evaluate.py` |
-| Recall (TPR) | TP / (TP + FN) | Share of real threats caught | `evaluate.py` |
-| F1-score | 2 · P · R / (P + R) | Balance of precision and recall | `evaluate.py` |
-| False Positive Rate | FP / (FP + TN) | Alert fatigue for analysts | `evaluate.py` |
-| False Negative Rate | FN / (FN + TP) = 1 − Recall | Missed malicious activity | `evaluate.py` |
-| ROC-AUC | Area under TPR vs. FPR curve | Threshold-free ranking quality | `evaluate.py` |
-| **PR-AUC** (average precision) | Area under precision vs. recall curve | Ranking quality under heavy imbalance (**primary metric**) | `evaluate.py` |
-| Confusion matrix | TP / FP / TN / FN counts | Error breakdown at a threshold | `evaluate.py` |
-| Detection time (a): compute | Train time; inference time per 1,000 user-days | Can it run in practice? | Arva (unsupervised), Ayo (supervised) |
-| Detection time (b): delay | Days from an insider's first malicious day to their first alert | How fast an insider is caught | `evaluate.py` |
-| User-level recall | Insiders flagged on ≥ 1 malicious day / all test insiders | Did we catch the *person*? | `evaluate.py` |
+| **Stand-up** | Every Mon, Wed, Fri | 15 min | Finished / next / blocked |
+| **Catch-up check** | Fri Nov 6 (stand-up) | 15 min | Decisions final? Drive upload date? Reviews done? |
+| **v1 walkthrough** | Mon Nov 9 | 30 min | Supriye explains the feature groups and dictionary; decide S24 |
+| **Results walkthrough** | Sat Nov 14 | 45 min | T5, T6, T7, F4, FP/FN, case studies; agree on the answer |
+| **Final read-through** | Thu Nov 19 | 60 min | Page-by-page fixes |
 
-### 10.2 Reporting protocol
-For **every** model, report on the `test` split:
-1. All metrics above at the **best-F1 threshold** and at the **top-1% alert budget** (Section 5.6).
-2. ROC-AUC and PR-AUC.
-3. The same metrics **per scenario** (1, 2, 3).
-4. The **unseen-scenario** (leave-one-scenario-out) results — see [Ayo.md](Ayo.md), tasks `Y12` and `Y16`.
+### 3.9 Git workflow
+1. **Branch** names follow `<name>/<TaskID>-<short-description>`, e.g. `arva/A15-final-models`.
+2. **Open** every PR into `main` with: tasks, what changed, how to test, and who it's a hand-off for.
+3. **Assign** the reviewer from 3.10. The reviewer runs the "how to test" step and approves or requests changes within **12 h** (**3 h** for hand-offs).
+4. **Merge** with **Squash and merge**, then **Delete branch**, then `git branch -D <branch>` locally.
+5. **Retarget** stacked PRs before merging their base: open the child PR and set its base to `main` first. GitHub **closes** a child PR when its base branch is deleted (this happened to #18).
+6. **Resolve** conflicts by keeping both sides' lines in `README.md` and `PROGRESS.md`. Never resolve a whole file with "ours". For a conflict in someone else's file or a notebook, run `git merge --abort` and ask the owner.
+7. **Never** push to `main`, force-push `main`, or delete someone else's branch.
+8. **Tag** milestones (Supriye): `git tag -a <tag> -m "<message>"`, then `git push origin <tag>`.
 
-Why precision/recall matter (this paragraph must be in the paper): in our data **0.298%** of user-days are malicious (984 of 330,268), so a model that always says "normal" scores **99.70% accuracy with 0% recall**. Accuracy hides the failure completely. Source: `results/tables/class_imbalance.csv`.
+### 3.10 Reviewer map
+| Author's branch kind | Reviewer |
+|---|---|
+| Supriye: data, features, baselines, LANL | Arva |
+| Supriye: ablation, final README | Ayo |
+| Arva: unsupervised models, tuning, results, case studies | Ayo |
+| Arva: risk scoring, pipeline, final models, dashboard, README run section, fixes | Supriye |
+| Ayo: `evaluate.py`, `explain.py`, LOSO, comparison, SHAP, FP/FN | Arva |
+| Ayo: supervised models, final tuned models, verification | Supriye |
+| Anyone: `<name>/notes`, tracker updates | Any teammate |
 
----
+### 3.11 Branch calendar (remaining)
+| Merge by | Branch | Tasks | Reviewer |
+|---|---|---|---|
+| Fri Nov 6 | `supriye/S8-decisions` | Final PROVISIONAL values (+ rebuild if changed) | Arva |
+| Sun Nov 8 | review-fix branches as needed | Fixes from post-merge reviews | File owner's reviewer |
+| Tue Nov 10 12:00 | `supriye/S21-v1-fixes` *(only if needed)* | S21 | Arva |
+| Tue Nov 10 | `arva/A15-final-models` | A15, A16 | Supriye |
+| Tue Nov 10 | `ayo/Y14-final-models` | Y14, Y15 | Supriye |
+| Wed Nov 11 | `supriye/S22-ablation` | S22 (+ T8 data time) | Ayo |
+| Wed Nov 11 | `arva/A17-results` | A17 | Ayo |
+| Wed Nov 11 | `ayo/Y16-loso-results` | Y16 | Arva |
+| Wed Nov 11 | `supriye/S24-lanl` *(stretch)* | S24 | Arva |
+| Thu Nov 12 | `ayo/Y17-comparison` | Y17 | Arva |
+| Fri Nov 13 | `supriye/notes`, `arva/notes`, `ayo/notes` | LIT notes, section notes, F2 | Any teammate |
+| Sat Nov 14 | `arva/A18-prototype-cases` | A18, A19 | Ayo |
+| Sat Nov 14 | `ayo/Y18-shap-fpfn` | Y18, Y20 | Arva |
+| Sat Nov 14 | `arva/A21-dashboard` *(optional)* | A21 | Supriye |
+| Mon Nov 16 | `arva/A23-readme-run` | A23 | Supriye |
+| Tue Nov 17 | `arva/A24-fresh-clone-fixes`, `ayo/Y23-verify` | A24, Y23 | Supriye |
+| Wed Nov 18 | **Code freeze** | Bug fixes only | — |
+| Thu Nov 19 | `arva/A26-final-fixes`, `ayo/Y25-final-fixes` *(if needed)* | A26, Y25 | Supriye |
+| Thu Nov 19 | `supriye/S33-final` | S33, S34 | Ayo |
 
-## 11. Paper Plan (IEEE conference format, ~8 pages — confirm the page limit with the instructor)
-
-| Section | Writer | Target length | Draft due |
+### 3.12 Paper sections
+| Section | Writer | Length | Draft due |
 |---|---|---|---|
 | Abstract | Supriye | ~200 words | Tue Nov 17 |
-| I. Introduction | Supriye | 0.75 page | Fri Nov 13 |
-| II. Related Work (+ comparison table) | Everyone writes their papers' paragraphs; Supriye merges | 1 page | Paragraphs by Fri Nov 13; merged Sat Nov 14 |
-| III. Dataset | Supriye | 0.75 page | Tue Nov 10 |
-| IV-A Preprocessing & Feature Engineering | Supriye | 0.75 page | Thu Nov 12 |
-| IV-B Establishing Normal Behavior | Supriye | 0.5 page | Thu Nov 12 |
-| IV-C Models — unsupervised / supervised | Arva / Ayo | 0.5 page each | Sun Nov 15 |
-| IV-D Risk Scoring & UEBA Prototype | Arva | 0.5 page | Sun Nov 15 |
-| V. Experiments & Results | Ayo | 1.25 pages | Sun Nov 15 |
-| VI-A Feature Importance | Ayo | 0.5 page | Mon Nov 16 |
-| VI-B Anomaly Case Studies | Arva | 0.75 page | Sun Nov 15 |
-| VI-C False Positive / False Negative Analysis | Ayo | 0.5 page | Mon Nov 16 |
-| VII. Limitations & Ethics | Supriye | 0.5 page | Fri Nov 13 |
-| VIII. Conclusion & Future Work | Arva | 0.25 page | Mon Nov 16 |
+| I. Introduction | Supriye | 0.75 p | Fri Nov 13 |
+| II. Related Work + T1 | All write; Supriye merges | 1 p | Paragraphs Fri Nov 13; merged Sat Nov 14 |
+| III. Dataset | Supriye | 0.75 p | Tue Nov 10 |
+| IV-A Preprocessing & Features | Supriye | 0.75 p | Thu Nov 12 |
+| IV-B Establishing Normal Behavior | Supriye | 0.5 p | Thu Nov 12 |
+| IV-C Models: unsupervised / supervised | Arva / Ayo | 0.5 p each | Sun Nov 15 |
+| IV-D Risk Scoring & Prototype | Arva | 0.5 p | Sun Nov 15 |
+| V. Experiments & Results | Ayo | 1.25 p | Sun Nov 15 |
+| VI-A Feature Importance | Ayo | 0.5 p | Mon Nov 16 |
+| VI-B Anomaly Case Studies | Arva | 0.75 p | Sun Nov 15 |
+| VI-C FP / FN Analysis | Ayo | 0.5 p | Mon Nov 16 |
+| VII. Limitations & Ethics | Supriye | 0.5 p | Fri Nov 13 |
+| VIII. Conclusion & Future Work | Arva | 0.25 p | Mon Nov 16 |
 
-### Figures & tables
-| # | Figure / table | Owner |
+### 3.13 Figures and tables
+| # | Content | Owner | Source | State (Nov 5) |
+|---|---|---|---|---|
+| T1 | Literature comparison | Supriye | Lit notes | — |
+| T2 | Dataset summary + class imbalance | Supriye | `class_imbalance.csv`, `dataset_files.csv` | Data ready |
+| T3 | Feature dictionary (condensed) | Supriye | `docs/feature_dictionary.md` | Data ready |
+| T4 | Hyperparameters | Arva, Ayo | `T4_hyperparameters_*.csv` | v0 drafts |
+| T5 | Model comparison, both thresholds | Ayo | `model_comparison.csv` | — |
+| T6 | LOSO results | Ayo | `loso.csv` | — |
+| T7 | Feature-group ablation | Supriye | `ablation.csv` | — |
+| T8 | Timing + detection delay | Ayo | `T8_timing.csv` | — |
+| F1 | Hourly activity, insider vs. normal | Supriye | `F1_insider_vs_normal.*` | Done |
+| F2 | UEBA pipeline diagram | Arva | draw.io | — |
+| F3 | One user's baseline vs. deviating days | Supriye | `F3_user_baseline.*` | Done |
+| F4 | ROC + PR curves | Ayo | `F4_*` | — |
+| F5 | Confusion matrices | Ayo | `F5_*` | — |
+| F6 | SHAP summary (XGBoost) | Ayo | `F6_*` | v0 version only |
+| F7 | Case-study explanations | Arva | `F7_*` | — |
+| F8 | Risk timeline, one insider | Arva | `F8_*` | — |
+
+### 3.14 Literature (≥ 5 recent papers from IEEE, Springer, Elsevier or ACM)
+| ID | Paper | Reader |
 |---|---|---|
-| T1 | Literature comparison table | Supriye |
-| T2 | Dataset summary & class imbalance | Supriye |
-| T3 | Feature dictionary (condensed) | Supriye |
-| T4 | Hyperparameters of all models | Arva, Ayo |
-| T5 | Main model comparison (all metrics, both thresholds) | Ayo |
-| T6 | Unseen-scenario (LOSO) results | Ayo |
-| T7 | Feature-group ablation | Supriye |
-| T8 | Timing / detection delay | Ayo (with Arva's timings) |
-| F1 | Hourly activity: normal user vs. insider | Supriye |
-| F2 | UEBA pipeline diagram | Arva |
-| F3 | One user's baseline vs. a deviating day | Supriye |
-| F4 | ROC and PR curves, all models | Ayo |
-| F5 | Confusion matrices | Ayo |
-| F6 | SHAP summary plot | Ayo |
-| F7 | Case-study explanation plots (2–3) | Arva |
-| F8 | Risk-score timeline for one insider | Arva |
+| L1 | Glasser & Lindauer, "Bridging the Gap…", IEEE S&P Workshops (2013) | Supriye |
+| L2 | Le, Zincir-Heywood & Heywood, "Analyzing Data Granularity Levels…", IEEE TNSM (2020) | Supriye |
+| L3 | Homoliak et al., "Insight into Insiders and IT…", ACM Computing Surveys (2019) | Supriye |
+| L4 | Tuor et al., "Deep Learning for Unsupervised Insider Threat Detection…", AAAI Workshops (2017) | Arva |
+| L5 | Lu & Wong, "Insider Threat Detection with LSTM", ACM ACSW (2019) | Arva |
+| L6 | Liu, De Vel, Han, Zhang & Xiang, "Detecting and Preventing Cyber Insider Threats: A Survey", IEEE COMST (2018) | Ayo |
+| L7 | Yuan & Wu, "Deep Learning for Insider Threat Detection: Review…", Computers & Security (2021) | Ayo |
+| L8 | Liu et al., "Log2vec…", ACM CCS (2019) | Ayo |
+| L9a / L10a / L11a | One **2022–2026** paper each: features/UEBA (Supriye), unsupervised/AE (Arva), supervised/XAI (Ayo) | Each |
+| L9b / L10b / L11b | **Strongly recommended:** "recent" may mean the last 5 years, which only L9a–L11a (+ L7) meet | Each |
+
+- **Method citations:**
+  - **Arva:** Liu, Ting & Zhou (IF, 2008), Schölkopf et al. (OCSVM, 2001) and Chandola et al. (2009).
+  - **Ayo:** Breiman (2001), Chen & Guestrin (2016), Lundberg & Lee (2017) and Saito & Rehmsmeier (2015).
+  - **Supriye:** Lindauer (CERT, KiltHub), plus Kent (LANL, 2015) if S24 is done.
+- **Finding papers:** use Google Scholar "Cited by" on L2 or L7 with "Since 2022", or IEEE Xplore / ACM DL / ScienceDirect / SpringerLink. Post the title in chat before reading.
+- **Note template** (`paper/lit_notes/<ID>.md`): citation (IEEE), problem, dataset, granularity, features, models, metrics + key numbers, strengths, limitations, relation to our project.
 
 ---
 
-## 12. Human-Only Work (no AI agents)
+## 4. Edge Cases & Troubleshooting
 
-**First, check the course's AI-use policy at the kickoff and follow it.** If it's stricter than this list, the policy wins.
+### 4.1 Environment
+- **`pip install` fails on a long path (Windows):** create the venv outside the repo at a short path (2.3).
+- **`UnicodeEncodeError` printing "σ" or "→" on Windows:** set `PYTHONIOENCODING=utf-8` before running, e.g. `set PYTHONIOENCODING=utf-8` and then `python src/pipeline.py`.
+- **`ModuleNotFoundError: src`:** run from the repo root as `python -m src.<module>`. `python src/pipeline.py` also works.
+- **Tests skip `test_v0_smoke`:** `data/processed/features_v0.parquet` is missing; copy `data/` from the drive.
 
-As a team, these stay **100% human**:
-1. **Reading papers** and writing the literature notes and Related Work in your own words.
-2. **Writing the paper.** The ideas, structure, sentences and conclusions are ours.
-3. **Interpreting results**: what the numbers mean, and the answer to the research question.
-4. **Explaining flagged anomalies**: why each case looks suspicious.
-5. **Checking every citation**: it exists, the details are correct, and it says what we claim.
-6. **Design decisions and their justification**: granularity, after-hours definition, split dates, thresholds, model choice.
-7. **Understanding every line of submitted code.** Each person must be able to explain their own code without notes.
-8. **Presenting / demoing** our own parts.
+### 4.2 Data
+- **The conversion stops after `file.csv`:** the archive is multi-stream bz2. Use `python -m src.data_loader convert`, which handles it; never `tarfile.open(..., "r|bz2")`.
+- **Out of memory on the web log:** always pass `columns=` / `users=` to `load_http`, or use `iter_http_batches()`. The S15 cache (`data/processed/http_user_day_domain.parquet`) avoids re-reading it.
+- **Counts that look inconsistent:** 70 insiders vs. 72 accounts (2 hijacked supervisor accounts); 986 labeled malicious user-days vs. 984 in the feature table (2 days with no logon). Both are expected.
+- **Web features:** v1 has **7** `f_http_*` columns (count, domains, after-hours, job, leak, cloud, hack), not 8.
+- **Checksums don't match after unzipping:** re-download the zip once; if it still fails, ask Supriye to re-upload. Never send single files around.
+- **A teammate's score file differs slightly from yours:** this is expected for the AE on another CPU. Use the results machine's tables (2.5.12) for the paper.
+- **Someone asks for a score file or model:** send the command instead (`python -m src.models_*  final`, `python src/pipeline.py --retrain`).
 
-Each personal file lists extra human-only tasks for that role.
+### 4.3 Models and results
+- **Tuning notebooks wipe the v0 log:** `03a`/`03b` call `log_path.unlink()` at the start. Before running on v1, change them to drop only the current dataset's rows (A15, Y14 step 1).
+- **Tuning log columns get misaligned:** `tune_supervised()` appends with `mode="a"`. If you add a log column, rewrite the file with `pd.concat([old, new])`, not an append.
+- **Supervised scores near 1.0 on v1:** an unsaved Nov 5 run gave RF/XGB val PR-AUC ≈ 0.95–0.99 with all 73 inputs. Without the 5 psychometric columns it was still 0.99; with only the raw `f_*` counts it was 0.51 val / 0.38 test. So the baselines drive it. **Re-run, then sanity-check** (ablation S22, SHAP Y18) before claiming it in the paper.
+- **Isolation Forest weak on v1:** the same unsaved run gave IF val PR-AUC ≈ 0.014. Report it honestly, and check the tuned AE and the per-scenario numbers.
+- **One-Class SVM below random on v0** (ROC-AUC 0.26): the implementation was checked. It's optional, so Arva decides whether to keep, tune or drop it.
+- **XGBoost stops at iteration 0 on synthetic data:** val has 24 positives, so val PR-AUC is noisy. On real data it trains 81–221 trees.
+- **Scenario 3 is thin in test:** 4 malicious days. Say so in V and VII, and lean on LOSO.
 
-*If the policy allows it*, AI tools may be used for things like looking up library syntax, explaining an error message, or checking grammar. Whoever uses them stays responsible for verifying the output.
+### 4.4 Git
+- **A stacked child PR closed itself:** its base branch was deleted. Push the base branch back, reopen the PR, set its base to `main`, then delete the base again.
+- **Conflict in `README.md` / `PROGRESS.md`:** keep both sides line by line (3.9 step 6).
+- **Squash-merged branch won't delete locally:** use `git branch -D <branch>`.
+- **`main` broke after a merge:** tell the team, find the PR on GitHub and click **Revert**; never force-push.
+- **Worktree with folder links (junctions):** remove the links before deleting the worktree, or the delete follows them into the real `data/`.
+
+### 4.5 People and time
+- **A hand-off will be late:** say so in chat as soon as you know, with the new time.
+- **Running behind at M3:** drop optional items first (One-Class SVM, dashboard, LANL, second recent paper). Never drop the 2 + 2 models, LOSO, FP/FN or the case studies.
+- **A teammate is unavailable:** the other two split their open tasks by priority; all code and notes are on GitHub.
+- **A PR waits > 3 h on a hand-off:** ping the reviewer; after that, the third person reviews.
 
 ---
 
-## 13. Risks & Fallback Plans
+## 5. Success Metrics / Definitions
 
-| Risk | Early sign | Fallback |
+### 5.1 Definition of done
+- **A task** is done when every "Done when" item in its card is true and its PR is merged.
+- **A hand-off** is delivered when its PR is merged and announced (data: uploaded and announced).
+- **A milestone** is done when its "Done when" column (1.5) is true; Supriye then ticks it in PROGRESS and tags `main`.
+
+### 5.2 Assignment requirements → proof
+| Requirement | Proof that it is met |
+|---|---|
+| Study insider threats, compromised accounts, anomalies, UEBA | §I + §II with checked citations |
+| ≥ 5 recent papers (IEEE/Springer/Elsevier/ACM) | ≥ 5 notes in `paper/lit_notes/`, T1 with venue + year |
+| Suitable dataset, preprocessed | §III; `cleaning_report.csv`, `split_check.csv` |
+| Login patterns | `f_logon_*` family in v1 + T3 |
+| Authentication failures | LANL features (S24) **or** the gap stated in §III and §VII |
+| File / resource access | `f_file_*`, `f_usb_*` + T3 |
+| Application usage | `f_http_*`, `f_email_*` + the stand-in stated in §III |
+| Activity times | `f_afterhours_*`, `f_weekend`, `f_work_duration` + reason for the hours |
+| Deviation from baseline | `z_user_*`, `z_peer_*`, `new_*` + F3 |
+| ≥ 2 models compared | 5 score files + T5 |
+| Risk score | `pipeline.py` output, alert levels, F8 |
+| Precision, recall, F1, FPR, FNR, accuracy, ROC-AUC, PR-AUC, confusion matrix | T5, F4, F5 |
+| Detection time | T8 (compute time + delay) |
+| Precision/recall vs. accuracy paragraph | §V with 0.298% / 99.70% numbers |
+| Unseen behavior | T6 (LOSO) |
+| FP / FN analysis | §VI-C + `fp_fn_causes.csv` |
+| Feature importance | F6, `feature_importance.csv`, T7 |
+| Anomaly explanations | Notebook 05 + §VI-B + F7 |
+| Prototype | `python src/pipeline.py` from a fresh clone + README section |
+| Paper | IEEE PDF within the page limit, all T1–T8 and F1–F8 referenced |
+
+### 5.3 Quality gates
+- **Tests:** `python -m pytest tests` passes on `main` after every merge (83 today; the count only grows).
+- **Notebooks:** 01–05 run top to bottom; their outputs match `results/tables/`.
+- **Reproducibility:** a fresh clone + `pip install -r requirements.txt` + `ueba_data_v1.zip` runs both `final` commands, the pipeline and `04_evaluation.ipynb`.
+- **Transfers:** exactly one data drop (two if S21 or S24 happens); no score file, model or partial table was ever sent by chat or drive.
+- **Numbers:** every number in the paper traces to a CSV in `results/tables/` (Y23).
+- **Ownership:** each person can explain their code line by line (2.6).
+
+### 5.4 Evaluation metrics and reporting protocol
+TP = malicious user-day flagged, FP = normal flagged, TN = normal not flagged, FN = malicious not flagged. All are computed by `src/evaluate.py`.
+
+| Metric | Formula / meaning | Note |
 |---|---|---|
-| CERT download is slow or fails | Not finished by Thu Oct 29 | Retry on campus network; download in parts; tell team immediately |
-| `http.csv` too big for RAM | Memory errors | Read with `chunksize=1_000_000` and `usecols`; aggregate per chunk; keep only user-day counts |
-| v1 features late | Not ready Sun Nov 8 | Arva and Ayo keep tuning on v0; Supriye ships v1 without `z_peer_*` first and adds them as v1.1 by Tue Nov 10, 12:00 |
-| Paper writing squeezed at the end | Sections still bullet points on Sun Nov 15 | Write notes for your sections as you work (hyperparameters, decisions, numbers) so drafting is fast |
-| Autoencoder won't train well | Validation loss flat or no separation | Smaller network, more epochs, check scaling; keep Isolation Forest + One-Class SVM as the unsupervised pair |
-| A scenario has too few test insiders | Fewer than ~3 insiders in test | Report per-scenario results with that caveat; rely on LOSO for that scenario |
-| Teammate unavailable (illness etc.) | Missed stand-up and hand-off | Their code and notes are on GitHub; the other two split the remaining tasks by priority (required > optional) |
-| Running behind overall | M3 (Wed Nov 11) missed | Drop optional items first: One-Class SVM, dashboard, LANL extension, second recent paper. Never drop: 2 unsupervised + 2 supervised models, the LOSO experiment, FP/FN analysis, case studies |
-| `main` is broken or a merge goes wrong | Code that worked yesterday fails after `git pull` | Tell the team at once; nobody merges until it's fixed. Find the bad PR on GitHub and click **Revert**; that adds a new PR that undoes it. Never force-push to `main` |
-| A PR waits for review and blocks a hand-off | No review 3 hours after posting a hand-off PR | Ping the reviewer in chat; if still nothing, the third teammate reviews it instead |
+| Accuracy | (TP + TN) / all | Reported but **misleading**: "always normal" scores 99.70% |
+| Precision | TP / (TP + FP) | Share of alerts that are real |
+| Recall (TPR) | TP / (TP + FN) | Share of threats caught |
+| F1 | 2PR / (P + R) | Balance of the two |
+| FPR | FP / (FP + TN) | Analyst alert fatigue |
+| FNR | FN / (FN + TP) | Missed threats |
+| ROC-AUC | Area under TPR vs. FPR | Threshold-free |
+| **PR-AUC** | Average precision | **Primary metric** under 0.298% positives |
+| Confusion matrix | TP / FP / TN / FN | At each operating point (F5) |
+| Detection time (a) | Fit time; inference time per 1,000 user-days (3-run mean) | T8 |
+| Detection time (b) | Days from an insider's first malicious test day to the first alert | T8 |
+| User-level recall | Test insiders flagged on ≥ 1 malicious day / all test insiders | T5 |
 
----
-
-## 14. Git Workflow — Branching, Pulling and Pushing
-
-**Repository:** `https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection` (owner: Supriye)
-
-**What goes where:**
-
-| Through Git (GitHub) | Through the shared drive | In Overleaf |
-|---|---|---|
-| Code (`src/`, `app/`), notebooks, `requirements.txt`, README, the `Tasks/` and `Guide/` files, small result tables (`results/tables/*.csv`), figures (`results/figures/`), literature notes (`paper/lit_notes/`) | Raw CERT/LANL data, Parquet files, feature tables, score files (`results/scores/`), trained models (`models/`) | The paper itself |
-
-### 14.1 One-time setup (by Thu Oct 29)
-
-**Supriye (repo owner):**
-1. On GitHub: **Settings → Collaborators → Add people** → add Arva and Ayo (they must accept the email invite).
-2. **Settings → Branches → Add branch protection rule** for `main`: tick **"Require a pull request before merging"** with **1 approval**. The repo is **public** (checked Nov 4), so branch protection is free. (On a private repo it would need GitHub Pro, free with the Student Developer Pack.) Until it's turned on, the team enforces the rule by agreement.
-3. Add the `.gitignore` below on your first branch (`supriye/S2-setup`, task S2).
-
-**Arva and Ayo:** clone the repo into a folder of your choice:
-```bash
-git clone https://github.com/SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection.git
-```
-```bash
-cd AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection
-```
-
-**Everyone:** tell Git who you are (use the email on your GitHub account):
-```bash
-git config user.name "Your Name"
-```
-```bash
-git config user.email "you@example.com"
-```
-
-**`.gitignore` (committed by Supriye in S2):**
-```
-# Data and large outputs: share through the shared drive instead
-data/
-results/scores/
-models/
-*.parquet
-*.tar.bz2
-*.gz
-# Environments and caches
-.venv/
-__pycache__/
-.ipynb_checkpoints/
-.DS_Store
-```
-
-### 14.2 Branch rules
-- **Name:** `<name>/<TaskID>-<short-description>`, lower-case words joined by hyphens, e.g. `supriye/S9-features-v0`, `arva/A6-autoencoder`, `ayo/Y4-thresholds`.
-- **Always start a branch from the latest `main`.**
-- **Keep branches short:** merge within 1–3 days. Long-lived branches cause conflicts.
-- **Every person's tasks go on that person's own branches** (`supriye/…`, `arva/…`, `ayo/…`), even when someone else helps write the code.
-- **When you need code that isn't merged yet,** start your branch from the branch that has it (a *stacked* branch). Open the PR with that branch as its base, so the PR shows only your changes. GitHub moves the PR to `main` when the base branch merges. On Nov 2 the first branches were stacked like this; the order is in [Supriye.md §3](Supriye.md#your-branches).
-- **Only edit files you own** (5.8). This matters most for notebooks (`.ipynb`), whose merge conflicts are very hard to fix.
-- **Literature and paper notes** go on one `<name>/notes` branch per person, merged once by Fri Nov 13.
-
-### 14.3 Daily routine
-
-**Every morning — get everyone's merged work:**
-```bash
-git checkout main
-```
-```bash
-git pull origin main
-```
-
-**Start a new task** (creates the branch from the `main` you just pulled):
-```bash
-git checkout -b arva/A6-autoencoder
-```
-
-**Continue an existing branch and bring in teammates' merged work:**
-```bash
-git checkout arva/A6-autoencoder
-```
-```bash
-git pull origin main
-```
-
-**Save work** (several times a day). Always run `git status` first and check that no data, score or model file is listed. Never run `git add .` without looking.
-```bash
-git status
-```
-```bash
-git add src/models_unsupervised.py notebooks/03a_unsupervised_models.ipynb
-```
-```bash
-git commit -m "A6: add autoencoder training loop"
-```
-
-**Push every evening** (this is also your backup). The first push of a new branch needs `-u`; after that `git push` is enough:
-```bash
-git push -u origin arva/A6-autoencoder
-```
-
-### 14.4 Finishing a branch — the pull request (PR)
-1. On your branch, bring in the latest `main` (`git pull origin main`), fix any conflicts (14.5), re-run your notebook with **Restart & Run All**, and push.
-2. On GitHub, click **"Compare & pull request"**. Base: `main` ← compare: your branch. Title: `A6: Autoencoder`. Description:
-   ```
-   Tasks: A6
-   What changed:
-   How to test: (the command or notebook to run)
-   Hand-off for: (who needs this, or "none")
-   ```
-3. Assign the **reviewer** from 14.6, and post the PR link in chat. If it's a hand-off, say so.
-4. **Reviewer:** get the branch and test it:
-   ```bash
-   git fetch origin
-   ```
-   ```bash
-   git checkout arva/A6-autoencoder
-   ```
-   Run the "How to test" step, go through the checklist below, then click **Approve** or **Request changes** on GitHub.
-5. **Author:** click **"Squash and merge"**, then **"Delete branch"**.
-6. **Author:** clean up locally. `-D` is needed because squash-merged branches look "unmerged" to Git:
-   ```bash
-   git checkout main
-   ```
-   ```bash
-   git pull origin main
-   ```
-   ```bash
-   git branch -D arva/A6-autoencoder
-   ```
-7. Post "merged" in chat. Everyone who depends on it runs `git pull origin main`.
-
-**Reviewer checklist:**
-- [ ] It runs, following "How to test"
-- [ ] It follows the formats in 5.1 / 5.2 / 5.5
-- [ ] No data, score, model files or personal paths (`C:\Users\...`) are committed
-- [ ] Notebooks run top to bottom
-- [ ] Only the author's own files changed (5.8)
-
-**Review speed:** within 12 hours; **within 3 hours** for PRs marked as a hand-off.
-
-### 14.5 Merge conflicts
-If `git pull origin main` says **CONFLICT**:
-1. Run `git status` to see the conflicted files.
-2. Open each file and find the blocks marked `<<<<<<<`, `=======` and `>>>>>>>`. Keep the correct lines and delete the markers.
-3. Mark it resolved and finish the merge:
-   ```bash
-   git add src/the_file_you_fixed.py
-   ```
-   ```bash
-   git commit
-   ```
-   ```bash
-   git push
-   ```
-4. If the conflict is in **someone else's file or in a notebook**, don't guess. Cancel the merge with `git merge --abort` and ask the file's owner in chat.
-
-**Never:** `git push --force` to `main`, delete someone else's branch, or commit straight to `main`.
-
-### 14.6 Who reviews whom
-Rule: **the person who will use the code reviews it**, because they test that it works for them.
-
-| Author | Kind of branch | Reviewer |
-|---|---|---|
-| Supriye | Setup, data loading, labels, features, baselines, LANL | Arva (Ayo for `S2-setup`) |
-| Supriye | Ablation, final README | Ayo |
-| Arva | Synthetic data, unsupervised models, tuning, results, case studies | Ayo |
-| Arva | Risk scoring, pipeline, final models, dashboard, README run section, fixes | Supriye |
-| Ayo | `evaluate.py`, `explain.py`, LOSO, comparison, SHAP, FP/FN | Arva |
-| Ayo | Supervised models, final tuned models, verification | Supriye |
-| Anyone | `<name>/notes` | Any teammate (quick skim) |
-
-### 14.7 Milestone tags (Supriye)
-After each milestone's PRs are merged, Supriye tags `main`, so anyone can get the exact code of that point later with `git checkout <tag>`:
-```bash
-git checkout main
-```
-```bash
-git pull origin main
-```
-```bash
-git tag -a m1-features-v0 -m "M1: feature table v0 code"
-```
-```bash
-git push origin m1-features-v0
-```
-
-| Tag | When | After merging |
-|---|---|---|
-| `m0-setup` | Sat Oct 31 | `supriye/S2-setup`, `supriye/S5-data-loader` |
-| `m1-features-v0` | Tue Nov 3 | `supriye/S9-features-v0` |
-| `m2-features-v1` | Sun Nov 8 | `supriye/S17-baselines-v1` |
-| `m3-all-scores` | Wed Nov 11 | `arva/A15-final-models`, `ayo/Y14-final-models`, `ayo/Y16-loso-results` |
-| `analysis-done` | Sat Nov 14 | `arva/A18-prototype-cases`, `ayo/Y18-shap-fpfn` |
-| `final-submission` | Thu Nov 19 | `supriye/S33-final` (last merge) |
-
-### 14.8 Branch calendar — everyone's branches in one view
-
-| Merge by | Branch | Owner | Tasks | Reviewer | Unblocks |
-|---|---|---|---|---|---|
-| Thu Oct 29 | `supriye/S2-setup` | Supriye | S2 | Ayo | Everyone's environment |
-| Tue Nov 3 | `supriye/plan-updates` | Supriye | `Tasks/PROGRESS.md` + plan updates | Any teammate | — |
-| Thu Oct 29 | `arva/A3-synthetic` | Arva | A3 | Ayo | Ayo's Y7 |
-| Sat Oct 31 | `supriye/S5-data-loader` | Supriye | S4, S5 | Arva | **M0** |
-| Sun Nov 1 | `ayo/Y3-evaluate` | Ayo | Y3–Y6 | Arva | Arva's A9; Supriye's S22 |
-| Sun Nov 1 | `arva/A7-risk-scoring` | Arva | A7 | Supriye | — |
-| Mon Nov 2 | `arva/A4-unsupervised-models` | Arva | A4, A5, A6, A8 | Ayo | — |
-| Mon Nov 2 | `supriye/S6-labels-eda` | Supriye | S6, S7, S8 | Arva | Split dates for everyone |
-| Tue Nov 3 | `supriye/S9-features-v0` | Supriye | S9 | Arva | **M1**: Arva's A9, Ayo's Y8 |
-| Wed Nov 4 | `arva/A9-v0-tuning` | Arva | A9, A10 | Ayo | — |
-| Thu Nov 5 | `ayo/Y7-supervised-models` | Ayo | Y7–Y10 | Supriye | — |
-| Fri Nov 6 | `ayo/Y11-explain` | Ayo | Y11 | Arva | Arva's A12, A19 |
-| Fri Nov 6 | `arva/A11-pipeline` | Arva | A11, A12 | Supriye | — |
-| Sat Nov 7 | `supriye/S10-behavior-features` | Supriye | S10–S16 | Arva | — |
-| Sat Nov 7 | `ayo/Y12-loso` | Ayo | Y12 | Arva | — |
-| Sat Nov 7 | `arva/A13-ocsvm` *(optional)* | Arva | A13 | Ayo | — |
-| Sun Nov 8 | `supriye/S17-baselines-v1` | Supriye | S17–S20 | Arva | **M2**: Arva's A15, Ayo's Y14 |
-| Tue Nov 10, 12:00 | `supriye/S21-v1-fixes` *(only if needed)* | Supriye | S21 | Arva | — |
-| Tue Nov 10 | `arva/A15-final-models` | Arva | A15, A16 | Supriye | Supriye's S22 |
-| Tue Nov 10 | `ayo/Y14-final-models` | Ayo | Y14, Y15 | Supriye | Supriye's S22 |
-| Wed Nov 11 | `supriye/S22-ablation` | Supriye | S22 | Ayo | — |
-| Wed Nov 11 | `supriye/S24-lanl` *(stretch)* | Supriye | S24 | Arva | Arva's A18 step 4 |
-| Wed Nov 11 | `arva/A17-results` | Arva | A17 | Ayo | Ayo's Y17 |
-| Wed Nov 11 | `ayo/Y16-loso-results` | Ayo | Y16 | Arva | **M3** |
-| Thu Nov 12 | `ayo/Y17-comparison` | Ayo | Y17 | Arva | Results walkthrough |
-| Fri Nov 13 | `supriye/notes`, `arva/notes`, `ayo/notes` | Each person | Literature + paper notes | Any teammate | — |
-| Sat Nov 14 | `arva/A18-prototype-cases` | Arva | A18, A19 | Ayo | — |
-| Sat Nov 14 | `ayo/Y18-shap-fpfn` | Ayo | Y18, Y20 | Arva | — |
-| Sat Nov 14 | `arva/A21-dashboard` *(optional)* | Arva | A21 | Supriye | — |
-| Mon Nov 16 | `arva/A23-readme-run` | Arva | A23 | Supriye | — |
-| Tue Nov 17 | `arva/A24-fresh-clone-fixes` *(if needed)* | Arva | A24 | Supriye | — |
-| Tue Nov 17 | `ayo/Y23-verify` | Ayo | Y23 | Supriye | — |
-| Wed Nov 18 | **Code freeze** — bug fixes only from here | | | | |
-| Thu Nov 19 | `arva/A26-final-fixes`, `ayo/Y25-final-fixes` *(if needed)* | Arva, Ayo | A26, Y25 | Supriye | — |
-| Thu Nov 19 | `supriye/S33-final` | Supriye | S33, S34 | Ayo | `final-submission` tag |
+**Reporting protocol (every model, `test` split only):**
+1. **Report** all metrics at the **best-F1** threshold (from val) and the **top-1%** budget.
+2. **Report** ROC-AUC and PR-AUC.
+3. **Report** the same per scenario (1, 2, 3).
+4. **Report** the unseen-scenario (LOSO) results (T6).
+5. **Include** the precision/recall paragraph in §V: 984 of 330,268 user-days (0.298%) are malicious, so always answering "normal" scores 99.70% accuracy with 0% recall (`class_imbalance.csv`).

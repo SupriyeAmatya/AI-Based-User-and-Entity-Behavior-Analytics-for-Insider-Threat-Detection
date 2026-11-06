@@ -1,600 +1,293 @@
-# Supriye — Data & Feature Engineering Lead + Paper Integrator
+# Supriye: Data & Features Lead, Paper Integrator (v2, from Thu Nov 5)
 
-**Your stream in one sentence:** turn the raw CERT logs into a clean, labeled, one-row-per-user-day feature table that captures each user's **normal behavior and deviations from it**, then assemble the team's research paper.
-
-**Deadline: Fri Nov 20, 2026. Target: submission-ready Thu Nov 19.**
-
-Before starting, read [TEAM_PLAN.md](TEAM_PLAN.md) fully, especially **Section 5 (Team Rules)** and **Section 6 (Dataset Facts)**. You are responsible for enforcing the rules in 5.1, 5.3, 5.5, 5.7 and 5.10. Your stream is the **critical path** in Week 1: Arva and Ayo depend on v0 (Tue Nov 3) and v1 (Sun Nov 8), so protect those two dates above everything else.
+Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tick progress in [PROGRESS.md](PROGRESS.md) §4.
+**[H]** = human-only (TEAM_PLAN 2.6): do it yourself; an AI agent must not do it or tick it.
 
 ---
 
-## 1. Your Responsibilities
+## 1. Executive Summary
 
-1. Set up the repository, environment, Overleaf and Zotero for the team.
-2. Download and convert the CERT r4.2 data; build ground-truth labels.
-3. Exploratory data analysis (EDA), including class imbalance and insider timelines.
-4. Decide the final train/val/test split dates.
-5. Engineer behavioral features: login patterns, activity times, USB/file access, email, web usage, organizational context.
-6. **Establish normal behavior:** per-user baselines, peer-group baselines, deviation (`z_*`) features and novelty (`new_*`) flags.
-7. Run the **feature-group ablation** study (which features matter most?).
-8. *(Stretch)* LANL authentication features, which add authentication failures and compromised accounts.
-9. Write paper sections I, III, IV-A, IV-B, VII and the Abstract; merge Related Work; **assemble and edit the whole paper**.
+### 1.1 Your role
+- **Data owner:** CERT r4.2, labels, the train/val/test split, and the PROVISIONAL decisions in `src/config.py`.
+- **Feature owner:** feature tables v0 and v1, the baselines, the feature dictionary, and the ablation (T7).
+- **Paper integrator:** you write III, IV-A, IV-B, I, VII and the Abstract, merge Related Work, assemble the paper and submit.
+- **Repo owner:** collaborators, branch protection, milestone tags, the final archive.
 
-## 2. Hand-offs
+### 1.2 Files you own
+- **Code:** `src/config.py`, `src/data_loader.py`, `src/labels.py`, `src/features.py`, `src/baseline.py`, `src/ablation.py` (new in S22), `src/lanl_features.py` (stretch).
+- **Tests:** `tests/test_labels.py`, `test_features.py`, `test_baseline.py`, `test_pipeline_mini.py`, `test_v0_smoke.py`, `test_ablation.py` (new).
+- **Notebooks:** `notebooks/01_eda.ipynb`, `notebooks/02_feature_engineering.ipynb`.
+- **Docs:** `docs/feature_dictionary.md`, `README.md`, `requirements.txt`, `.gitignore`, `Tasks/`, `Guide/`, `paper/` assembly.
 
-| You give | To | Due |
-|---|---|---|
-| GitHub repo, `requirements.txt`, Overleaf + Zotero invites | Arva, Ayo | Thu Oct 29 |
-| CERT Parquet files on the shared drive | Arva, Ayo | Sat Oct 31 (M0) |
-| Final split dates (TEAM_PLAN 5.3) | Arva, Ayo | Mon Nov 2 |
-| `features_v0.parquet` + `get_model_matrix()` | Arva, Ayo | Tue Nov 3 (M1) |
-| `features_v1.parquet` + feature dictionary | Arva, Ayo | Sun Nov 8 (M2) |
-| Any v1 bug fix (`features_v1_1.parquet`) | Arva, Ayo | Tue Nov 10, 12:00 at the latest |
-| Data-processing time (for table T8) | Ayo | Fri Nov 13 |
-| Merged full paper draft | Arva, Ayo | Wed Nov 18, 18:00 (M5) |
+### 1.3 Already done (code by Claude at your request; you must still read and explain it)
+- **S1:** CERT r4.2 + answers downloaded and checksum-verified (`scripts/download_cert.sh`).
+- **S2:** repo structure, `.gitignore`, `src/config.py`, pinned `requirements.txt`, both collaborators added.
+- **S4–S5:** streaming Parquet converter (32.8M rows) and cleaning loaders (no duplicates or missing keys).
+- **S6:** labels (70 insiders, 984 malicious user-days in the table) and the insider timeline.
+- **S7:** EDA notebook with F1 and T2 data.
+- **S8:** split proposal and the split check.
+- **S9:** v0 table (100 users) + `get_model_matrix()`.
+- **S10–S16:** 41 behavior features for all users (PR #17).
+- **S17–S20:** `src/baseline.py` (`z_user_*`, `z_peer_*`, `new_*`), F3, leakage checks 1/2/3/5 and the feature dictionary (PR #18).
+- **Tracker:** PROGRESS audit (#16), the Week 1 tracker (#26), and the web-count fix (#28).
 
-| You need | From | Due |
-|---|---|---|
-| `evaluate.py` | Ayo | Sun Nov 1 |
-| `models_unsupervised.py` and `models_supervised.py` with tuned settings (for the ablation) | Arva, Ayo | Tue Nov 10 |
-| Related Work paragraphs | Arva, Ayo | Fri Nov 13 |
-| Paper sections IV-C, IV-D, V, VI-B | Arva, Ayo | Sun Nov 15 |
-| Paper sections VI-A, VI-C, VIII | Arva, Ayo | Mon Nov 16 (M4) |
-
-## 3. Files You Own & Your Git Branches
-
-**Files you own:** `src/config.py` (paths + every PROVISIONAL decision), `src/data_loader.py`, `src/labels.py`, `src/features.py`, `src/baseline.py`, `src/lanl_features.py` (stretch), `tests/test_labels.py`, `tests/test_features.py`, `tests/test_v0_smoke.py`, `notebooks/01_eda.ipynb`, `notebooks/02_feature_engineering.ipynb`, `docs/feature_dictionary.md`, `README.md`, `requirements.txt`, `.gitignore`, `paper/`, and the planning files in `Tasks/` (incl. `PROGRESS.md`) and `Guide/`
-
-**Where the data lives (never in Git):** raw archives in `data/raw/`; converted logs in `data/parquet/` (`logon`, `device`, `file`, `email`, `http` + `manifest.json`); labels and feature tables in `data/processed/`. These are the folders you share on the drive.
-
-**As repo owner you also:** add the collaborators and branch protection (S2), create the milestone tags (TEAM_PLAN 14.7), and make the final code archive (S34). If `main` ever breaks, you lead the fix (TEAM_PLAN Section 13).
-
-### Your branches
-How-to: [TEAM_PLAN §14](TEAM_PLAN.md#14-git-workflow--branching-pulling-and-pushing). A code hand-off counts as delivered only once its PR is **merged** and announced in chat.
-
-| Branch | Tasks | Create on | Open PR | Merge by | Reviewer | Then tag |
-|---|---|---|---|---|---|---|
-| `supriye/S2-setup` | S2 | Wed Oct 28 | Thu Oct 29 | Thu Oct 29 | Ayo | — |
-| `supriye/S5-data-loader` | S4, S5 | Fri Oct 30 | Sat Oct 31 | Sat Oct 31 | Arva | `m0-setup` |
-| `supriye/S6-labels-eda` | S6, S7, S8 (incl. split dates in TEAM_PLAN 5.3) | Sun Nov 1 | Mon Nov 2 | Mon Nov 2 | Arva | — |
-| `supriye/S9-features-v0` | S9 | Tue Nov 3 | Tue Nov 3 (hand-off) | Tue Nov 3 | Arva | `m1-features-v0` |
-| `supriye/S10-behavior-features` | S10–S16 | Wed Nov 4 | Fri Nov 6 (night) | Sat Nov 7 (morning) | Arva | — |
-| `supriye/S17-baselines-v1` | S17–S19, S20 steps 1–2 (the Mon walkthrough needs no code) | Sat Nov 7 (after merging S10) | Sun Nov 8 (hand-off) | Sun Nov 8 | Arva | `m2-features-v1` |
-| `supriye/S21-v1-fixes` *(only if needed)* | S21 | Tue Nov 10 | Tue Nov 10 (hand-off) | Tue Nov 10, 12:00 | Arva | — |
-| `supriye/S24-lanl` *(stretch)* | S24 | Tue Nov 10 | Wed Nov 11 | Wed Nov 11 | Arva | — |
-| `supriye/S22-ablation` | S22 | Wed Nov 11 | Wed Nov 11 | Wed Nov 11 | Ayo | `m3-all-scores` (once Ayo's `Y16-loso-results` is also merged) |
-| `supriye/notes` | S-LIT1–3 notes | Mon Nov 9 | Fri Nov 13 | Fri Nov 13 | Any teammate | — |
-| — | — | — | — | Sat Nov 14 | — | `analysis-done` (after Arva's `A18-prototype-cases` and Ayo's `Y18-shap-fpfn` merge) |
-| `supriye/S33-final` | S33, S34 (README results, last fixes) | Thu Nov 19 | Thu Nov 19 | Thu Nov 19 | Ayo | `final-submission` |
-| `supriye/plan-updates` | Planning files: `Tasks/PROGRESS.md`, updates to the `Tasks/*.md` plans | Mon Nov 2 | Mon Nov 2 | Tue Nov 3 | Any teammate | — |
-
-*(Done: all of these were merged by Nov 3; kept for the record. New branches start from `main`.)*
-
-**Branches built on unmerged branches (Nov 2).** Each task branch is meant to start from the latest `main`. But on Nov 2 nothing had been merged yet, so these branches are **stacked**: each one starts from the branch it needs code from.
-
-| Branch | Built on | Open its PR with base |
-|---|---|---|
-| `supriye/S2-setup` | `main` | `main` |
-| `ayo/Y3-evaluate` | `supriye/S2-setup` (needs `src/config.py`) | `supriye/S2-setup` |
-| `supriye/S5-data-loader` | `supriye/S2-setup` | `supriye/S2-setup` |
-| `supriye/S6-labels-eda` | `supriye/S5-data-loader` | `supriye/S5-data-loader` |
-| `supriye/S9-features-v0` | `supriye/S6-labels-eda` | `supriye/S6-labels-eda` |
-
-**Merge them in this order:** S2 → (Y3 and S5) → S6 → S9. Use the base shown above for each PR. When a base branch is squash-merged and deleted, GitHub automatically re-targets the next PR to `main`. If that PR then shows a conflict, run `git pull origin main` on the branch, keep the branch's version of its own files, and push. From `supriye/S10-behavior-features` onwards, branch from `main` as usual.
-
-### Decisions waiting for you (PROVISIONAL in `src/config.py`)
-These are human-only (TEAM_PLAN 12). The code runs with placeholder values so v0 could be built; change a value, then re-run `python -m src.labels` and `python -m src.features v0`.
-
-- [ ] **After hours** (`WORK_START_HOUR`, `WORK_END_HOUR`, now 07:00–19:00) — from the hour-of-day plot in `notebooks/01_eda.ipynb` (S11). Write the reason in the feature dictionary.
-- [ ] **Split dates** (`TRAIN_END`, `VAL_END`, now the plan's default 60/15/25 months) — from `results/tables/split_check.csv` (S8). Copy the final dates into TEAM_PLAN 5.3. Note: with the default, scenario 3 has only **1 real insider with 2 days in test** (`insider_days_s3`, `insiders_s3`).
-- [ ] **Web keyword lists** for S15 — from `results/tables/top100_web_domains.csv`.
-- [ ] **EDA observations** — the empty *Observation* cells in `notebooks/01_eda.ipynb` (S7).
-- [ ] **Hand-check labels** for 3 insiders against `data/raw/answers/` (S6 step 4).
-- [ ] **Hijacked supervisor accounts (found Nov 3):** in scenario 3, the sysadmin logs in *as the supervisor*. Right now those 20 malicious days are labeled on the supervisor accounts (`FAW0032`, `FBA0348`): half of scenario 3's labeled days. Since Nov 4 they no longer count as insiders (the `insider` column and the v0 sample use `insiders.csv`). Keep this compromised-account view, or move those days to the insider? Either way, mention it in III. Dataset.
-- [ ] **Which emails count as "sent" (S14, found Nov 3):** only 62.4% come from the user's own `dtaa.com` address; the rest look like personal webmail from the work PC. Count all, or only work-address emails?
-
-You also **review** Arva's `A7`, `A11`, `A15`, `A21`, `A23`, `A24`, `A26` branches and Ayo's `Y7`, `Y14`, `Y23`, `Y25` branches. Dates are in the calendar in [TEAM_PLAN 14.8](TEAM_PLAN.md#148-branch-calendar--everyones-branches-in-one-view). The `A15` and `Y14` reviews on Tue Nov 10 are hand-offs **you** need for the ablation, so review them quickly.
-
-### When to pull `main`
-Every morning, plus right after these merges. If you're on a branch, run `git pull origin main` on it.
-
-| When | After merge of | Why you need it |
-|---|---|---|
-| Sun Nov 1 | `ayo/Y3-evaluate` | `evaluate.py` |
-| Tue Nov 10 (evening) | `arva/A15-final-models`, `ayo/Y14-final-models` | Tuned models for the ablation (S22) |
-| Wed Nov 11 / Sat Nov 14 | The PRs listed for `m3-all-scores` / `analysis-done` | So the tag marks the right commit |
-| Thu Nov 19 | Everyone's final fixes | Before `S33-final` and the fresh-clone test |
-
-### Shared drive, not Git
-Upload these and post the link in chat. They count as delivered together with the matching merged code (e.g. M1 = `features_v0.parquet` on the drive **and** `supriye/S9-features-v0` merged):
-- CERT Parquet files (Sat Oct 31)
-- `features_v0.parquet` (Tue Nov 3)
-- `features_v1.parquet` (Sun Nov 8)
-- `features_v1_1.parquet` (only if needed, Tue Nov 10, 12:00)
-- `lanl_features.parquet` (stretch)
+### 1.4 What's left (in order)
+1. **Catch-up (Nov 5–8):** your 5 decisions, the rebuild if needed, the hand-checks, the drive upload, setup leftovers, reviews, and the M2 freeze.
+2. **Models block (Nov 9–11):** the v1 walkthrough, the bug-fix window, III. Dataset, the ablation T7 and the T8 data time.
+3. **Analysis + paper (Nov 12–18):** IV-A/IV-B, literature, Intro, Limitations, Related Work + T1, assembly, Abstract, editing, M5.
+4. **Finish (Nov 19–20):** README results, fresh-clone test, tag, archive, submit.
 
 ---
 
-## 4. Day-by-Day Timeline
+## 2. Prerequisites / Required Tools
 
-| Date | Task | What |
-|---|---|---|
-| **Week 0** | | |
-| Wed Oct 28 | S1, S2 | Start the CERT download; start repo setup |
-| Thu Oct 29 | S2, S3 | Finish setup; run the kickoff meeting |
-| Fri Oct 30 | S4 | Convert CSVs to Parquet |
-| Sat Oct 31 | S5 | Data loaders and cleaning; share Parquet files → **M0** |
-| Sun Nov 1 | S6, S7, S8 | Labels + insider timeline; EDA part 1; propose split dates |
-| **Week 1** | | |
-| Mon Nov 2 | S7, S8 | EDA part 2; finalize split at stand-up |
-| Tue Nov 3 | S9 | Feature table v0 + `get_model_matrix()` → **M1** |
-| Wed Nov 4 | S10, S11 | Login + activity-time features |
-| Thu Nov 5 | S12, S13 | USB + file features; start the web-log job overnight |
-| Fri Nov 6 | S14, S15 | Email + web-usage features |
-| Sat Nov 7 | S16, S17 | Context features; per-user baselines (`z_user_*`) |
-| Sun Nov 8 | S18, S19, S20 | Peer baselines + novelty flags; checks; **v1** → **M2** *(long day)* |
-| **Week 2** | | |
-| Mon Nov 9 | S20, S-LIT1 | v1 walkthrough at stand-up; read L1, L2 |
-| Tue Nov 10 | S21, S23 | Bug-fix window (until 12:00); write III. Dataset |
-| Wed Nov 11 | S22, S-LIT2 | Feature-group ablation; read L3 |
-| Thu Nov 12 | S23, S-LIT3 | Write IV-A and IV-B; read L9a |
-| Fri Nov 13 | S25, S26, S27 | Your Related Work paragraphs; Introduction; Limitations & Ethics |
-| Sat Nov 14 | S28 | Results walkthrough; merge Related Work + table T1 |
-| Sun Nov 15 | S29 | Assemble Overleaf with everything received so far |
-| **Week 3** | | |
-| Mon Nov 16 | S29 | Collect the remaining sections → **M4** |
-| Tue Nov 17 | S30 | Abstract; integrate figures, tables, references |
-| Wed Nov 18 | S31, S32 | Editing pass; circulate draft by 18:00 → **M5** |
-| Thu Nov 19 | S33, S34 | Final read-through; README results; fresh-clone test → **submission-ready** |
-| Fri Nov 20 | S35 | **Submit** |
+- **Environment:** Python 3.13 venv at `%USERPROFILE%\.venvs\ueba` with `requirements.txt` installed (TEAM_PLAN 2.3).
+- **Data on your laptop:** `data/raw/` (archives + extracted LDAP, psychometric, answers), `data/parquet/` (5 logs + `manifest.json`), `data/processed/` (`labels.parquet`, `features_v0.parquet`, `features_v1.parquet`, `http_user_day_domain.parquet`, `http_domain_counts.csv`).
+- **GitHub admin rights:** you own the repo (settings, tags).
+- **Shared drive:** write access, to upload the single `ueba_data_v1.zip` (TEAM_PLAN 2.5.12).
+- **Overleaf + Zotero:** accounts to create the project and group library.
+- **Arva's and Ayo's merged tuned-defaults PRs** (for S22): `arva/A15-final-models`, `ayo/Y14-final-models`. You need **no score files**: the ablation retrains each model on each feature set.
 
 ---
 
-## 5. Task Cards
-
-### S1 · Wed Oct 28 · Start the download
-**Goal:** get the data downloading today, because it is large.
-1. Go to `kilthub.cmu.edu`, search **"Insider Threat Test Dataset"**, and download **`r4.2.tar.bz2`** and **`answers.tar.bz2`**.
-2. Save them in `data/raw/` (which will be git-ignored).
-3. Check you have ≥ 8 GB of free disk space (4.8 GB archive + 1.2 GB Parquet; the 16 GB of CSVs inside are never unpacked).
-
-**Run:** `bash scripts/download_cert.sh` from the repo root (on `supriye/S2-setup`). KiltHub limits each connection to ~0.4 MB/s, so the script fetches the archive in 16 parallel parts, can be stopped and re-run to resume, and checks both SHA-256 checksums at the end.
-
-**Done when:** both archives are fully downloaded, and the file sizes match the website.
-
-### S2 · Wed Oct 28 – Thu Oct 29 · Repository, environment and writing tools
-**Goal:** a shared setup that works the same on all three laptops.
-1. The GitHub repo already exists (`SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection`) with the planning files in its first commit. On GitHub, **add Arva and Ayo as collaborators** and **turn on branch protection for `main`** (TEAM_PLAN 14.1).
-2. Create your first branch. Any uncommitted edits in your folder come along to the new branch, so they get committed there:
-   ```bash
-   git checkout -b supriye/S2-setup
-   ```
-3. Create the folder structure from [README.md](../README.md) (empty folders need a `.gitkeep` file, or Git won't track them).
-4. Create `.gitignore` with **exactly** the content in TEAM_PLAN 14.1.
-5. Create a **Python 3.13** virtual environment at a short path outside the repo (`python -m venv %USERPROFILE%\.venvs\ueba`; see the README) and install: `pandas numpy pyarrow scikit-learn xgboost imbalanced-learn torch shap matplotlib seaborn jupyter streamlit pytest`. Inside this long project path, Jupyter's install fails on the Windows 260-character path limit (found Nov 3). Everyone uses 3.13 so `requirements.txt` installs the same versions.
-6. Run `pip freeze > requirements.txt`.
-7. `git status` → check that `.venv/` is **not** listed → `git add` the folders, `.gitignore`, `requirements.txt` and the planning files → commit `S2: project structure, gitignore, requirements` → `git push -u origin supriye/S2-setup`.
-8. Open a PR, assign **Ayo** as reviewer, and merge on Thu Oct 29 after approval (TEAM_PLAN 14.4).
-9. Create the **Overleaf** project from the IEEE conference template with empty sections I–VIII; invite Arva and Ayo.
-10. Create a **Zotero group library**; invite Arva and Ayo.
-
-**Done when:** `supriye/S2-setup` is merged; Arva and Ayo have each cloned the repo and installed `requirements.txt` without errors; both have accepted the GitHub, Overleaf and Zotero invites.
-
-### S3 · Thu Oct 29 · Run the kickoff meeting
-1. Share your screen with [TEAM_PLAN.md](TEAM_PLAN.md) and go through Sections 2–5 and 11–13.
-2. Confirm: the paper page limit, the course AI-use policy, PyTorch vs. Keras, and exactly what must be submitted on Nov 20 (paper only? paper + code? a demo?).
-3. Agree on every rule in Section 5 and write any changes into TEAM_PLAN.md during the meeting.
-4. Agree on the group chat and the stand-up times (Mon / Wed / Fri).
-
-**Done when:** TEAM_PLAN.md is updated and pushed with the agreed decisions.
-
-### S4 · Fri Oct 30 · Convert CSVs to Parquet
-**Goal:** fast loading for everyone from here on.
-1. Extract `r4.2.tar.bz2` and `answers.tar.bz2` into `data/raw/`.
-2. For each CSV, read it with `pd.read_csv(path, chunksize=1_000_000)`. Parse `date` with `format="%m/%d/%Y %H:%M:%S"` (check the first rows to confirm the format). Write each chunk to Parquet with `pyarrow.parquet.ParquetWriter`.
-3. For `http.csv` and `email.csv`, **drop the `content` column** while converting to save space (keep a note that it exists).
-4. Print the row count and date range of every file and save them into `notebooks/01_eda.ipynb` (you will reuse these in the Dataset section).
-
-**Run:** `python -m src.data_loader convert` from the repo root (one streaming pass; ~10 min on Nov 3). It never unpacks the big CSVs to disk; it also extracts LDAP/, psychometric.csv and the answers. Row counts go to `data/parquet/manifest.json`.
-
-**Done when:** every log has a Parquet file, and row counts match the CSVs.
-
-### S5 · Sat Oct 31 · Data loaders and cleaning (`src/data_loader.py`) → M0
-1. Write one function per log: `load_logon()`, `load_device()`, `load_file()`, `load_email()`, `load_http()`, `load_ldap()`, `load_psychometric()`. Each returns a clean DataFrame.
-2. In every loader: convert `date` to `datetime`; add `day = date.dt.normalize()` and `hour = date.dt.hour + date.dt.minute / 60`; strip whitespace from `user` and `pc`; drop exact duplicate rows.
-3. `load_ldap()`: read every monthly file, add a `month` column, and stack them into one table.
-4. Print the number of duplicates and missing values removed per file. You will report these in the paper.
-5. Upload the Parquet files to the shared drive, post the link, and push `data_loader.py`.
-
-**Run:** `from src.data_loader import load_logon; load_logon(users=["AAM0658"])`. Every loader takes `columns=` and `users=`; the huge http log also has `iter_http_batches()`. The cleaning report (step 4) is the second table in `notebooks/01_eda.ipynb`.
-
-**Done when:** every loader runs in a fresh Python session; Arva and Ayo can download the Parquet files. → **M0**
-
-### S6 · Sun Nov 1 · Ground-truth labels + insider timeline
-**Goal:** know exactly which user-days are malicious.
-1. Read `answers/insiders.csv`; keep rows for dataset 4.2. Note each insider's `user`, `scenario`, `start`, `end`.
-2. For each insider, open their answer file in `answers/r4.2-<scenario>/`. Each line is a copy of one malicious log record. Extract the user and date of every line.
-3. Build a table `malicious_days` with columns `user, day, scenario`.
-4. **Check:** every malicious day falls between that insider's `start` and `end`. Investigate any that don't.
-5. Make an **insider timeline table**: number of malicious user-days per **month × scenario**. You need it for S8.
-6. Save it as `data/processed/labels.parquet`.
-
-**Run:** `python -m src.labels`. It writes `data/processed/labels.parquet` and `results/tables/insider_timeline.csv`, and prints the step-4 checks. Step 4's hand check of 3 insiders is still yours (human-only).
-
-**Done when:** the number of insiders per scenario matches `insiders.csv`, and the timeline table is saved.
-
-### S7 · Sun Nov 1 – Mon Nov 2 · Exploratory data analysis (`notebooks/01_eda.ipynb`)
-Produce these outputs, each with a 1–2 sentence observation written by you underneath. Do items 2 and 6 **first**, because v0 needs them.
-1. Events per log type per month (line chart).
-2. Activity by **hour of day** and by **day of week**, for all users. Use this to decide "working hours" (see S11).
-3. Distribution of events per user (histogram), to spot very active or very quiet users.
-4. **Class imbalance:** total user-days, malicious user-days, % malicious, broken down by scenario. This becomes table **T2**.
-5. **Insider vs. normal comparison (figure F1):** for one insider per scenario, plot daily activity over time and mark the malicious period. Show one normal user from the same role next to them.
-6. Top 50 email recipient domains (to identify the company's own domain) and top 100 web domains (for the S15 keyword lists).
-
-**Run:** open `notebooks/01_eda.ipynb` with the project environment and choose Restart & Run All (~5–10 min; it streams the http log for item 6). The *Observation* cells are left empty for you.
-
-**Done when:** all 6 outputs are in the notebook with your written observations, and figures are saved to `results/figures/`.
-
-### S8 · Sun Nov 1 – Mon Nov 2 · Decide the train/val/test split
-1. Using the insider timeline table (S6), propose month boundaries close to 60% / 15% / 25% (TEAM_PLAN 5.3).
-2. Check that **each** split contains malicious days from **all three** scenarios. Adjust the boundaries until it does.
-3. Post the proposal in chat on Sun evening; confirm at the Mon stand-up.
-4. Write the final dates into TEAM_PLAN.md Section 5.3 and push.
-
-**Run:** `python -m src.labels` prints the default 60/15/25 proposal and checks the split currently in `src/config.py` (`TRAIN_END`, `VAL_END`). The same check is saved to `results/tables/split_check.csv`: `days_s*` / `accounts_s*` count every labeled account, while `insider_days_s*` / `insiders_s*` count real insiders only (the split is judged on those). To try other dates, edit `src/config.py` and run it again.
-
-**Done when:** the dates are in TEAM_PLAN.md and every split has malicious days from all 3 scenarios.
-
-### S9 · Tue Nov 3 · Feature table v0 + `get_model_matrix()` → M1
-**Goal:** give Arva and Ayo real data early, even if simple.
-1. **Users:** about 20 insiders (mix of all 3 scenarios) + 80 randomly chosen normal users (`random_state=42`), **all dates**.
-2. **Rows:** one per user per day on which the user has at least one logon. Days with no activity are skipped; write this down for the paper.
-3. **Features (basic only):** `f_logon_count`, `f_logoff_count`, `f_afterhours_logon`, `f_usb_connect`, `f_file_copy`, `f_email_sent`, `f_email_external`.
-4. Add `split`, `label`, `scenario`, `insider`, `role`, `department` exactly as in TEAM_PLAN 5.1.
-5. In `src/features.py` write:
-   ```python
-   def get_model_matrix(df, split=None, columns=None):
-       """Return X (DataFrame), y (Series), feature_names.
-       - split: 'train' / 'val' / 'test' / None (all rows)
-       - columns: list of feature columns to use (default: every f_*, z_user_*, z_peer_*, new_* column)
-       Applies log1p to f_* count columns and fills missing values with 0."""
-   ```
-   The `columns` argument is what makes the ablation (S22) possible.
-6. Save as `data/processed/features_v0.parquet`, share it, and post in chat.
-
-**Run:** `python -m src.features v0`, then `python -m pytest tests`. `tests/test_v0_smoke.py` checks the table against TEAM_PLAN 5.1 and pushes it through a quick model and `evaluate.py`; it skips only when `data/processed/features_v0.parquet` is missing.
-
-**Done when:** Arva and Ayo confirm that `get_model_matrix(pd.read_parquet("data/processed/features_v0.parquet"), split="train")` works in their code. → **M1**
-
-### S10 · Wed Nov 4 · Login features
-For each user-day, from `logon.csv`:
-
-| Feature | Definition |
-|---|---|
-| `f_logon_count` | Number of Logon events |
-| `f_logoff_count` | Number of Logoff events |
-| `f_first_logon_hour` | Hour (decimal) of the first logon |
-| `f_last_logoff_hour` | Hour of the last logoff (if missing, use the last event of the day) |
-| `f_work_duration` | `f_last_logoff_hour − f_first_logon_hour` |
-| `f_n_pcs` | Number of distinct PCs used |
-| `f_logon_other_pc` | Logons on a PC that is not the user's **primary PC** (the PC they used most in the `train` split) |
-
-`f_logon_other_pc` and `f_n_pcs` are our **authentication-behavior** signals, since CERT has no failed logins (TEAM_PLAN Section 6).
-
-**Done when:** the features exist for all users, and you have checked a few user-days by hand against the raw log.
-
-### S11 · Wed Nov 4 · Activity-time features
-1. **Decide "after hours"** from the hour-of-day plot in S7 (e.g. before 07:00 or after 19:00). This is your decision; write down the reason.
-2. Features:
-
-| Feature | Definition |
-|---|---|
-| `f_afterhours_logon` | Logons outside working hours |
-| `f_afterhours_events` | All events (logon, USB, file, email, web) outside working hours |
-| `f_afterhours_ratio` | `f_afterhours_events / total events` |
-| `f_weekend` | 1 if Saturday or Sunday, else 0 |
-
-**Done when:** the features are added, and the after-hours definition and its reason are written into the feature dictionary.
-
-### S12 · Thu Nov 5 · USB device features
-| Feature | Definition |
-|---|---|
-| `f_usb_connect` | Number of Connect events |
-| `f_usb_afterhours` | Connects outside working hours |
-| `f_usb_n_pcs` | Distinct PCs with a USB connect |
-| `f_usb_duration` | Total minutes connected (pair each Connect with the next Disconnect on the same PC; cap unmatched ones at the end of the day) |
-
-**Done when:** the features are added, and you have checked one scenario-1 insider: their USB use should jump during the malicious period.
-
-### S13 · Thu Nov 5 · File features
-From `file.csv` (file copies to removable media). Group extensions from the `filename` column:
-
-| Feature | Definition |
-|---|---|
-| `f_file_copy` | Total files copied |
-| `f_file_doc` | `.doc`, `.docx`, `.pdf`, `.txt` |
-| `f_file_exe` | `.exe` |
-| `f_file_zip` | `.zip` and other archive types |
-| `f_file_img` | `.jpg`, `.png` |
-| `f_file_afterhours` | Copies outside working hours |
-
-Before you finish today, also start **S15 step 2** so the long web-log job runs overnight.
-
-**Done when:** the features are added, and the extension groups cover over 95% of files (check with `value_counts()`).
-
-### S14 · Fri Nov 6 · Email features
-1. Identify the **company domain** from the S7 domain counts (e.g. `dtaa.com`; confirm it in the data).
-2. Use the rows where the user is the sender. Split `to`, `cc` and `bcc` on `;` to get the recipients.
-
-| Feature | Definition |
-|---|---|
-| `f_email_sent` | Emails sent |
-| `f_email_recipients` | Total recipients |
-| `f_email_external` | Emails with at least one non-company recipient |
-| `f_email_attach` | Total attachments |
-| `f_email_external_attach` | External emails with ≥ 1 attachment |
-| `f_email_size` | Mean email size |
-| `f_email_bcc` | Emails using BCC |
-| `f_email_afterhours` | Emails sent outside working hours |
-
-**Done when:** the features are added; a scenario-3 insider shows a spike in `f_email_recipients` on their mass-email day.
-
-### S15 · Thu Nov 5 (start) – Fri Nov 6 · Web-usage features
-`http.csv` is huge, so process it **in chunks** and **only once**.
-1. **(Thu) Keyword lists:** from the top web domains in S7, make 4 lists, e.g.:
-   - `job`: job-search and recruiting sites
-   - `leak`: `wikileaks` and similar
-   - `cloud`: file-sharing / cloud-storage sites
-   - `hack`: keylogger, spyware, hacking-tool sites
-
-   Inspect the data to build the lists yourself; don't guess.
-2. **(Thu night)** Read the Parquet file with only `user, date, url`. Per chunk: extract the domain, assign a category (or `other`), aggregate to `user, day, category → count`, and append to a small result table. Let it run overnight.
-3. **(Fri)** Turn the aggregated table into features:
-
-| Feature | Definition |
-|---|---|
-| `f_http_count` | Total page visits |
-| `f_http_domains` | Distinct domains visited |
-| `f_http_job` / `f_http_leak` / `f_http_cloud` / `f_http_hack` | Visits per category |
-| `f_http_afterhours` | Visits outside working hours |
-
-**Done when:** the features are added; scenario-1 insiders show `f_http_leak > 0` and scenario-2 insiders show increased `f_http_job`.
-
-### S16 · Sat Nov 7 · Organizational context
-1. Join `role` and `department` from the LDAP file for **that month** (people can change role).
-2. *(Optional feature group)* Add the psychometric scores as `f_ctx_O`, `f_ctx_C`, `f_ctx_E`, `f_ctx_A`, `f_ctx_N`.
-3. **Do NOT create a "days until leaving" feature.** It uses future information (in reality you don't know someone will leave), so it would be data leakage. Mention this in the paper as a deliberate choice.
-
-**Done when:** every row has a `role` and `department`, and there are no "future" features.
-
-### S17 · Sat Nov 7 · Per-user baselines (`src/baseline.py`) — the core of UEBA
-**Goal:** measure how unusual each day is **for that specific user**.
-1. Choose ~15 key features to baseline: logon count, first logon hour, work duration, after-hours events, USB connects, file copies, external emails, email recipients, HTTP count and each HTTP category, `f_logon_other_pc`.
-2. For each user, sort by date and compute a rolling **mean** and **std** over the **previous 30 active days**, using `.shift(1)` so **today is never included**:
-   ```python
-   g = df.sort_values("date").groupby("user")[col]
-   mean = g.transform(lambda s: s.shift(1).rolling(30, min_periods=10).mean())
-   std  = g.transform(lambda s: s.shift(1).rolling(30, min_periods=10).std())
-   df[f"z_user_{col[2:]}"] = (df[col] - mean) / (std + 1)
-   ```
-   The `+ 1` stops tiny standard deviations from producing huge values. Explain this choice in IV-B.
-3. **Cold start:** if a user has fewer than 10 past days, the value is missing. Fill it with the matching `z_peer_*` value after S18 (or 0 if that is missing too).
-4. Malicious days stay in the history. In real life nobody knows which days were bad, so this is the realistic choice. Write it down.
-5. **Figure F3:** for one insider, plot a feature with its rolling mean ± 2 std band and mark the malicious days.
-
-**Done when:** the `z_user_*` columns exist, and F3 is saved.
-
-### S18 · Sun Nov 8 · Peer-group baselines + novelty flags
-1. **Peer group** = users with the same `role` on the same `date`. For each key feature: `z_peer_x = (x − peer_mean) / (peer_std + 1)`. Use the same 15 features as S17.
-2. If a role has fewer than 5 users, use `department` instead.
-3. **Novelty flags** (computed from past days only):
-
-| Flag | 1 when |
-|---|---|
-| `new_usb_user` | First day this user ever connects a USB drive |
-| `new_pc` | User logs on to a PC never used before |
-| `new_leak_site` | First visit to a `leak` or `cloud` site |
-| `new_afterhours` | First ever after-hours logon |
-
-4. Fill the cold-start gaps from S17 step 3.
-
-**Done when:** the `z_peer_*` and `new_*` columns exist with no missing values.
-
-### S19 · Sun Nov 8 · Validation and leakage checks
-Run these checks and put the results in a cell at the end of `02_feature_engineering.ipynb`:
-1. No missing or infinite values in any model-input column.
-2. Rows per split, malicious rows per split, malicious rows per split **per scenario** (all > 0).
-3. **Leakage test:** recompute the baselines after deleting the last month of data. The `z_user` values for earlier months must not change.
-4. **Hand check:** for 3 insiders (one per scenario), open the raw logs for one malicious day and confirm that 3–4 feature values match by counting manually.
-5. The table contains no column derived from `label`, `scenario` or future LDAP months.
-
-**Done when:** all 5 checks pass and are documented.
-
-### S20 · Sun Nov 8 – Mon Nov 9 · Feature table v1 + dictionary + walkthrough → M2
-1. **(Sun)** Save `data/processed/features_v1.parquet`, share it, and post in chat.
-2. **(Sun)** Write `docs/feature_dictionary.md` with one row per feature: **name, group, definition, unit, why it can indicate insider activity**. The groups are logon / time / usb / file / email / http / context / z_user / z_peer / new. A short first version is fine; polish it on Thu Nov 12 for IV-A.
-3. **(Mon stand-up)** Run the 30-minute walkthrough for Arva and Ayo; announce the **freeze** (TEAM_PLAN 5.10). Decide together whether the LANL stretch (S24) happens.
-
-**Done when:** both teammates have loaded v1 in their code. → **M2**
-
-### S21 · Tue Nov 10 · Bug-fix window
-1. Fix only bugs reported through GitHub Issues that change results.
-2. If anything changed, release `features_v1_1.parquet` **by 12:00** and post in chat what changed.
-3. After 12:00 the features are final.
-
-**Done when:** all reported feature issues are closed or explicitly postponed.
-
-### S22 · Wed Nov 11 · Feature-group ablation
-**Goal:** answer *"which behavioral features contribute most to detection?"* from a second angle (Ayo covers SHAP).
-1. Use Ayo's XGBoost and Arva's Isolation Forest **with their tuned settings** (committed by Tue Nov 10), and `get_model_matrix(..., columns=...)`.
-2. Run these feature sets:
-   - (a) raw `f_*` only
-   - (b) `f_*` + `z_user_*`
-   - (c) `f_*` + `z_user_*` + `z_peer_*` + `new_*` (= full)
-   - (d) full set **minus one group at a time**: logon, time, usb, file, email, http, context
-3. Record **PR-AUC** and **recall at the top-1% budget** on `test`, using `evaluate.py`.
-4. Save `results/tables/ablation.csv` (table **T7**) and write 3–5 sentences on what you see.
-
-**Done when:** the table is saved, and the comparison of (a) vs. (b) vs. (c) answers whether the baselining helps.
-
-### S23 · Tue Nov 10 and Thu Nov 12 · Paper sections III, IV-A, IV-B
-Write directly in Overleaf. **Your own words, no AI** (see Section 6).
-- **Tue — III. Dataset:** what CERT r4.2 is and how it was generated (cite L1), the log types, the 3 scenarios, preprocessing (duplicates, Parquet, dropped columns), the split dates, the class-imbalance table **T2**, and the "no failed logins" gap.
-- **Thu — IV-A Preprocessing & Feature Engineering:** why user-day granularity (cite L2), each feature group with its intuition, the after-hours definition, the condensed feature table **T3**, and why there is no "days until leaving" feature.
-- **Thu — IV-B Establishing Normal Behavior:** the per-user rolling baseline formula, peer groups, novelty flags, cold-start handling, the `+1` in the denominator, figure **F3**.
-
-**Done when:** all three sections are full paragraphs (not bullets), with every figure and table referenced in the text.
-
-### S24 · Stretch (only if agreed on Mon Nov 9) · LANL authentication features
-**Goal:** cover **authentication failures** and **compromised accounts**, which CERT cannot provide. Work on it Tue Nov 10 – Wed Nov 11 in the evenings; Arva and Ayo would run their models on it Thu Nov 12. If not agreed, skip it; the gap is covered in III and VII.
-1. Read and accept the LANL data-use terms yourself at `csr.lanl.gov/data/cyber1/`; download `auth.txt.gz` and `redteam.txt.gz`.
-2. Stream `auth.txt.gz` with `chunksize`. Columns, in order: `time, src_user, dst_user, src_comp, dst_comp, auth_type, logon_type, orientation, outcome`.
-3. Keep only human user accounts: `src_user` starting with `U` (drop computer accounts ending in `$` and `ANONYMOUS`).
-4. **Scope:** all users that appear in `redteam.txt` + 1,000 random other users (`random_state=42`).
-5. `day = time // 86400`, `hour = (time % 86400) // 3600`.
-6. Per user-day features: `f_auth_count`, `f_auth_fail`, `f_auth_fail_ratio`, `f_auth_dst_hosts`, `f_auth_src_hosts`, `f_auth_new_dst` (destination never seen before for this user), `f_auth_ntlm`, `f_auth_network_logon`.
-7. `label = 1` if the (user, day) appears in `redteam.txt`. Split by day using the same 60/15/25 idea, checking that red-team days exist in every split.
-8. Save `data/processed/lanl_features.parquet` in the TEAM_PLAN 5.1 format (`scenario = 0/1`).
-
-**Done when:** the file is shared by Wed Nov 11 night.
-
-### S25 · Fri Nov 13 · Your Related Work paragraphs
-Write one paragraph each for L1, L2, L3 and L9a in **II. Related Work**, from your notes. Check that Arva and Ayo have posted theirs (also due today).
-
-**Done when:** your paragraphs are in Overleaf.
-
-### S26 · Fri Nov 13 · I. Introduction
-Cover, in this order:
-1. The insider-threat problem and why it's hard (insiders already have legitimate access).
-2. What UEBA is and why behavior-based detection helps.
-3. The research question (quoted exactly).
-4. A bulleted list of our contributions: features with per-user and peer baselines, a comparison of unsupervised vs. supervised models, the unseen-scenario evaluation, explainable risk scoring.
-5. A paper outline sentence ("Section II reviews…").
-
-Any statistic you quote (e.g. the cost of insider incidents) must have a citation you have checked yourself.
-
-**Done when:** the section is ~0.75 page and every claim is cited.
-
-### S27 · Fri Nov 13 · VII. Limitations & Ethics
-Cover at least:
-- the data is **synthetic** (CERT)
-- labels were used to clean the training data for the unsupervised models
-- few insiders per scenario
-- **concept drift**: normal behavior changes over time
-- thresholds depend on the alert budget
-- the cold-start problem
-- no authentication failures in CERT
-- **privacy and ethics** of monitoring employees: proportionality, transparency, the risk of false accusations, and why a human analyst must stay in the loop
-
-**Done when:** each limitation says what its effect on our results is.
-
-### S28 · Sat Nov 14 · Results walkthrough + merge II. Related Work
-1. Attend the results walkthrough: present the ablation (S22), and note the agreed answer to the research question.
-2. Order the Related Work paragraphs by theme (surveys → feature/granularity → unsupervised/deep → supervised/explainable), not by person.
-3. Add linking sentences so it reads as one text.
-4. Build table **T1**: paper, year, dataset, models, best result, limitation.
-5. End with 2–3 sentences on the **gap our project fills**.
-
-**Done when:** Related Work reads as one coherent section, and T1 is complete.
-
-### S29 · Sun Nov 15 – Mon Nov 16 · Assemble the paper → M4
-1. **(Sun)** Check that IV-C, IV-D, V and VI-B are in Overleaf and the project compiles.
-2. **(Mon)** Check that VI-A, VI-C and VIII are in. Chase anything missing; it must be in by Mon night.
-
-**Done when:** every section in TEAM_PLAN Section 11 exists as a full draft. → **M4**
-
-### S30 · Tue Nov 17 · Abstract + integration
-1. **Abstract** (~200 words): problem → approach → dataset → models → key results (best PR-AUC, recall, FPR) → main finding about features and unseen scenarios.
-2. Number figures and tables consistently; make sure every one is referenced in the text.
-3. Export the Zotero library in IEEE style; check all citations compile.
-
-**Done when:** the paper compiles with no missing references (`??`) and is within the page limit.
-
-### S31 · Wed Nov 18 · Editing pass
-Go through the whole paper with this checklist:
-- [ ] Terms are consistent: "user-day", "insider", "anomaly score", "risk score"
-- [ ] Every number in the text matches the tables, and the tables match `results/tables/`
-- [ ] Every figure has a caption and is readable when printed
-- [ ] The research question is answered explicitly in VI or VIII
-- [ ] Each section is in one consistent voice
-- [ ] Page limit is respected
-
-**Done when:** every checklist item is ticked.
-
-### S32 · Wed Nov 18 · Circulate the full draft → M5
-Export the PDF **by 18:00**, post it in chat, and ask each teammate for comments by Thu morning.
-
-### S33 · Thu Nov 19 · Final read-through + README
-1. Lead the final read-through meeting; assign and apply the last fixes.
-2. Fill the **Results** section of [README.md](../README.md) with the main comparison table.
-
-### S34 · Thu Nov 19 · Fresh-clone test → submission-ready
-1. Merge `supriye/S33-final` (and any last `*-final-fixes` PRs from Arva and Ayo).
-2. Clone the repo into a **new folder**, create a new virtual environment, and run `pip install -r requirements.txt`.
-3. Copy the feature table from the shared drive into the clone's `data/processed/`. Run the prototype (`python src/pipeline.py`) and `04_evaluation.ipynb` from top to bottom.
-4. If both work, tag the final version (TEAM_PLAN 14.7) as `final-submission` and push the tag.
-5. Make the code archive from that tag. It contains exactly the committed code, with no data or local junk:
-   ```bash
-   git archive --format=zip -o submission-code.zip final-submission
-   ```
-6. Produce the final PDF from Overleaf. Check that both files meet the course's submission requirements.
-
-**Done when:** the `final-submission` tag is pushed, and the code archive and PDF are ready on Thu night.
-
-### S35 · Fri Nov 20 · Submit
-Submit the paper and code. Post a confirmation (screenshot) in the group chat.
-
-### S-LIT1 / S-LIT2 / S-LIT3 · Literature reading
-| Task | Date | Papers |
-|---|---|---|
-| S-LIT1 | Mon Nov 9 | L1 — Glasser & Lindauer (2013); L2 — Le, Zincir-Heywood & Heywood (2020) |
-| S-LIT2 | Wed Nov 11 | L3 — Homoliak et al. (2019) |
-| S-LIT3 | Thu Nov 12 | **L9a** — one 2022–2026 paper you find (TEAM_PLAN 7.3). L9b only if time allows |
-
-For each paper: read it, fill in the note template (TEAM_PLAN 7.4) as `paper/lit_notes/<ID>.md`, and add it to Zotero. Skim L1 and L2 earlier if you can, since they help with S7 and S10.
+## 3. Step-by-Step Instructions
+
+### Catch-up block: Thu Nov 5 – Sun Nov 8
+
+#### S2-rest · Thu Nov 5 · Finish setup
+1. **Turn on** branch protection: GitHub → **Settings → Branches → Add rule** for `main` → tick **Require a pull request before merging** with 1 approval.
+2. **Create** the Overleaf project from the IEEE conference template and invite Arva and Ayo.
+3. **Create** the Zotero group library (IEEE export style) and invite both.
+4. **Post** both links in the group chat.
+
+**Done when:** a direct push to `main` is rejected, and both teammates have joined Overleaf and Zotero.
+
+#### S3-rest · Thu Nov 5 · Confirm the course rules
+1. **Confirm** the page limit, the AI-use policy and the submission contents (PDF + code archive?) with the instructor or the brief.
+2. **Write** the answers into TEAM_PLAN §1 and §2.6 on your next plan branch.
+
+**Done when:** all three answers are in TEAM_PLAN.
+
+#### S8 · Thu Nov 5 – Fri Nov 6 · Decide the PROVISIONAL values [H]
+Branch: `supriye/S8-decisions` (reviewer Arva).
+1. **Decide** the split dates from `results/tables/split_check.csv`. Keep 2010-10-31 / 2011-01-31, or move them so scenario 3 has more than 4 test days. Every cell of `insider_days_s*` must stay > 0.
+2. **Decide** the after-hours window from the hour-of-day plot in `notebooks/01_eda.ipynb` (now 07:00–19:00), and write the reason under "Settings" in `docs/feature_dictionary.md`.
+3. **Check** the web keyword lists in `src/config.py` `HTTP_CATEGORIES` against `data/processed/http_domain_counts.csv` (all 475 domains). Note what's left out and why: LinkedIn, the 5 defense-contractor sites, freelance sites, torrent indexes.
+4. **Decide** the email rule: `EMAIL_COUNT_PERSONAL = True` counts webmail sent from the work PC too, and 37.6% of emails are such webmail.
+5. **Decide** the hijacked-account labels: keep the 20 scenario-3 days on `FAW0032`/`FBA0348` (compromised-account view), or move them to the insider.
+6. **Write** each value into `src/config.py` (remove the PROVISIONAL tag), the split dates into TEAM_PLAN 2.5.3, and the reasons into the feature dictionary.
+7. **Post** the final values in chat.
+
+**Done when:** no PROVISIONAL tag is left in `src/config.py`, and TEAM_PLAN 2.5.3 shows the dates.
+
+#### S20b · Fri Nov 6 – Sat Nov 7 · Rebuild after the decisions (only if a value changed)
+1. **Run** `python -m src.labels`.
+2. **Run** `python -m src.features v0`, then `python -m src.features v1` (~2 min).
+3. **Re-run** `notebooks/01_eda.ipynb` and `notebooks/02_feature_engineering.ipynb` with Restart & Run All.
+4. **Run** `python -m pytest tests`.
+5. **Commit** the regenerated tables and figures on `supriye/S8-decisions`, and note the changed numbers in the PR.
+
+**Done when:** tests pass, both notebooks run clean, and `v1_validation_checks.csv` still shows PASS.
+
+#### S6-H / S19-H · Fri Nov 6 · Hand-checks [H]
+1. **Pick** one insider per scenario.
+2. **Open** their answer file in `data/raw/answers/` and the raw logs for one malicious day.
+3. **Count** 3–4 feature values by hand (logons, USB connects, file copies, emails) and compare them with `features_v1.parquet`.
+4. **Write** the result in the Observation cell of `02_feature_engineering.ipynb` (S19 check 4).
+
+**Done when:** the Observation cell says which values matched.
+
+#### S7-H · Fri Nov 6 · EDA observations [H]
+1. **Write** 2–3 sentences under each plot in `notebooks/01_eda.ipynb`.
+
+**Done when:** no Observation cell in notebook 01 is empty.
+
+#### S4-rest / S20-rest · Sat Nov 7 · The one data drop (TEAM_PLAN 2.5.12)
+1. **Write** checksums: `sha256sum data/processed/* data/parquet/logon.parquet data/parquet/device.parquet data/parquet/file.parquet data/parquet/email.parquet data/parquet/manifest.json > data/CHECKSUMS.txt`.
+2. **Zip** only those files plus `data/CHECKSUMS.txt` into `ueba_data_v1.zip` (~380 MB). Leave out `http.parquet` and `data/raw/`.
+3. **Upload** the zip once to the shared drive, and post the link with the commit it matches.
+
+**Done when:** Arva and Ayo confirm the checksums pass and `get_model_matrix(pd.read_parquet('data/processed/features_v1.parquet'), split='train')` works.
+
+#### REV-S · Thu Nov 5 – Sun Nov 8 · Read your code and do your reviews
+1. **Read** `data_loader.py`, `labels.py`, `features.py` and `baseline.py` until you can explain each function [H].
+2. **Review** on `main` the PRs assigned to you: Arva's #9 (`CLAUDE.md`), #15 (A7), #21 (A11–A12) and #27 (coverage), and Ayo's #23 (Y7–Y10). Run each "How to test" step.
+3. **Open** a GitHub Issue for the owner for anything that needs changing (TEAM_PLAN 2.5.8).
+4. **Tick** each review in PROGRESS §7.
+
+**Done when:** every review assigned to you in PROGRESS §7 is ticked.
+
+#### S20-tag · Sun Nov 8 · Freeze v1 → M2
+1. **Tag** `m0-setup` and `m1-features-v0` if their conditions are met (PROGRESS §8).
+2. **Announce** the freeze (TEAM_PLAN 2.5.9).
+3. **Tag** `m2-features-v1`: `git tag -a m2-features-v1 -m "M2: feature table v1"`, then `git push origin m2-features-v1`.
+
+**Done when:** the tag is on GitHub and M2 is ticked in PROGRESS §1.
+
+### Models block: Mon Nov 9 – Wed Nov 11
+
+#### S20-walk · Mon Nov 9 · v1 walkthrough (30 min)
+1. **Walk** Arva and Ayo through each feature group with `docs/feature_dictionary.md` and F3.
+2. **Lead** the decision on the LANL stretch (S24). The default is to skip it and state the gap.
+
+**Done when:** both teammates have asked their questions, and the S24 decision is in the chat.
+
+#### S21 · Tue Nov 10 (until 12:00) · Bug-fix window
+1. **Check** GitHub Issues for feature bugs (none were open on Nov 5).
+2. **Fix** only result-changing bugs on `supriye/S21-v1-fixes`, rebuild as `features_v1_1.parquet`, upload that one 35 MB file (the only allowed second drop) and post what changed.
+3. **Close** or explicitly postpone every feature issue at 12:00.
+
+**Done when:** no feature issue is open without a decision.
+
+#### S23a · Tue Nov 10 · III. Dataset [H]
+1. **Write** in Overleaf: what CERT r4.2 is and how it was made (cite L1), the log types, the 3 scenarios, the preprocessing, the split dates, T2 (`class_imbalance.csv`), and the "no failed logins" gap.
+
+**Done when:** III is full paragraphs, with T2 referenced.
+
+#### S22 · Wed Nov 11 · Feature-group ablation → T7
+Branch: `supriye/S22-ablation`, from `main` **after** `arva/A15-final-models` and `ayo/Y14-final-models` merge (reviewer Ayo).
+1. **Create** `src/ablation.py` with:
+   - **`feature_group(column)`** maps every model input to one of `logon, time, usb, file, email, http, context`. `z_user_*` and `z_peer_*` follow their feature; `new_usb_user` → usb, `new_pc` → logon, `new_leak_site` → http, `new_afterhours` → time.
+   - **`feature_sets(columns)`** returns (a) raw `f_*`, (b) `f_*` + `z_user_*`, (c) full, and (d) full minus one group at a time.
+   - **`run_ablation(df)`** retrains XGBoost (`train_and_score_supervised(..., columns=...)`) and Isolation Forest (`train_and_score(..., columns=...)`) with their **tuned defaults**, scores with `evaluate_df()`, and records test PR-AUC, ROC-AUC, recall at top 1%, recall at best-F1 and the change vs. full.
+2. **Add** `data_processing_time()`: wall-clock time of `labels.build_labels()`, the web-log pass (`http_user_day_domains(refresh=True)`) and `build_v1()`, plus the ~10-min conversion. It writes `results/tables/data_processing_time.csv`.
+3. **Add** `tests/test_ablation.py`: every v1 input has a group; the feature sets are correct; `run_ablation()` works on `make_synthetic_features()`.
+4. **Run** `python -m src.ablation`, which writes `results/tables/ablation.csv` (T7).
+5. **Run** `python -m src.ablation time`, which writes `data_processing_time.csv` (for T8).
+6. **Write** 3–5 sentences on (a) vs. (b) vs. (c) and the biggest group drops in the PR and in your notes [H].
+7. **Tag** `m3-all-scores` once `ayo/Y16-loso-results` is merged too.
+
+**Done when:**
+- **Table:** `ablation.csv` has 10 feature sets × 2 models;
+- **Answer:** the (a)/(b)/(c) comparison says whether baselining helps;
+- **Hand-off:** Ayo has the data-processing time.
+
+#### S24 · Tue Nov 10 – Wed Nov 11 · LANL authentication features *(stretch, only if agreed Nov 9)*
+1. **Accept** the LANL terms yourself and download `auth.txt.gz` + `redteam.txt.gz`.
+2. **Stream** `auth.txt.gz` in chunks. Keep `src_user` starting with `U`; drop accounts ending in `$` and `ANONYMOUS`.
+3. **Scope** to red-team users + 1,000 random others (`random_state=42`). Compute `day = time // 86400`.
+4. **Build** `f_auth_count`, `f_auth_fail`, `f_auth_fail_ratio`, `f_auth_dst_hosts`, `f_auth_src_hosts`, `f_auth_new_dst`, `f_auth_ntlm`, `f_auth_network_logon`. Label = (user, day) in `redteam.txt`. Split by day so every split has red-team days.
+5. **Save** `data/processed/lanl_features.parquet` in the 2.5.1 format.
+
+**Done when:** the file is on the drive by Wed night.
+
+### Analysis + paper block: Thu Nov 12 – Wed Nov 18
+
+#### S-LIT1–3 · by Thu Nov 12 · Literature [H]
+1. **Read** L1, L2 (S-LIT1), L3 (S-LIT2) and L9a, plus **L9b, strongly recommended** (S-LIT3; find it via TEAM_PLAN 3.14).
+2. **Write** one `paper/lit_notes/<ID>.md` per paper with the TEAM_PLAN 3.14 template, and add each to Zotero.
+3. **Merge** `supriye/notes` by Fri Nov 13 (any reviewer).
+
+**Done when:** 4–5 note files are on `main`.
+
+#### S23b · Thu Nov 12 · IV-A and IV-B [H]
+1. **Write** IV-A: why user-day (cite L2), each feature group and its intuition, the after-hours definition, T3, and why there is no "days until leaving" feature.
+2. **Write** IV-B: the rolling baseline formula, the `+1` in the denominator, peer groups and the department fallback, novelty flags, cold start, and F3.
+
+**Done when:** both are full paragraphs, with T3 and F3 referenced.
+
+#### S-T8 · Fri Nov 13 · Data-processing time for T8
+1. **Point** Ayo to `results/tables/data_processing_time.csv` on `main` (merged with S22); nothing is sent separately.
+
+**Done when:** Ayo confirms T8 includes it.
+
+#### S25 · Fri Nov 13 · Related Work paragraphs [H]
+1. **Write** one paragraph each for L1, L2, L3 and L9a in Overleaf II.
+
+#### S26 · Fri Nov 13 · I. Introduction [H]
+1. **Write** the problem, UEBA, the research question (quoted exactly), the contributions (bullets) and the outline sentence. Cite every statistic.
+
+**Done when:** ~0.75 page, and every claim is cited.
+
+#### S27 · Fri Nov 13 · VII. Limitations & Ethics [H]
+1. **Cover** synthetic data, label-filtered training, few insiders per scenario (scenario 3: 4 test days), concept drift, threshold dependence, cold start, the missing failed logins, the provisional choices, and the privacy/ethics of monitoring (proportionality, transparency, false accusations, human in the loop).
+
+**Done when:** each limitation states its effect on our results.
+
+#### S28 · Sat Nov 14 · Results walkthrough + merge Related Work [H]
+1. **Present** the ablation (T7) at the walkthrough, and write down the agreed answer to the research question.
+2. **Order** Related Work by theme (surveys → features/granularity → unsupervised/deep → supervised/XAI) and add linking sentences.
+3. **Build** T1 (paper, year, venue, dataset, models, best result, limitation).
+4. **Close** with 2–3 sentences on the gap our project fills.
+5. **Tag** `analysis-done` after `arva/A18-prototype-cases` and `ayo/Y18-shap-fpfn` merge.
+
+**Done when:** II reads as one section, and T1 is complete.
+
+#### S29 · Sun Nov 15 – Mon Nov 16 · Assemble → M4
+1. **Check** on Sun that IV-C, IV-D, V and VI-B are in Overleaf and compile.
+2. **Check** on Mon that VI-A, VI-C and VIII are in; chase anything missing.
+
+**Done when:** every section in TEAM_PLAN 3.12 is a full draft → **M4**.
+
+#### S30 · Tue Nov 17 · Abstract + integration [H]
+1. **Write** the ~200-word Abstract: problem → approach → data → models → key numbers → main finding.
+2. **Number** all figures and tables, and check that each is referenced.
+3. **Export** Zotero in IEEE style, and check that there are no `??` references.
+
+**Done when:** the PDF compiles within the page limit with no missing references.
+
+#### S31 · Wed Nov 18 · Editing pass [H]
+1. **Check** that terms are consistent (user-day, insider, anomaly score, risk score).
+2. **Check** that every number matches `results/tables/`.
+3. **Check** captions, readability, one voice, the page limit, and that the research question is answered explicitly.
+
+**Done when:** every check passes.
+
+#### S32 · Wed Nov 18 · Circulate → M5
+1. **Export** the PDF by **18:00**, post it, and ask for comments by Thu morning.
+
+### Finish: Thu Nov 19 – Fri Nov 20
+
+#### S33 · Thu Nov 19 · Final read-through + README results
+1. **Lead** the 60-min read-through, then assign and apply the fixes.
+2. **Fill** the README **Results** section with the main comparison table (from `model_comparison.csv`) on `supriye/S33-final` (reviewer Ayo).
+
+#### S34 · Thu Nov 19 · Fresh-clone test → submission-ready
+1. **Merge** `supriye/S33-final` and any `*-final-fixes` PRs.
+2. **Clone** into a new folder, create a new venv and run `pip install -r requirements.txt`.
+3. **Unzip** `ueba_data_v1.zip` into the clone, run both `final` commands (`python -m src.models_unsupervised final`, `python -m src.models_supervised final`), then `python src/pipeline.py`, then Restart & Run All `notebooks/04_evaluation.ipynb`.
+4. **Tag** `final-submission` and push the tag.
+5. **Build** the archive: `git archive --format=zip -o submission-code.zip final-submission`.
+6. **Export** the final PDF, and check both files against the course requirements.
+
+**Done when:** the tag is pushed, and the zip and PDF are ready Thu night.
+
+#### S35 · Fri Nov 20 · Submit
+1. **Submit** the paper and code, and post a confirmation screenshot in chat.
 
 ---
 
-## 6. Do This Yourself — No AI Agents
+## 4. Edge Cases & Troubleshooting
 
-On top of the [team-wide list](TEAM_PLAN.md#12-human-only-work-no-ai-agents):
-
-- [ ] **Read L1, L2, L3, L9a** and write their notes and Related Work paragraphs in your own words.
-- [ ] **Choose the granularity** (user-day) and write the justification.
-- [ ] **Define "working hours / after hours"** from your own reading of the EDA plots.
-- [ ] **Build the web-category keyword lists** by inspecting the real domains.
-- [ ] **Decide the split boundaries** (S8).
-- [ ] **Hand-check labels and features** for 3 insiders (S6 step 4, S19 step 4).
-- [ ] **Write the EDA observations** under each plot.
-- [ ] **Interpret the ablation** (S22): which feature groups matter, and why that makes sense for each scenario.
-- [ ] **Write** I. Introduction, III. Dataset, IV-A, IV-B, VII. Limitations & Ethics and the Abstract.
-- [ ] **Merge and edit** Related Work and the full paper.
-- [ ] **Verify every reference** in the final paper (it exists; authors, title, venue and year are correct).
-- [ ] **Explain** `data_loader.py`, `features.py` and `baseline.py` line by line if asked.
+- **A decision changes the split:** rebuild labels, v0 and v1 (S20b) **before** Arva and Ayo tune on Mon Nov 9; tell them the new commit.
+- **Scenario 3 has no test day after moving the split:** `python -m src.labels` prints "NOT VALID". Move `VAL_END` earlier until every `insider_days_s*` cell is > 0.
+- **`build_v1` is slow or runs out of memory:** the first run makes one pass over the 28.4M-row web log (~30 s) and caches it. Later runs reuse `http_user_day_domain.parquet`. Pass `refresh=True` only after a keyword-list change.
+- **Keyword lists changed:** delete nothing, and just re-run `python -m src.features v1`. Categories are applied from the cache.
+- **A conflict in `PROGRESS.md` or `README.md` when merging:** keep both sides' lines; never take a whole file from one side.
+- **Ablation numbers look too good:** supervised v1 runs reached val PR-AUC ≈ 0.99 in an unsaved Nov 5 test, while `f_*` alone gave 0.51 val / 0.38 test. Report (a) vs. (c) honestly and check against Ayo's SHAP (Y18).
+- **The tuned defaults aren't merged by Wed:** run S22 with explicit params read from `results/tables/T4_hyperparameters_*.csv` (v1 rows, on the open PRs' branches), and note it in the PR. Don't ask for score files.
+- **A teammate asks for raw logs or `http.parquet`:** point them to the web cache (`http_user_day_domain.parquet`) or the 4 small logs in the drop; send nothing else.
+- **Overleaf compile errors near the deadline:** keep the last good PDF; fix one section at a time.
 
 ---
 
-## 7. Your Literature
+## 5. Success Metrics / Definitions
 
-| ID | Paper | What to extract |
-|---|---|---|
-| L1 | Glasser & Lindauer, IEEE S&P Workshops (2013) | How CERT was generated; why it's synthetic; limitations to cite in VII |
-| L2 | Le, Zincir-Heywood & Heywood, IEEE TNSM (2020) | Their feature set and granularity comparison; their results on CERT (for T1) |
-| L3 | Homoliak et al., ACM Computing Surveys (2019) | Insider-threat definitions and taxonomy for the Introduction |
-| L9a (L9b optional) | 2022–2026 paper on insider-threat features / UEBA / compromised accounts (you find it) | Recent feature ideas; results to compare |
-| — | Lindauer, CERT dataset, CMU KiltHub | Dataset citation |
-| — | Kent, LANL (2015) | Only if S24 is done |
-
-## 8. Your Models
-You don't build models. You **run** Arva's Isolation Forest and Ayo's XGBoost with their tuned settings for the ablation (S22).
-
-## 9. Your Tools
-Python, **Pandas**, **NumPy**, **PyArrow** (Parquet, chunked reading), Jupyter, Matplotlib/Seaborn, Git/GitHub, **Overleaf**, **Zotero**.
-
-## 10. Your Evaluation Responsibilities
-| What | Where reported |
+| Task | Verified by |
 |---|---|
-| Dataset size, class imbalance overall and per scenario | III. Dataset, table T2 |
-| Feature-group ablation (PR-AUC, recall at top 1%) | V / VI-A, table T7 |
-| Data-processing time (raw logs → v1 features) | Detection-time table T8 (send it to Ayo by Fri Nov 13) |
+| S2-rest, S3-rest | Protection rule active; Overleaf/Zotero joined; course answers in TEAM_PLAN |
+| S8 + S20b | No PROVISIONAL tags; tests pass; notebooks 01–02 re-run; checks PASS |
+| Data drop | One `ueba_data_v1.zip`; both teammates' checksums pass and v1 loads |
+| Reviews | Every review assigned to you ticked in PROGRESS §7 |
+| M2 | `m2-features-v1` tag pushed |
+| S21 | No undecided feature issue at Tue 12:00 |
+| S22 | `ablation.csv` (20 rows) + `data_processing_time.csv` on `main`; tests pass |
+| Literature | 4–5 notes in `paper/lit_notes/`, in Zotero |
+| Paper | III, IV-A, IV-B, I, VII, Abstract, II + T1 drafted; M4 and M5 met |
+| Submission | `final-submission` tag, zip and PDF submitted; confirmation posted |
+
+**Your numbers in the paper:**
+- **T2:** dataset size and imbalance, overall and per scenario (`class_imbalance.csv`).
+- **T7:** the ablation (`ablation.csv`).
+- **T8:** the data-processing time (`data_processing_time.csv`).
+- **III:** the 0.298% base rate (984 / 330,268).
