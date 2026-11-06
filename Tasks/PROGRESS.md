@@ -152,8 +152,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **S21** bug-fix window closed (Tue Nov 10 12:00)
 - [ ] **S23a** III. Dataset [H]
 - [ ] **S22** `src/ablation.py` + tests → `ablation.csv` (T7) + `data_processing_time.csv`
-  - [x] **Code:** `feature_group()` (all 73 v1 inputs → 7 groups), `feature_sets()` (a, b, c + 7 × d = 10 sets), `run_ablation()` (XGBoost + Isolation Forest retrained with their module defaults, test PR-AUC / ROC-AUC / recall at top 1% and best-F1), tests on `supriye/S22-ablation` **(Claude)**
-  - [x] **T8 data time:** `data_processing_time.csv`: Parquet logs → v1 in ~94 s (web-log pass 22 s, v1 incl. baselines 72 s) + the one-off ~10 min conversion; 24 threads, 31.4 GB RAM on `supriye/S22-ablation` **(Claude)**
+  - [x] **Code:** `feature_group()` (all 73 v1 inputs → 7 groups), `feature_sets()` (a, b, c + 7 × d = 10 sets), `run_ablation()` (XGBoost + Isolation Forest retrained with their module defaults, test PR-AUC / ROC-AUC / recall at top 1% and best-F1; each row records the model settings and commit), tests on `supriye/S22-ablation` **(Claude)**
+  - [x] **T8 data time:** `data_processing_time.csv` (3-run means): Parquet logs → v1 in ~138 s (labels 0.07 s, web-log pass 26 s, v1 incl. baselines 112 s) + the one-off conversion, an untimed ~10 min estimate (`measured` = False); 24 threads, 31.4 GB RAM on `supriye/S22-ablation` **(Claude)**
   - [ ] **Run** `python -m src.ablation` once A16 and Y15 (tuned defaults) are merged → `ablation.csv`
 - [ ] **S22-H** interpret the ablation [H]
 - [ ] **S24** LANL features *(stretch, only if agreed)*

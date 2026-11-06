@@ -1,5 +1,5 @@
-step,seconds,user_days,seconds_per_1000_user_days,cpu,threads,ram_gb
-"archive -> Parquet conversion (S4, one-off, Nov 3)",600.0,330268,1.817,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
-labels (S6),0.0,330268,0.0,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
-"web-log pass, 28.4M rows (S15)",21.8,330268,0.066,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
-feature table v1 incl. baselines (S10-S18),72.4,330268,0.219,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+step,seconds,runs,measured,user_days,seconds_per_1000_user_days,cpu,threads,ram_gb
+"archive -> Parquet conversion (S4, one-off; estimate ~10 min, not timed)",600.0,0,False,330268,1.8167,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+labels (S6),0.07,3,True,330268,0.0002,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+"web-log pass, 28.4M rows (S15)",26.02,3,True,330268,0.0788,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+feature table v1 incl. baselines (S10-S18),112.38,3,True,330268,0.3403,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
