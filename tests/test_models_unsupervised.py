@@ -46,7 +46,8 @@ def test_autoencoder_shape_loss_and_early_stopping(df):
     _, info = mu.train_and_score(df, "autoencoder", {"epochs": 40, "patience": 2}, save=False)
     detector = info["detector"]
     sizes = [m.out_features for m in detector.network if hasattr(m, "out_features")]
-    assert sizes == [64, 32, 16, 32, 64, len(info["features"])]   # A6 card architecture
+    p = detector.params        # whatever the defaults are (card values until A16 tunes them)
+    assert sizes == [*p["hidden"], p["bottleneck"], *reversed(p["hidden"]), len(info["features"])]
     assert isinstance(detector.network[-1], mu.nn.Linear)           # linear output layer
     loss = detector.history["train_loss"]
     assert loss[-1] < loss[0] / 5                                   # it actually learns
@@ -142,3 +143,46 @@ def test_hyperparameter_table_draft(df, tmp_outputs, monkeypatch):
     assert set(table["model"]) == {"iforest", "autoencoder", "ocsvm"}
     assert table.set_index("model").loc["iforest", "runs"] == 2
     assert (tmp_outputs / "tables" / "T4_hyperparameters_unsupervised.csv").exists()
+
+
+# ---------------------------------------------------------------- A15-A16
+def test_clear_log_keeps_other_datasets_and_concat_keeps_columns(df, tmp_outputs, monkeypatch):
+    monkeypatch.setattr(mu, "TABLES_DIR", tmp_outputs / "tables")
+    grid = {"n_estimators": [20]}
+    mu.tune(df, "iforest", grid, dataset="v0")
+    mu.tune(df, "iforest", grid, dataset="v1")
+    mu.clear_log("v1")
+    mu.tune(df, "iforest", {"n_estimators": [20, 30]}, dataset="v1")
+    saved = pd.read_csv(tmp_outputs / "tables" / mu.TUNING_LOG)
+    assert saved["dataset"].value_counts().to_dict() == {"v0": 1, "v1": 2}
+    # an older log with one column fewer still lines up after the next run
+    saved.drop(columns="n_features").to_csv(tmp_outputs / "tables" / mu.TUNING_LOG, index=False)
+    mu.tune(df, "iforest", grid, dataset="v1")
+    saved = pd.read_csv(tmp_outputs / "tables" / mu.TUNING_LOG)
+    assert len(saved) == 4 and saved["val_pr_auc"].between(0, 1).all()
+    mu.clear_log("v2")                                   # no such rows: nothing changes
+    assert len(pd.read_csv(tmp_outputs / "tables" / mu.TUNING_LOG)) == 4
+
+
+def test_hyperparameter_table_uses_one_dataset_and_normal_runs(df, tmp_outputs, monkeypatch):
+    monkeypatch.setattr(mu, "TABLES_DIR", tmp_outputs / "tables")
+    mu.tune(df, "iforest", {"n_estimators": [20, 30]}, dataset="v0")
+    mu.tune(df, "iforest", {"n_estimators": [40]}, dataset="v1")
+    mu.tune(df, "iforest", {"n_estimators": [50]}, dataset="v1", train_on="all")
+    row = mu.hyperparameter_table(dataset="v1").set_index("model").loc["iforest"]
+    assert row["runs"] == 1 and row["dataset"] == "v1" and "40" in row["best_params"]
+    assert mu.json.loads(row["card"])["n_estimators"] == 200
+    assert mu.hyperparameter_table(dataset="v0").set_index("model").loc["iforest", "runs"] == 2
+
+
+def test_final_writes_every_score_file(tmp_outputs):
+    small = make_synthetic_features(n_users=20, n_days=200)
+    paths = mu.final(df=small, params={"autoencoder": {"epochs": 2}, "ocsvm": {"max_train": 500}})
+    names = sorted(p.name for p in (tmp_outputs / "scores").glob("*.parquet"))
+    assert names == ["autoencoder.parquet", "autoencoder_contam.parquet", "iforest.parquet",
+                     "iforest_contam.parquet", "ocsvm.parquet"]
+    assert sorted(p.name for p in paths) == names
+    for path in paths:
+        scores = pd.read_parquet(path)
+        assert len(scores) == len(small) and scores["score"].notna().all()
+        assert 0 <= evaluate_file(path)["ranking"]["pr_auc"] <= 1
