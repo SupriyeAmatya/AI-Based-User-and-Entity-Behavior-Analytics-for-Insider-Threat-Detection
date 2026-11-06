@@ -81,8 +81,8 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 **Done when:** no PROVISIONAL tag is left in `src/config.py`, and TEAM_PLAN 2.5.3 shows the dates.
 
 #### S20b · Fri Nov 6 – Sat Nov 7 · Rebuild after the decisions (only if a value changed)
-1. **Run** `bash scripts/rebuild_data.sh` (~5 min). It runs `python -m src.labels`, `python -m src.features v0` and `v1`, re-executes notebooks 01 and 02, and runs the tests. The web-log cache rebuilds itself if the working hours changed.
-2. **Check** that `results/tables/split_check.csv` and `v1_validation_checks.csv` still pass.
+1. **Run** `bash scripts/rebuild_data.sh` (~5 min). It runs `python -m src.labels`, `python -m src.features v0` and `v1`, re-executes notebooks 01 and 02, runs the tests, and ends with a check of `split_check.csv` and `v1_validation_checks.csv`. The web-log cache rebuilds itself if the working hours changed.
+2. **Stop** if the final check prints `STOP` (exit 1): fix the split or the failed check first.
 3. **Commit** the regenerated tables, figures and notebooks on `supriye/S8-decisions`, and note the changed numbers in the PR.
 
 **Done when:** tests pass, both notebooks run clean, and `v1_validation_checks.csv` still shows PASS.
@@ -101,7 +101,7 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 **Done when:** no Observation cell in notebook 01 is empty.
 
 #### S4-rest / S20-rest · Sat Nov 7 · The one data drop (TEAM_PLAN 2.5.12)
-1. **Run** `python scripts/data_drop.py make` after S8/S20b. It writes `data/ueba_data_v1.zip` (~360 MB), with `data/CHECKSUMS.txt` and `data/DROP_INFO.txt` (the commit and the decisions it was built with), and leaves out `http.parquet` and `data/raw/`.
+1. **Run** `python scripts/data_drop.py make` after S8/S20b. It refuses to build if the web-log cache was not built with the current working hours; then run `python -m src.features v1` first. It writes `data/ueba_data_v1.zip` (~360 MB), with `data/CHECKSUMS.txt` and `data/DROP_INFO.txt` (the commit and the decisions it was built with), and leaves out `http.parquet` and `data/raw/`.
 2. **Upload** the zip once to the shared drive, and post the link with the commit it matches.
 3. **Ask** Arva and Ayo to unzip it in the repo root and run `python scripts/data_drop.py verify`.
 

@@ -110,29 +110,51 @@ def http_user_day_domains(refresh=False) -> pd.DataFrame:
     afterwards, so changing a list never needs another pass over the log.
     The after-hours counts depend on the working hours, so the cache records the window it was built
     with (Parquet metadata `work_hours`) and is rebuilt automatically when the window changes (S11).
+    A cache without that stamp (built before Nov 5) is rebuilt too. Each build also writes
+    data/processed/http_domain_counts.csv (every domain with its visits, for the S15 keyword lists).
     """
     cache = PROCESSED_DIR / "http_user_day_domain.parquet"
-    window = f"{WORK_START_HOUR}-{WORK_END_HOUR}"
-    if cache.exists() and not refresh:
-        built_with = (pq.read_schema(cache).metadata or {}).get(b"work_hours", b"").decode()
-        if built_with == window:
-            return pd.read_parquet(cache)
+    window = work_hours_stamp()
+    built_with = cache_work_hours(cache) if cache.exists() else None
+    if built_with == window and not refresh:
+        return pd.read_parquet(cache)
     parts = []
-    for batch in iter_http_batches(columns=("user", "date", "url")):
-        batch = batch.dropna(subset=["user", "date"])
-        date = pd.to_datetime(batch["date"])
-        part = pd.DataFrame({"user": batch["user"].str.strip(), "date": date.dt.normalize(),
-                             "domain": url_domains(batch["url"]).fillna("(none)"),
-                             "afterhours": is_after_hours(date.dt.hour + date.dt.minute / 60)})
-        parts.append(part.groupby(["user", "date", "domain"])
-                     .agg(visits=("afterhours", "size"), afterhours=("afterhours", "sum")))
+    try:
+        for batch in iter_http_batches(columns=("user", "date", "url")):
+            batch = batch.dropna(subset=["user", "date"])
+            date = pd.to_datetime(batch["date"])
+            part = pd.DataFrame({"user": batch["user"].str.strip(), "date": date.dt.normalize(),
+                                 "domain": url_domains(batch["url"]).fillna("(none)"),
+                                 "afterhours": is_after_hours(date.dt.hour + date.dt.minute / 60)})
+            parts.append(part.groupby(["user", "date", "domain"])
+                         .agg(visits=("afterhours", "size"), afterhours=("afterhours", "sum")))
+    except FileNotFoundError as missing:
+        found = f"built with working hours {built_with}" if built_with else (
+            "without a working-hours stamp" if cache.exists() else "missing")
+        raise FileNotFoundError(
+            f"The web-log cache {cache.name} is {found}, but src/config.py says {window}. Rebuilding "
+            f"it needs the full web log (data/parquet/http.parquet), which is not on this machine "
+            f"({missing}). Get a data drop built with these working hours from Supriye.") from missing
     out = pd.concat(parts).groupby(level=[0, 1, 2]).sum().reset_index()
     out = out.astype({"visits": "int32", "afterhours": "int32"})
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     table = pa.Table.from_pandas(out, preserve_index=False)
     meta = {**(table.schema.metadata or {}), b"work_hours": window.encode()}
     pq.write_table(table.replace_schema_metadata(meta), cache)
+    counts = out.groupby("domain")["visits"].sum().sort_values(ascending=False)
+    counts.to_csv(PROCESSED_DIR / "http_domain_counts.csv", index_label="domain")
     return out
+
+
+def work_hours_stamp() -> str:
+    """The working-hours window as stored in the web-log cache, e.g. '7-19' (7.0 and 7 match)."""
+    return f"{WORK_START_HOUR:g}-{WORK_END_HOUR:g}"
+
+
+def cache_work_hours(path) -> str | None:
+    """The working-hours stamp a web-log cache was built with, or None if it has none."""
+    stamp = (pq.read_schema(path).metadata or {}).get(b"work_hours")
+    return stamp.decode() if stamp else None
 
 
 # ---------------------------------------------------------------- feature table v0 (S9)

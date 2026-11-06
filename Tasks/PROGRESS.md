@@ -100,7 +100,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [x] | Oct 29 → Nov 4 | `src/synthetic.py` merged (#10) | Arva → Ayo |
 | [ ] | Thu Nov 5 | Overleaf + Zotero invites | Supriye → Arva, Ayo |
 | [ ] | Fri Nov 6 | Final PROVISIONAL values | Supriye → all |
-| [ ] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~380 MB, checksums) | Supriye → Arva, Ayo |
+| [ ] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~360 MB, checksums) | Supriye → Arva, Ayo |
 | [ ] | Sun Nov 8 | v1 frozen + feature dictionary | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` | Arva → all (Git) |
@@ -139,12 +139,12 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **S15** check the web keyword lists (7 `f_http_*` features built) [H]
 - [ ] **S6** decide the hijacked-account labels [H]
 - [ ] **S20b** rebuild labels/v0/v1 + notebooks 01–02 if a value changed
-  - [x] **Tooling:** `bash scripts/rebuild_data.sh` runs labels → v0 → v1 → notebooks 01–02 → tests in one go (checked Nov 5: same counts, 87 tests pass). The web-log cache now rebuilds itself when the working hours change on `supriye/S20-rebuild-data-drop` **(Claude)**
+  - [x] **Tooling:** `bash scripts/rebuild_data.sh` runs labels → v0 → v1 → notebooks 01–02 → tests → a final check that stops (exit 1) on an invalid split or a failed v1 check (run Nov 5: same counts, all pass). The web-log cache now rebuilds itself when the working hours change, or when it has no working-hours stamp on `supriye/S20-rebuild-data-drop` **(Claude)**
   - [ ] **Run** it after the S8 decisions and commit the regenerated tables, figures and notebooks
 - [ ] **S6-H / S19-H** hand-check 3 insiders [H]
 - [ ] **S7-H** EDA observation cells [H]
 - [ ] **S4/S20** data drop uploaded with checksums
-  - [x] **Tooling:** `python scripts/data_drop.py make` builds `data/ueba_data_v1.zip` (10 files, ~360 MB, `CHECKSUMS.txt` + `DROP_INFO.txt` with the commit and decisions); `verify` lets Arva and Ayo check it after unzipping on `supriye/S20-rebuild-data-drop` **(Claude)**
+  - [x] **Tooling:** `python scripts/data_drop.py make` builds `data/ueba_data_v1.zip` (10 files, ~360 MB, `CHECKSUMS.txt` + `DROP_INFO.txt` with the commit and decisions); `make` refuses a web-log cache not built with the current working hours; `verify` lets Arva and Ayo check the files after unzipping and warns if their `src/config.py` differs from the drop's decisions on `supriye/S20-rebuild-data-drop` **(Claude)**
   - [ ] **Build** the zip after S8/S20b, upload it to the drive and post the link
 - [ ] **REV-S** read own code [H]; reviews done (§3.7)
 - [ ] **S20-tag** `m0-setup`, `m1-features-v0`, `m2-features-v1`

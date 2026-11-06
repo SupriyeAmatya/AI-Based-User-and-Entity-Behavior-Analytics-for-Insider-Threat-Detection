@@ -93,7 +93,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 
 ### 2.1 Access
 - **GitHub:** collaborator access to `SupriyeAmatya/AI-Based-User-and-Entity-Behavior-Analytics-for-Insider-Threat-Detection` (all three have it, checked Nov 4).
-- **Shared drive:** read access to one file, `ueba_data_v1.zip` (~380 MB, the only data that moves between laptops; 2.5.12). **Supriye uploads it once, by Sat Nov 7.**
+- **Shared drive:** read access to one file, `ueba_data_v1.zip` (~360 MB, the only data that moves between laptops; 2.5.12). **Supriye uploads it once, by Sat Nov 7.**
 - **Overleaf:** the team project on the IEEE conference template (Supriye creates it and invites both).
 - **Zotero:** the shared group library (Supriye creates it), exporting IEEE style.
 - **StFX library login:** for paywalled papers.
@@ -115,7 +115,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 3. **Activate** it: `%USERPROFILE%\.venvs\ueba\Scripts\activate` (macOS/Linux: `source ~/.venvs/ueba/bin/activate`).
 4. **Install** packages: `pip install -r requirements.txt`.
 5. **Unzip** `ueba_data_v1.zip` into the repo root (it creates `data/processed/` and `data/parquet/`) and run `python scripts/data_drop.py verify`. Or rebuild everything yourself (2.5.11).
-6. **Run** `python -m pytest tests` from the repo root. Expect **83 passed** with the data present (2 v0 smoke tests skip without it).
+6. **Run** `python -m pytest tests` from the repo root. Expect every test to pass (without `data/`, the 2 v0 smoke tests skip).
 7. **Set** your Git identity: `git config user.name "Your Name"` and `git config user.email "you@example.com"`.
 
 ### 2.4 Hardware
@@ -187,7 +187,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 4. **Run** `python -m src.features v0` and `python -m src.features v1` (~2 min; the first v1 run makes a 30-second pass over the web log).
 
 #### 2.5.12 Minimal-transfer rule (send code, not data)
-- **One data drop, once:** after the decisions are final, Supriye uploads `ueba_data_v1.zip` (~380 MB):
+- **One data drop, once:** after the decisions are final, Supriye uploads `ueba_data_v1.zip` (~360 MB):
   - **`data/processed/`:** `labels.parquet`, `features_v0.parquet`, `features_v1.parquet` (35 MB), `http_user_day_domain.parquet` (18 MB), `http_domain_counts.csv`;
   - **`data/parquet/`:** `logon`, `device`, `file`, `email` + `manifest.json` (~325 MB);
   - **`data/CHECKSUMS.txt`:** SHA-256 of every file, plus **`data/DROP_INFO.txt`** (commit and decisions). Built with `python scripts/data_drop.py make`, checked with `verify`.
@@ -310,7 +310,7 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 | Due | What | From → To |
 |---|---|---|
 | Fri Nov 6 | Final PROVISIONAL values in `src/config.py` + 2.5.3 | Supriye → all |
-| Sat Nov 7 | **The only data drop:** `ueba_data_v1.zip` (labels, v0, v1, web cache, 4 small logs; ~380 MB) | Supriye → Arva, Ayo |
+| Sat Nov 7 | **The only data drop:** `ueba_data_v1.zip` (labels, v0, v1, web cache, 4 small logs; ~360 MB) | Supriye → Arva, Ayo |
 | Sun Nov 8 | v1 frozen + `docs/feature_dictionary.md` | Supriye → Arva, Ayo |
 | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed; 35 MB, the only allowed second drop)* | Supriye → Arva, Ayo |
 | Tue Nov 10 | Merged PR: tuned `models_unsupervised.py` defaults + `python -m src.models_unsupervised final` (rebuilds `iforest`, `autoencoder`, `*_contam`, `ocsvm`) | Arva → Ayo, Supriye (via Git) |
