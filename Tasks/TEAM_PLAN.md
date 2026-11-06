@@ -75,7 +75,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 |---|---|---|---|---|---|
 | M0 | Sat Oct 31 | **Setup complete** | Supriye | Everyone cloned and installed; Parquet data on the drive | Open (drive, Ayo) |
 | — | Sun Nov 1 | `evaluate.py` ready | Ayo | Merged and tested | Done Nov 3 |
-| — | Mon Nov 2 | Split dates final | Supriye | Dates written into 2.5.3 | Decided Nov 6; reason to write |
+| — | Mon Nov 2 | Split dates final | Supriye | Dates written into 2.5.3 | Done Nov 6 |
 | M1 | Tue Nov 3 | **Feature table v0** | Supriye | v0 + `get_model_matrix()` load in Arva's and Ayo's code | Open (confirmations) |
 | — | Fri Nov 6 | `explain.py` ready | Ayo | Merged; Arva confirms it for the case studies | Code merged |
 | M2 | Sun Nov 8 | **Feature table v1 frozen** | Supriye | v1 + dictionary on the drive; decisions final; both teammates load it | Built, not shared |
@@ -142,7 +142,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 - **Requirement:** every split has malicious days from every scenario (`python -m src.labels` checks it).
 - **Known weakness:** scenario 3 in test is 1 real insider (`JLM0364`) with 2 days, plus 2 days on the hijacked account `FBA0348`.
 - **Final values:** `train` = Jan 2 2010 – Oct 31 2010, `val` = Nov 1 2010 – Jan 31 2011, `test` = Feb 1 2011 – May 17 2011.
-- **Reason (Supriye):** *to be written.*
+- **Reason:** we kept the 60/15/25 month rule so the models train on the longest possible history, and every split contains malicious days from all three scenarios. Moving the boundaries earlier (e.g. 2010-07-31 / 2010-11-30) would add only two scenario-3 test days while cutting scenario-1 training days from 59 to 19. Scenario 3's small test set (2 real-insider days) is reported as a limitation (VII) and covered by the leave-one-scenario-out experiment (T6).
 
 #### 2.5.4 Training-data rule
 - **Unsupervised models** train on `split == "train"` and `label == 0`; the `_contam` variants train on all train rows.
