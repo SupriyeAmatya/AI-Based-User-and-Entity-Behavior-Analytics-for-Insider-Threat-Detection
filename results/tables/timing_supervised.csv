@@ -1,0 +1,3 @@
+model,setup,repeats,n_train,n_scored,n_features,fit_seconds_mean,fit_seconds_std,score_seconds_per_1000_mean,score_seconds_per_1000_std,cpu,cores,threads,ram_gb
+random_forest,c_smote_train_only,3,209072,330268,76,344.1417020136675,16.01318393457235,0.004470584620167715,0.0001164639891465258,Apple M1,8,8,8.0
+xgboost,b_class_weights,3,209072,330268,76,11.026961430667143,0.5579998230540172,0.001356702654612572,5.848520192378144e-05,Apple M1,8,8,8.0
