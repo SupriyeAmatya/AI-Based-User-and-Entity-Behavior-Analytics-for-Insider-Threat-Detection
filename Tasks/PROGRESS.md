@@ -132,6 +132,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 
 **Open:**
 - [ ] **S2-rest** branch protection; Overleaf + Zotero created and invites sent
+  - [x] **Branch protection** on `main` *(Nov 7, after Supriye made the repo public; GitHub offers it on private repos only with Pro)*: a PR with 1 approval is required, admins included; no force-push or deletion. Checked by reading the rule back from the GitHub API, not by test-pushing to `main` **(Claude)**
+  - [ ] **Overleaf** project (IEEE conference template) and **Zotero** group library created; Arva and Ayo invited and joined
 - [ ] **S3-rest** page limit, AI policy, submission contents confirmed
 - [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.*
 - [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
