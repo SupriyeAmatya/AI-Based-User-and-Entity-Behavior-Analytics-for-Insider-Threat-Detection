@@ -137,16 +137,22 @@ TINY_GRIDS = {"random_forest": {"n_estimators": [50], "max_depth": [3, None]},
 
 
 @pytest.mark.parametrize("name", ms.MODELS)
-def test_final_setup_is_smote_without_class_weights(df, name):
-    # Y10 decision (Ayo, Nov 6): SMOTE on training rows only, no class weights on top
-    _, info = ms.train_and_score_supervised(df, name, save=False, **ms.FINAL_SETUP)
+@pytest.mark.parametrize("setup", list(ms.SETUPS))
+def test_each_setup_builds_the_matching_pipeline(df, name, setup):
+    _, info = ms.train_and_score_supervised(df, name, save=False, **ms.SETUPS[setup])
     pipeline = info["pipeline"]
-    assert list(pipeline.named_steps) == ["scaler", "smote", "model"]
+    smote = setup == "c_smote_train_only"
+    assert list(pipeline.named_steps) == (["scaler", "smote", "model"] if smote else ["scaler", "model"])
     params = pipeline.named_steps["model"].get_params()
+    weighted = setup == "b_class_weights"                         # SMOTE never adds weights on top
     if name == "random_forest":
-        assert params["class_weight"] is None
+        assert (params["class_weight"] == "balanced") == weighted
     else:
-        assert params["scale_pos_weight"] == 1.0
+        assert (params["scale_pos_weight"] != 1.0) == weighted
+
+
+def test_final_setup_names_a_setup_per_model():
+    assert set(ms.FINAL_SETUP) == set(ms.MODELS) and set(ms.FINAL_SETUP.values()) <= set(ms.SETUPS)
 
 
 def test_tune_final_writes_best_params_by_val_pr_auc(df, tmp_outputs):
@@ -159,7 +165,8 @@ def test_tune_final_writes_best_params_by_val_pr_auc(df, tmp_outputs):
         top = runs.loc[runs["val_pr_auc"].idxmax()]
         assert best[name]["params"] == saved[name]["params"] == json.loads(top["params"])
         assert saved[name]["val_pr_auc"] == pytest.approx(top["val_pr_auc"])
-        assert saved[name]["setup"] == "c_smote_train_only" and saved[name]["dataset"] == "v1"
+        assert saved[name]["setup"] == ms.FINAL_SETUP[name] and saved[name]["dataset"] == "v1"
+        assert set(runs["setup"]) == {ms.FINAL_SETUP[name]}
 
 
 def test_tune_final_never_looks_at_test_labels(df, tmp_outputs):
@@ -180,3 +187,62 @@ def test_hyperparameter_table_uses_only_the_requested_dataset(tmp_outputs):
     table = ms.hyperparameter_table(dataset="v1").set_index("model")
     assert table.loc["xgboost", "best_params"] == '{"max_depth": 6}'
     assert table.loc["xgboost", "dataset"] == "v1" and table.loc["xgboost", "runs"] == 1
+
+
+# ---------------------------------------------------------------- Y14 (Plans v2): log, set-ups
+@pytest.mark.parametrize("options, name", [
+    ({"weighting": False, "smote": False}, "a_no_weighting"),
+    ({"weighting": True, "smote": False}, "b_class_weights"),
+    ({"weighting": False, "smote": True}, "c_smote_train_only"),
+    ({"weighting": True, "smote": True}, "c_smote_train_only"),   # SMOTE replaces the weights
+    ({}, "b_class_weights"),                                       # the function defaults
+])
+def test_setup_name_per_option_pair(options, name):
+    assert ms.setup_name(**options) == name
+
+
+def test_log_stays_aligned_after_a_new_column(df, tmp_outputs):
+    # an old log written before the `setup` column, with its columns in another order
+    (tmp_outputs / "tables").mkdir(parents=True, exist_ok=True)
+    old = pd.DataFrame([{"params": '{"max_depth": 3}', "model": "xgboost", "dataset": "v0",
+                         "val_pr_auc": 0.41, "val_roc_auc": 0.96, "fit_seconds": 1.0}])
+    old.to_csv(tmp_outputs / "tables" / ms.TUNING_LOG, index=False)
+    ms.tune_supervised(df, "random_forest", {"n_estimators": [50]}, dataset="v1", smote=True)
+    saved = pd.read_csv(tmp_outputs / "tables" / ms.TUNING_LOG)
+    first = saved.iloc[0]
+    assert (first["model"], first["dataset"], first["params"]) == ("xgboost", "v0", '{"max_depth": 3}')
+    assert first["val_pr_auc"] == pytest.approx(0.41) and first["setup"] == "b_class_weights"
+    assert saved.iloc[1]["setup"] == "c_smote_train_only" and saved.iloc[1]["dataset"] == "v1"
+
+
+def test_clear_log_drops_only_that_dataset(df, tmp_outputs):
+    ms.tune_supervised(df, "xgboost", {"max_depth": [3]}, dataset="v0")
+    ms.tune_supervised(df, "xgboost", {"max_depth": [3, 6]}, dataset="v1")
+    ms.clear_log("v1")
+    saved = pd.read_csv(tmp_outputs / "tables" / ms.TUNING_LOG)
+    assert list(saved["dataset"]) == ["v0"]
+    ms.clear_log("v1")                                            # nothing left to drop: no error
+
+
+def test_imbalance_csv_keeps_other_datasets(df, tmp_outputs):
+    fast = {"random_forest": {"n_estimators": 50}}
+    ms.imbalance_experiment(df, params=fast, dataset="v0")
+    ms.imbalance_experiment(df, params=fast, dataset="v1")
+    ms.imbalance_experiment(df, params=fast, dataset="v1")       # a rerun replaces v1, keeps v0
+    saved = pd.read_csv(tmp_outputs / "tables" / ms.IMBALANCE_TABLE)
+    assert saved.groupby("dataset").size().to_dict() == {"v0": 6, "v1": 6}
+
+
+def test_hyperparameter_table_shows_the_setup(df, tmp_outputs):
+    ms.tune_supervised(df, "xgboost", {"max_depth": [3]}, dataset="v1", weighting=False)
+    table = ms.hyperparameter_table(dataset="v1").set_index("model")
+    assert table.loc["xgboost", "setup"] == "a_no_weighting"
+
+
+def test_tune_final_takes_a_setup_per_model(df, tmp_outputs):
+    setups = {"random_forest": "a_no_weighting", "xgboost": "b_class_weights"}
+    best = ms.tune_final(df, dataset="v1", grids=TINY_GRIDS, setups=setups)
+    log = pd.read_csv(tmp_outputs / "tables" / ms.TUNING_LOG)
+    assert log.groupby("model")["setup"].unique().map(list).to_dict() == \
+        {"random_forest": ["a_no_weighting"], "xgboost": ["b_class_weights"]}
+    assert {m: best[m]["setup"] for m in ms.MODELS} == setups

@@ -17,9 +17,11 @@ Tuning (Y9) and the imbalance experiment (Y10) evaluate on val only and log to r
     log, best = tune_supervised(df, "xgboost")       # -> tuning_log_supervised.csv
     table = imbalance_experiment(df)                 # -> imbalance.csv
 
-Final set-up and tuning on v1 (Y14): SMOTE on the training rows only (Y10 decision), the Y9 grids,
-best settings by val PR-AUC -> results/tables/best_params_supervised.json:
+Final set-up and tuning on v1 (Y14): each model's imbalance set-up in FINAL_SETUP (DEC-Y: RF with
+SMOTE on the training rows only, XGBoost with class weights), the Y9 grids, best settings by val
+PR-AUC -> results/tables/best_params_supervised.json. The notebook 03b runs it; or:
     python -m src.models_supervised tune v1
+The tuning log keeps every dataset's runs; clear_log("v1") drops only v1's before a rerun.
 
 Leave-one-scenario-out (Y12), the "unseen anomaly" experiment:
     scores, metrics = run_loso(df, "xgboost", held_out=2)   # -> results/scores/xgboost_loso_s2.parquet
@@ -153,37 +155,78 @@ def val_metrics(scores: pd.DataFrame, k: float = 0.01) -> dict:
     return {"val_roc_auc": m["roc_auc"], "val_pr_auc": m["pr_auc"], "val_recall_top1pct": recall}
 
 
+# The Y10 imbalance set-ups: the (weighting, smote) option pairs of train_and_score_supervised().
+SETUPS = {"a_no_weighting": {"weighting": False, "smote": False},
+          "b_class_weights": {"weighting": True, "smote": False},
+          "c_smote_train_only": {"weighting": False, "smote": True}}
+OLD_ROWS_SETUP = "b_class_weights"   # v0 runs logged before the `setup` column used the defaults
+
+
+def setup_name(weighting=True, smote=False) -> str:
+    """The SETUPS name of an option pair. SMOTE replaces the class weights (fit_pipeline), so any
+    pair with smote=True is set-up c."""
+    return "c_smote_train_only" if smote else ("b_class_weights" if weighting else "a_no_weighting")
+
+
+def _read_table(path) -> pd.DataFrame:
+    return pd.read_csv(path) if path.exists() else pd.DataFrame()
+
+
+def _write_table(table: pd.DataFrame, path):
+    """Whole-file write. Concatenating aligns columns by name, so a new column can never shift the
+    old rows (an `mode="a"` append would)."""
+    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+    table.to_csv(path, index=False)
+
+
+def read_log(log_name=TUNING_LOG) -> pd.DataFrame:
+    """The tuning log; v0 rows from before the `setup` column get OLD_ROWS_SETUP."""
+    log = _read_table(TABLES_DIR / log_name)
+    if len(log):
+        if "setup" not in log.columns:
+            log["setup"] = pd.NA
+        log.loc[log["setup"].isna() & (log["dataset"] == "v0"), "setup"] = OLD_ROWS_SETUP
+    return log
+
+
+def clear_log(dataset, log_name=TUNING_LOG):
+    """Drop `dataset`'s rows from the tuning log and keep every other dataset's history (the
+    notebook calls this instead of deleting the file, so the v0 runs survive a v1 rerun)."""
+    path = TABLES_DIR / log_name
+    if path.exists():
+        log = read_log(log_name)
+        _write_table(log[log["dataset"] != dataset], path)
+
+
 def tune_supervised(df, model_name, grid=None, dataset="v0", log_name=TUNING_LOG, save=True,
                     **kwargs):
     """Every combination of `grid` (default: the card grid), scored on val; one row per run is
-    appended to results/tables/<log_name> (save=False: not written). Returns (this run's rows,
-    best params by val PR-AUC). Never looks at test."""
+    added to results/tables/<log_name> (save=False: not written), with the imbalance `setup` the
+    weighting/smote options in kwargs give. Returns (this run's rows, best params by val PR-AUC).
+    Never looks at test."""
     grid = GRIDS[model_name] if grid is None else grid
+    setup = setup_name(kwargs.get("weighting", True), kwargs.get("smote", False))
     rows = []
     for params in ParameterGrid(grid):
         scores, info = train_and_score_supervised(df, model_name, params, save=False, **kwargs)
-        rows.append({"model": model_name, "dataset": dataset,
+        rows.append({"model": model_name, "dataset": dataset, "setup": setup,
                      "params": json.dumps(params, default=str), **val_metrics(scores),
                      "best_iteration": info["best_iteration"],
                      "fit_seconds": round(info["fit_seconds"], 2),
                      "n_features": len(info["features"])})
     log = pd.DataFrame(rows)
     if save:
-        TABLES_DIR.mkdir(parents=True, exist_ok=True)
-        path = TABLES_DIR / log_name
-        log.to_csv(path, mode="a", header=not path.exists(), index=False)
+        old = read_log(log_name)
+        _write_table(pd.concat([old, log], ignore_index=True) if len(old) else log,
+                     TABLES_DIR / log_name)
     return log, json.loads(log.loc[log["val_pr_auc"].idxmax(), "params"])
 
 
 # ---------------------------------------------------------------- Y10: imbalance experiment
-SETUPS = {"a_no_weighting": {"weighting": False, "smote": False},
-          "b_class_weights": {"weighting": True, "smote": False},
-          "c_smote_train_only": {"weighting": False, "smote": True}}
-
-
 def imbalance_experiment(df, models=MODELS, params=None, dataset="v0", save=True):
     """Y10: no weighting vs. class weights vs. SMOTE (training rows only), on val.
-    Returns one row per model x set-up; saved as results/tables/imbalance.csv."""
+    Returns one row per model x set-up. Saved in results/tables/imbalance.csv, where a rerun
+    replaces only `dataset`'s rows."""
     rows = []
     for model_name in models:
         for setup, options in SETUPS.items():
@@ -193,33 +236,37 @@ def imbalance_experiment(df, models=MODELS, params=None, dataset="v0", save=True
                          **val_metrics(scores), "fit_seconds": round(info["fit_seconds"], 2)})
     table = pd.DataFrame(rows)
     if save:
-        TABLES_DIR.mkdir(parents=True, exist_ok=True)
-        table.to_csv(TABLES_DIR / IMBALANCE_TABLE, index=False)
+        path = TABLES_DIR / IMBALANCE_TABLE
+        old = _read_table(path)
+        if len(old):
+            old = old[old["dataset"] != dataset]
+        _write_table(pd.concat([old, table], ignore_index=True) if len(old) else table, path)
     return table
 
 
 # ---------------------------------------------------------------- Y14: final set-up, tuning on v1
-# Y10 decision (Ayo, Nov 6): the final models use set-up (c), SMOTE on the training rows only and no
-# class weights on top. On v0 val it was best for both models (PR-AUC RF 0.245, XGB 0.413; recall
-# at top-1% 0.32 / 0.39), while class weights (b) hurt (RF 0.078, XGB 0.296). imbalance.csv.
-FINAL_SETUP_NAME = "c_smote_train_only"
-FINAL_SETUP = SETUPS[FINAL_SETUP_NAME]
+# One imbalance set-up per model: the card rule (highest val PR-AUC in imbalance.csv, v1 rows, card
+# settings), confirmed by Ayo on Nov 8 (DEC-Y).
+FINAL_SETUP = {"random_forest": "c_smote_train_only", "xgboost": "b_class_weights"}
 BEST_PARAMS = "best_params_supervised.json"
 
 
-def tune_final(df=None, dataset="v1", grids=None, save=True):
-    """Y14: the Y9 grids (or `grids`) with FINAL_SETUP, scored on val only. Appends every run to
-    the tuning log and writes the best params per model (by val PR-AUC) to
-    results/tables/best_params_supervised.json. df=None loads data/processed/features_<dataset>.
+def tune_final(df=None, dataset="v1", grids=None, save=True, setups=None):
+    """Y14: the Y9 grids (or `grids`), each model with its set-up from `setups` (default
+    FINAL_SETUP), scored on val only. Adds every run to the tuning log and writes the best params
+    per model (by val PR-AUC) to results/tables/best_params_supervised.json.
+    df=None loads data/processed/features_<dataset>.
     Returns {model: {"params", "setup", "dataset", "val_pr_auc", "val_roc_auc", "val_recall_top1pct"}}."""
     if df is None:
         df = pd.read_parquet(PROCESSED_DIR / f"features_{dataset}.parquet")
+    setups = {**FINAL_SETUP, **(setups or {})}
     best = {}
     for model_name in MODELS:
         grid = (grids or GRIDS)[model_name]
-        log, params = tune_supervised(df, model_name, grid, dataset=dataset, save=save, **FINAL_SETUP)
+        log, params = tune_supervised(df, model_name, grid, dataset=dataset, save=save,
+                                      **SETUPS[setups[model_name]])
         top = log.loc[log["val_pr_auc"].idxmax()]
-        best[model_name] = {"params": params, "setup": FINAL_SETUP_NAME, "dataset": dataset,
+        best[model_name] = {"params": params, "setup": setups[model_name], "dataset": dataset,
                             **{k: float(top[k]) for k in ("val_pr_auc", "val_roc_auc",
                                                           "val_recall_top1pct")}}
     if save:
@@ -298,8 +345,7 @@ def hyperparameter_table(log_name=TUNING_LOG, name="T4_hyperparameters_supervise
     """Draft of table T4 for RF and XGB: card settings, grid searched and the best run so far by
     val PR-AUC (from the tuning log; only `dataset`'s runs if given, e.g. "v1"), saved to
     results/tables/<name>."""
-    path = TABLES_DIR / log_name
-    log = pd.read_csv(path) if path.exists() else pd.DataFrame()
+    log = read_log(log_name)
     if dataset is not None and len(log):
         log = log[log["dataset"] == dataset]
     rows = []
@@ -312,6 +358,7 @@ def hyperparameter_table(log_name=TUNING_LOG, name="T4_hyperparameters_supervise
         if len(runs):
             best = runs.loc[runs["val_pr_auc"].idxmax()]
             row.update({"best_params": best["params"], "dataset": best["dataset"],
+                        "setup": best["setup"],
                         "val_pr_auc": best["val_pr_auc"], "val_roc_auc": best["val_roc_auc"],
                         "runs": len(runs)})
         rows.append(row)

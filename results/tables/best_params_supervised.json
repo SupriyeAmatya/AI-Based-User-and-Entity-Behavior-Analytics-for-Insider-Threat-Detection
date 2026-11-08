@@ -8,21 +8,21 @@
     },
     "setup": "c_smote_train_only",
     "dataset": "v1",
-    "val_pr_auc": 0.9837312126072176,
+    "val_pr_auc": 0.9837312126072174,
     "val_roc_auc": 0.9999036721800713,
     "val_recall_top1pct": 0.9957627118644068
   },
   "xgboost": {
     "params": {
       "learning_rate": 0.1,
-      "max_depth": 6,
-      "min_child_weight": 1,
+      "max_depth": 3,
+      "min_child_weight": 5,
       "subsample": 1.0
     },
-    "setup": "c_smote_train_only",
+    "setup": "b_class_weights",
     "dataset": "v1",
-    "val_pr_auc": 0.9911988753817808,
-    "val_roc_auc": 0.9999520632782901,
+    "val_pr_auc": 0.9913215485207924,
+    "val_roc_auc": 0.999950775878181,
     "val_recall_top1pct": 1.0
   }
 }
