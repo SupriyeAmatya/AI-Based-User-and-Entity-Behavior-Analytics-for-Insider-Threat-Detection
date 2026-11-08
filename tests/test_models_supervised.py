@@ -44,10 +44,12 @@ def test_higher_scores_for_the_synthetic_anomalies(df, name):
 
 
 def test_card_settings(df):
-    _, info = ms.train_and_score_supervised(df, "random_forest", save=False)
+    _, info = ms.train_and_score_supervised(df, "random_forest", ms.RF_CARD, save=False,
+                                            weighting=True, smote=False, base="card")
     rf = info["pipeline"].named_steps["model"]
     assert (rf.n_estimators, rf.class_weight, rf.random_state) == (300, "balanced", 42)
-    _, info = ms.train_and_score_supervised(df, "xgboost", save=False)
+    _, info = ms.train_and_score_supervised(df, "xgboost", ms.XGB_CARD, save=False,
+                                            weighting=True, smote=False, base="card")
     xgb = info["pipeline"].named_steps["model"]
     train = df[df["split"] == "train"]
     n_pos = train["label"].sum()
@@ -246,3 +248,76 @@ def test_tune_final_takes_a_setup_per_model(df, tmp_outputs):
     assert log.groupby("model")["setup"].unique().map(list).to_dict() == \
         {"random_forest": ["a_no_weighting"], "xgboost": ["b_class_weights"]}
     assert {m: best[m]["setup"] for m in ms.MODELS} == setups
+
+
+# ---------------------------------------------------------------- Y15: tuned defaults, final, timing
+def test_tuned_defaults_sit_on_top_of_the_card():
+    best = {"random_forest": {"max_depth": 20, "max_features": 0.5, "min_samples_leaf": 5,
+                              "n_estimators": 500},
+            "xgboost": {"learning_rate": 0.1, "max_depth": 3, "min_child_weight": 5, "subsample": 1.0}}
+    assert ms.RF_DEFAULTS == {**ms.RF_CARD, **best["random_forest"]}
+    assert ms.XGB_DEFAULTS == {**ms.XGB_CARD, **best["xgboost"]}
+    assert ms.RF_CARD["n_estimators"] == 300 and ms.XGB_CARD["learning_rate"] == 0.05
+
+
+@pytest.mark.parametrize("name", ms.MODELS)
+def test_default_call_uses_final_setup_and_tuned_defaults(df, name):
+    _, info = ms.train_and_score_supervised(df, name, save=False)
+    pipeline = info["pipeline"]
+    assert ("smote" in pipeline.named_steps) == (ms.FINAL_SETUP[name] == "c_smote_train_only")
+    assert info["setup"] == ms.FINAL_SETUP[name]
+    params = pipeline.named_steps["model"].get_params()
+    defaults = ms.RF_DEFAULTS if name == "random_forest" else ms.XGB_DEFAULTS
+    assert all(params[k] == v for k, v in defaults.items() if k != "class_weight")
+
+
+def test_explicit_options_still_override_final_setup(df):
+    _, info = ms.train_and_score_supervised(df, "random_forest", save=False, smote=False)
+    assert "smote" not in info["pipeline"].named_steps and info["setup"] == "b_class_weights"
+
+
+def test_tuning_still_starts_from_the_card(df, tmp_outputs):
+    # the grid runs layer on the card values, so the logged v0/v1 runs stay reproducible
+    log, _ = ms.tune_supervised(df, "random_forest", {"n_estimators": [50]})
+    _, info = ms.train_and_score_supervised(df, "random_forest", {"n_estimators": 50}, save=False,
+                                            weighting=True, smote=False, base="card")
+    assert info["pipeline"].named_steps["model"].max_depth is None          # the card has no depth
+    assert log.loc[0, "setup"] == "b_class_weights"
+    assert log.loc[0, "val_pr_auc"] == pytest.approx(ms.val_metrics(_scores_of(df, info))["val_pr_auc"])
+
+
+def _scores_of(df, info):
+    X, _, _ = ms.get_model_matrix(df)
+    return df[ms.SCORE_KEYS].assign(score=ms.predict_scores(info["pipeline"], X))
+
+
+FAST = {"random_forest": {"n_estimators": 20}, "xgboost": {"n_estimators": 50}}
+
+
+def test_final_writes_both_score_files_for_every_row(df, tmp_outputs):
+    paths = ms.final(df=df, params=FAST)
+    assert [p.name for p in paths] == ["random_forest.parquet", "xgboost.parquet"]
+    for path in paths:
+        scores = pd.read_parquet(path)
+        assert list(scores.columns) == ms.SCORE_KEYS + ["score"] and len(scores) == len(df)
+        assert set(scores["split"]) == {"train", "val", "test"}
+        assert 0 <= evaluate_file(path)["ranking"]["pr_auc"] <= 1
+
+
+def test_final_reads_the_features_file(df, tmp_path, tmp_outputs):
+    path = tmp_path / "features_test.parquet"
+    df.to_parquet(path, index=False)
+    paths = ms.final(path, params=FAST)
+    assert all(p.exists() for p in paths)
+
+
+def test_timing_averages_repeats_and_records_the_machine(df, tmp_outputs):
+    row = ms.timing(df, "xgboost", repeats=2, params=FAST["xgboost"])
+    assert row["repeats"] == 2 and row["setup"] == ms.FINAL_SETUP["xgboost"]
+    assert row["fit_seconds_mean"] > 0 and row["score_seconds_per_1000_mean"] > 0
+    assert row["n_scored"] == len(df) and row["threads"] >= 1 and row["ram_gb"] > 0 and row["cpu"]
+    ms.timing(df, "random_forest", repeats=1, params=FAST["random_forest"])
+    ms.timing(df, "xgboost", repeats=1, params=FAST["xgboost"])          # rerun replaces its row
+    saved = pd.read_csv(tmp_outputs / "tables" / ms.TIMING_TABLE)
+    assert sorted(saved["model"]) == ["random_forest", "xgboost"]
+    assert saved.set_index("model").loc["xgboost", "repeats"] == 1
