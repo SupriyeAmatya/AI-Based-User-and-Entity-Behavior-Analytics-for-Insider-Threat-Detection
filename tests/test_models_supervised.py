@@ -1,4 +1,6 @@
 """Tests for src/models_supervised.py (Y7, Y9, Y10) on Arva's synthetic data. Run: python -m pytest tests"""
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -127,3 +129,54 @@ def test_loso_table_puts_unsupervised_on_the_same_rows(df, tmp_outputs):
     for s, rows in table.groupby("held_out"):
         assert rows["n_rows"].nunique() == 1 and rows["n_malicious"].nunique() == 1  # same test rows
     assert (tmp_outputs / "tables" / ms.LOSO_TABLE).exists()
+
+
+# ---------------------------------------------------------------- Y14: final set-up and v1 tuning
+TINY_GRIDS = {"random_forest": {"n_estimators": [50], "max_depth": [3, None]},
+              "xgboost": {"max_depth": [2, 4], "learning_rate": [0.1]}}
+
+
+@pytest.mark.parametrize("name", ms.MODELS)
+def test_final_setup_is_smote_without_class_weights(df, name):
+    # Y10 decision (Ayo, Nov 6): SMOTE on training rows only, no class weights on top
+    _, info = ms.train_and_score_supervised(df, name, save=False, **ms.FINAL_SETUP)
+    pipeline = info["pipeline"]
+    assert list(pipeline.named_steps) == ["scaler", "smote", "model"]
+    params = pipeline.named_steps["model"].get_params()
+    if name == "random_forest":
+        assert params["class_weight"] is None
+    else:
+        assert params["scale_pos_weight"] == 1.0
+
+
+def test_tune_final_writes_best_params_by_val_pr_auc(df, tmp_outputs):
+    best = ms.tune_final(df, dataset="v1", grids=TINY_GRIDS)
+    log = pd.read_csv(tmp_outputs / "tables" / ms.TUNING_LOG)
+    assert set(log["dataset"]) == {"v1"} and len(log) == 4
+    saved = json.loads((tmp_outputs / "tables" / ms.BEST_PARAMS).read_text())
+    for name in ms.MODELS:
+        runs = log[log["model"] == name]
+        top = runs.loc[runs["val_pr_auc"].idxmax()]
+        assert best[name]["params"] == saved[name]["params"] == json.loads(top["params"])
+        assert saved[name]["val_pr_auc"] == pytest.approx(top["val_pr_auc"])
+        assert saved[name]["setup"] == "c_smote_train_only" and saved[name]["dataset"] == "v1"
+
+
+def test_tune_final_never_looks_at_test_labels(df, tmp_outputs):
+    first = ms.tune_final(df, dataset="v1", grids=TINY_GRIDS, save=False)
+    shuffled = df.copy()
+    test = shuffled["split"] == "test"
+    shuffled.loc[test, "label"] = shuffled.loc[test, "label"].sample(frac=1, random_state=0).to_numpy()
+    second = ms.tune_final(shuffled, dataset="v1", grids=TINY_GRIDS, save=False)
+    assert first == second
+
+
+def test_hyperparameter_table_uses_only_the_requested_dataset(tmp_outputs):
+    (tmp_outputs / "tables").mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([
+        {"model": "xgboost", "dataset": "v0", "params": '{"max_depth": 3}', "val_pr_auc": 0.9, "val_roc_auc": 0.9},
+        {"model": "xgboost", "dataset": "v1", "params": '{"max_depth": 6}', "val_pr_auc": 0.4, "val_roc_auc": 0.8},
+    ]).to_csv(tmp_outputs / "tables" / ms.TUNING_LOG, index=False)
+    table = ms.hyperparameter_table(dataset="v1").set_index("model")
+    assert table.loc["xgboost", "best_params"] == '{"max_depth": 6}'
+    assert table.loc["xgboost", "dataset"] == "v1" and table.loc["xgboost", "runs"] == 1

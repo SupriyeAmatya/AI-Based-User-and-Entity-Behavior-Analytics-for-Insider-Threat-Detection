@@ -17,6 +17,10 @@ Tuning (Y9) and the imbalance experiment (Y10) evaluate on val only and log to r
     log, best = tune_supervised(df, "xgboost")       # -> tuning_log_supervised.csv
     table = imbalance_experiment(df)                 # -> imbalance.csv
 
+Final set-up and tuning on v1 (Y14): SMOTE on the training rows only (Y10 decision), the Y9 grids,
+best settings by val PR-AUC -> results/tables/best_params_supervised.json:
+    python -m src.models_supervised tune v1
+
 Leave-one-scenario-out (Y12), the "unseen anomaly" experiment:
     scores, metrics = run_loso(df, "xgboost", held_out=2)   # -> results/scores/xgboost_loso_s2.parquet
     table = loso_table(df, unsupervised={"iforest": iforest_scores})
@@ -38,7 +42,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-from src.config import RANDOM_STATE, SCORES_DIR, TABLES_DIR
+from src.config import PROCESSED_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
 from src.evaluate import ranking_metrics, threshold_metrics, threshold_top_k
 from src.features import get_model_matrix
 
@@ -149,10 +153,11 @@ def val_metrics(scores: pd.DataFrame, k: float = 0.01) -> dict:
     return {"val_roc_auc": m["roc_auc"], "val_pr_auc": m["pr_auc"], "val_recall_top1pct": recall}
 
 
-def tune_supervised(df, model_name, grid=None, dataset="v0", log_name=TUNING_LOG, **kwargs):
+def tune_supervised(df, model_name, grid=None, dataset="v0", log_name=TUNING_LOG, save=True,
+                    **kwargs):
     """Every combination of `grid` (default: the card grid), scored on val; one row per run is
-    appended to results/tables/<log_name>. Returns (this run's rows, best params by val PR-AUC).
-    Never looks at test."""
+    appended to results/tables/<log_name> (save=False: not written). Returns (this run's rows,
+    best params by val PR-AUC). Never looks at test."""
     grid = GRIDS[model_name] if grid is None else grid
     rows = []
     for params in ParameterGrid(grid):
@@ -163,9 +168,10 @@ def tune_supervised(df, model_name, grid=None, dataset="v0", log_name=TUNING_LOG
                      "fit_seconds": round(info["fit_seconds"], 2),
                      "n_features": len(info["features"])})
     log = pd.DataFrame(rows)
-    TABLES_DIR.mkdir(parents=True, exist_ok=True)
-    path = TABLES_DIR / log_name
-    log.to_csv(path, mode="a", header=not path.exists(), index=False)
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        path = TABLES_DIR / log_name
+        log.to_csv(path, mode="a", header=not path.exists(), index=False)
     return log, json.loads(log.loc[log["val_pr_auc"].idxmax(), "params"])
 
 
@@ -190,6 +196,36 @@ def imbalance_experiment(df, models=MODELS, params=None, dataset="v0", save=True
         TABLES_DIR.mkdir(parents=True, exist_ok=True)
         table.to_csv(TABLES_DIR / IMBALANCE_TABLE, index=False)
     return table
+
+
+# ---------------------------------------------------------------- Y14: final set-up, tuning on v1
+# Y10 decision (Ayo, Nov 6): the final models use set-up (c), SMOTE on the training rows only and no
+# class weights on top. On v0 val it was best for both models (PR-AUC RF 0.245, XGB 0.413; recall
+# at top-1% 0.32 / 0.39), while class weights (b) hurt (RF 0.078, XGB 0.296). imbalance.csv.
+FINAL_SETUP_NAME = "c_smote_train_only"
+FINAL_SETUP = SETUPS[FINAL_SETUP_NAME]
+BEST_PARAMS = "best_params_supervised.json"
+
+
+def tune_final(df=None, dataset="v1", grids=None, save=True):
+    """Y14: the Y9 grids (or `grids`) with FINAL_SETUP, scored on val only. Appends every run to
+    the tuning log and writes the best params per model (by val PR-AUC) to
+    results/tables/best_params_supervised.json. df=None loads data/processed/features_<dataset>.
+    Returns {model: {"params", "setup", "dataset", "val_pr_auc", "val_roc_auc", "val_recall_top1pct"}}."""
+    if df is None:
+        df = pd.read_parquet(PROCESSED_DIR / f"features_{dataset}.parquet")
+    best = {}
+    for model_name in MODELS:
+        grid = (grids or GRIDS)[model_name]
+        log, params = tune_supervised(df, model_name, grid, dataset=dataset, save=save, **FINAL_SETUP)
+        top = log.loc[log["val_pr_auc"].idxmax()]
+        best[model_name] = {"params": params, "setup": FINAL_SETUP_NAME, "dataset": dataset,
+                            **{k: float(top[k]) for k in ("val_pr_auc", "val_roc_auc",
+                                                          "val_recall_top1pct")}}
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        (TABLES_DIR / BEST_PARAMS).write_text(json.dumps(best, indent=2, default=str))
+    return best
 
 
 # ---------------------------------------------------------------- Y12: leave-one-scenario-out
@@ -257,11 +293,15 @@ def loso_table(df, models=MODELS, unsupervised=None, params=None, held_out=(1, 2
 
 
 # ---------------------------------------------------------------- Y13: table T4 draft
-def hyperparameter_table(log_name=TUNING_LOG, name="T4_hyperparameters_supervised.csv"):
+def hyperparameter_table(log_name=TUNING_LOG, name="T4_hyperparameters_supervised.csv",
+                         dataset=None):
     """Draft of table T4 for RF and XGB: card settings, grid searched and the best run so far by
-    val PR-AUC (from the tuning log), saved to results/tables/<name>."""
+    val PR-AUC (from the tuning log; only `dataset`'s runs if given, e.g. "v1"), saved to
+    results/tables/<name>."""
     path = TABLES_DIR / log_name
     log = pd.read_csv(path) if path.exists() else pd.DataFrame()
+    if dataset is not None and len(log):
+        log = log[log["dataset"] == dataset]
     rows = []
     for model, defaults in (("random_forest", RF_DEFAULTS), ("xgboost", XGB_DEFAULTS)):
         row = {"model": model,
@@ -300,5 +340,9 @@ def demo():
 if __name__ == "__main__":
     if sys.argv[1:] == ["demo"]:
         demo()
+    elif sys.argv[1:2] == ["tune"]:                       # Y14: python -m src.models_supervised tune v1
+        version = sys.argv[2] if len(sys.argv) > 2 else "v1"
+        print(json.dumps(tune_final(dataset=version), indent=2, default=str))
+        print(hyperparameter_table(dataset=version).to_string())
     else:
         print(__doc__)
