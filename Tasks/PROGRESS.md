@@ -58,7 +58,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **M0 Setup complete** (Sat Oct 31)
   - [x] **Repo cloned:** Supriye, Arva (PRs #9, #10)
   - [ ] **Repo cloned + installed:** Ayo (Y1)
-  - [ ] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20)
+  - [x] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20) *(confirmed by Supriye Nov 8)*
 - [x] **`evaluate.py` ready** (Sun Nov 1): merged Nov 3 (#3 via #7)
 - [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request*
 - [ ] **M1 Feature table v0** (Tue Nov 3)
@@ -67,11 +67,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **`explain.py` ready** (Fri Nov 6)
   - [x] **Merged** (#24)
   - [ ] **Arva confirms** it for the case studies
-- [ ] **M2 Feature table v1 frozen** (Sun Nov 8)
+- [x] **M2 Feature table v1 frozen** (Sun Nov 8)
   - [x] **v1 built**, feature dictionary, leakage checks 1/2/3/5 pass (#17, #18)
   - [x] **Decisions final** and v1 rebuilt if needed (S8, S20b) *Decided Nov 6 (#36); values unchanged, rebuild ran clean; reasons written*
-  - [ ] **Data drop uploaded**; both teammates load v1
-  - [ ] **Tag** `m2-features-v1`
+  - [x] **Data drop uploaded**; both teammates load v1 *(confirmed by Supriye Nov 8)*
+  - [x] **Tag** `m2-features-v1` *(Nov 8, on `main` at `2710789`; feature code unchanged since the drop's commit `e5dc881`; 142 tests pass; the real v1 matches the 76 frozen inputs)* **(Claude)**
 - [ ] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
 - [ ] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all
 - [ ] **Analysis done** (Sat Nov 14): T5–T8, F4–F8, FP/FN, cases; walkthrough held
@@ -100,8 +100,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [x] | Oct 29 → Nov 4 | `src/synthetic.py` merged (#10) | Arva → Ayo |
 | [ ] | Thu Nov 5 | Overleaf + Zotero invites | Supriye → Arva, Ayo |
 | [ ] | Fri Nov 6 | Final decision values (#36, #37 + competitor category) announced in chat | Supriye → all |
-| [ ] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~360 MB, checksums) | Supriye → Arva, Ayo |
-| [ ] | Sun Nov 8 | v1 frozen + feature dictionary | Supriye → Arva, Ayo |
+| [x] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~360 MB, checksums) | Supriye → Arva, Ayo |
+| [ ] | Sun Nov 8 | v1 frozen + feature dictionary *(tag `m2-features-v1` pushed; announce the freeze in chat)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` | Arva → all (Git) |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` | Ayo → all (Git) |
@@ -147,9 +147,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **S7-H** EDA observation cells [H]
 - [ ] **S4/S20** data drop uploaded with checksums
   - [x] **Tooling:** `python scripts/data_drop.py make` builds `data/ueba_data_v1.zip` (10 files, ~360 MB, `CHECKSUMS.txt` + `DROP_INFO.txt` with the commit and decisions); `make` refuses a web-log cache not built with the current working hours; `verify` lets Arva and Ayo check the files after unzipping and warns if their `src/config.py` differs from the drop's decisions on `supriye/S20-rebuild-data-drop` **(Claude)**
-  - [ ] **Build** the zip after S8/S20b, upload it to the drive and post the link
+  - [x] **Build** the zip after S8/S20b, upload it to the drive and post the link *(built from `e5dc881` by Claude; uploaded by Supriye; both teammates loaded v1, confirmed Nov 8)*
 - [ ] **REV-S** read own code [H]; reviews done (§3.7)
 - [ ] **S20-tag** `m0-setup`, `m1-features-v0`, `m2-features-v1`
+  - [x] **`m2-features-v1`** tagged and pushed (Nov 8) **(Claude)**
+  - [ ] **`m0-setup`, `m1-features-v0`** once their conditions in §3.1 are met; announce the freeze in chat
 - [ ] **S20-walk** v1 walkthrough (Mon Nov 9)
 - [ ] **S21** bug-fix window closed (Tue Nov 10 12:00)
 - [ ] **S23a** III. Dataset [H]
@@ -321,7 +323,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 ### 3.9 Milestone tags (Supriye)
 - [ ] **`m0-setup`:** after M0
 - [ ] **`m1-features-v0`:** after M1
-- [ ] **`m2-features-v1`:** Sun Nov 8
+- [x] **`m2-features-v1`:** Sun Nov 8 *(pushed Nov 8, `2710789`)*
 - [ ] **`m3-all-scores`:** after A16, Y15, Y16, S22 merge
 - [ ] **`analysis-done`:** after A18–A19 and Y18–Y20 merge
 - [ ] **`final-submission`:** Thu Nov 19
