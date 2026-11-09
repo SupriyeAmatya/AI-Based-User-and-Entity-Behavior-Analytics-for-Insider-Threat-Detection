@@ -1,8 +1,8 @@
 # UEBA assignment coverage
 
-> **Snapshot from Sun Nov 8, 2026** (repo at `e5dc881`). This file does not update itself. [`Tasks/PROGRESS.md`](../Tasks/PROGRESS.md) is still the tracker of record.
+> **Snapshot from Sun Nov 8, 2026, evening** (repo at `2710789`). This file does not update itself. [`Tasks/PROGRESS.md`](../Tasks/PROGRESS.md) is still the tracker of record.
 
-It maps each requirement in the CSCI 561 assignment brief to how it's measured, the deliverable, the proof that it's met, and where it stands. It's built from the brief, `Tasks/TEAM_PLAN.md`, `Tasks/PROGRESS.md` and the code on `main`. Tests weren't re-run for this snapshot. Open PRs (#39–#41) are mentioned where they matter but don't count as met.
+It maps each requirement in the CSCI 561 assignment brief to how it's measured, the deliverable, the proof that it's met, and where it stands. It's built from the brief, `Tasks/TEAM_PLAN.md`, `Tasks/PROGRESS.md` and the code on `main`. Tests weren't re-run for this snapshot. Work still on a branch is mentioned where it matters but doesn't count as met.
 
 **12 days left to Fri Nov 20 · 5 of 25 requirements fully met**
 
@@ -24,14 +24,14 @@ Milestones from TEAM_PLAN 1.5. Of the five due before today, two are done (`eval
 
 | Date | Milestone | State | Note |
 |---|---|---|---|
-| Sat, Oct 31 | **M0** Setup complete | Open, past due | The data drop isn’t ticked as uploaded, and Ayo’s Y1 isn’t ticked (though PR #41 reports 131 tests passing). |
+| Sat, Oct 31 | **M0** Setup complete | Open, past due | The data drop isn’t ticked as uploaded, and Ayo’s Y1 isn’t ticked, though Ayo has tuned on v1 (#41). |
 | Sun, Nov 1 | evaluate.py ready | Done | Merged Nov 3. |
 | Mon, Nov 2 | Split dates final | Done | Decided Nov 6 (#36); reason in TEAM_PLAN 2.5.3. |
 | Tue, Nov 3 | **M1** Feature table v0 | Open, past due | Built and used by every model; Arva’s and Ayo’s confirmations remain. |
 | Fri, Nov 6 | explain.py ready | Open, past due | Code merged Nov 5; Arva still has to confirm it for the case studies, which needs the data. |
-| Sun, Nov 8 | **M2** Feature table v1 | Due today | Decisions final (#36–#38); v1 grew to 76 inputs on Nov 6. The data drop, both teammates loading v1, and the tag remain. |
-| Tue, Nov 10 | Tuned models + `final` commands | Upcoming | The unsupervised `final` command is merged (#33), not yet with tuned defaults; the supervised one is in PR #41. |
-| Wed, Nov 11 | **M3** All score files | Upcoming | Needs A17’s code re-applied first. |
+| Sun, Nov 8 | **M2** Feature table v1 | Due today | Decisions final (#36–#38) and S20b done (#40); v1 grew to 76 inputs on Nov 6. The data drop, Arva loading v1, and the tag remain. |
+| Tue, Nov 10 | Tuned models + `final` commands | Upcoming | Supervised half merged (#41). The unsupervised `final` command is merged (#33), but its tuned defaults wait for the data. |
+| Wed, Nov 11 | **M3** All score files | Upcoming | Needs A17’s code re-applied first (in progress). |
 | Sat, Nov 14 | Analysis done | Upcoming |  |
 | Mon, Nov 16 | **M4** All sections drafted | Upcoming |  |
 | Wed, Nov 18 | **M5** Full paper draft | Upcoming |  |
@@ -67,8 +67,8 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
 | Establish normal behavior | Per-user and peer baselines; unsupervised models train on normal training days only | `src/baseline.py`, paper §IV-B | Figure F3: one user’s baseline next to a day that deviates | **Partial**<br>`baseline.py` and F3 are merged, and every unsupervised model trains on normal training days only. §IV-B due Nov 12. | Supriye, Arva · S17, S23b, A5 |
-| Develop and compare at least 2 models | 2 or more score files in the agreed format; 5 are built (IF, AE, OCSVM, RF, XGB) | `models_unsupervised.py`, `models_supervised.py`, `results/scores/*.parquet` | Comparison table T5 from `compare_files()` | **Partial**<br>All five are on `main` and have scored v0 (best val PR-AUC: IF 0.063, AE 0.122, RF 0.273, XGB 0.324). The unsupervised `final` command is merged (#33); Ayo’s supervised one is in open PR #41. Final v1 scores due Nov 10, T5 due Nov 12. | Arva, Ayo · A4–A6, A9–A10, A13, A15–A16, Y7–Y9, Y14–Y15 |
-| Justify the models chosen | A reason for each model; hyperparameters listed | Paper §IV-C, table T4 | Paper text | **Partial**<br>T4 drafts exist for both model families. The reasons are still only in TEAM_PLAN 2.7.3. Arva’s autoencoder architecture and grids (DEC-A) are due today; Ayo’s imbalance set-up is in open PR #41. §IV-C due Nov 15. | Arva, Ayo · A14, A22, DEC-A, Y13, Y21, DEC-Y |
+| Develop and compare at least 2 models | 2 or more score files in the agreed format; 5 are built (IF, AE, OCSVM, RF, XGB) | `models_unsupervised.py`, `models_supervised.py`, `results/scores/*.parquet` | Comparison table T5 from `compare_files()` | **Partial**<br>All five are on `main` and have scored v0 (best val PR-AUC: IF 0.063, AE 0.122, RF 0.273, XGB 0.324). The supervised models are tuned on v1, with their tuned defaults and `final` command merged (#41). The unsupervised `final` command is merged (#33), but their v1 tuning waits for the data. Final v1 scores due Nov 10, T5 due Nov 12. | Arva, Ayo · A4–A6, A9–A10, A13, A15–A16, Y7–Y9, Y14–Y15 |
+| Justify the models chosen | A reason for each model; hyperparameters listed | Paper §IV-C, table T4 | Paper text | **Partial**<br>The supervised T4 shows the v1-tuned values (#41); the unsupervised one is still the v0 draft. The reasons are still only in TEAM_PLAN 2.7.3. Ayo’s imbalance set-up is in the code (`FINAL_SETUP`, #41), but its written reason isn’t on `main`. Arva’s autoencoder architecture and grids (DEC-A) are due today. §IV-C due Nov 15. | Arva, Ayo · A14, A22, DEC-A, Y13, Y21, DEC-Y |
 | Assign a risk score to suspicious behavior | 0–100 daily risk (percentile of normal training scores), 7-day user risk, alert levels, top-3 reasons per alert | `src/risk_scoring.py` | Ranked user table; F8 risk timeline for one insider | **Partial**<br>`risk_scoring.py` and `pipeline.py` are merged; the ranked table gives 3 reasons per user. The precision@k, F8-user and risk-timeline code is merged (#35). Alert levels still PROVISIONAL (DEC-A, due today). F8 and precision@20 due Nov 12. | Arva · A7, A11–A12, A18 |
 
 ### Evaluation
@@ -76,7 +76,7 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
 | Accuracy, precision, recall, F1, FPR, FNR, ROC-AUC, confusion matrix | Each on the test split at the best-F1 and top-1% thresholds, overall and per scenario | `evaluate.py`; T5, F4, F5 | Hand-checked unit test; v0 smoke test | **Partial**<br>Code done and run on v0 scores. Test-split tables and figures (T5, F4, F5) due Nov 12. | Ayo · Y3–Y6, Y17 |
-| Detection time | Train time and inference time per 1,000 user-days; data-processing time; days from an insider’s first malicious day to their first alert | Table T8 | Timing tables; `detection_delay()` | **Partial**<br>Delay is built, and data-processing time is measured (`data_processing_time.csv`, #32). Supervised timing is in open PR #41. Arva’s `timing()` was in #34 but was lost when that branch was merged with `main`, so it has to be re-applied. T8 due Nov 12. | Arva, Ayo, Supriye · A17, Y15, Y17, S22 |
+| Detection time | Train time and inference time per 1,000 user-days; data-processing time; days from an insider’s first malicious day to their first alert | Table T8 | Timing tables; `detection_delay()` | **Partial**<br>Delay is built. Data-processing time (`data_processing_time.csv`, #32) and supervised fit and inference time (`timing_supervised.csv`, #41) are measured. Arva’s `timing()` was in #34 but was lost when that branch was merged with `main`; it is being re-applied. T8 due Nov 12. | Arva, Ayo, Supriye · A17, Y15, Y17, S22 |
 | Explain why precision and recall matter on imbalanced data | A paragraph with our base rate: 0.298% malicious, so always answering “normal” scores 99.70% accuracy with 0 recall | Paper §V | `class_imbalance.csv` | **Partial**<br>Number ready and quoted in TEAM_PLAN 5.4. Paper text due Nov 16. | Ayo · Y22 |
 | Detect previously unseen anomalous behavior | Leave-one-scenario-out: PR-AUC, ROC-AUC and recall at top 1% on the held-out scenario | `run_loso()`, `<model>_loso_s<1–3>` score files | Table T6 | **Partial**<br>`run_loso()` and `loso_table()` are merged and run on v0. Results (T6) due Nov 11; Ayo’s LOSO justification (DEC-Y) is due today. | Ayo · Y12, Y16, DEC-Y |
 
@@ -85,7 +85,7 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
 | Analyze false positives and false negatives | Top false positives grouped by root cause; each missed test insider explained | Paper §VI-C | Case tables | **Not started**<br>Due Nov 14. | Ayo · Y20 |
-| Find the features that drive detection | SHAP for RF and XGB, per-feature reconstruction error for the autoencoder, feature-group ablation | `explain.py`, `feature_importance.csv` | F6 SHAP plot, T7 ablation table | **Partial**<br>`explain.py` (SHAP), the autoencoder’s `feature_errors()` and the ablation code (`src/ablation.py`, #32) are merged, with SHAP plots on v0. The T7 run waits for the tuned defaults; F6, `feature_importance.csv` and T7 due Nov 11–13. | Ayo, Arva, Supriye · Y11, Y18, A8, S22 |
+| Find the features that drive detection | SHAP for RF and XGB, per-feature reconstruction error for the autoencoder, feature-group ablation | `explain.py`, `feature_importance.csv` | F6 SHAP plot, T7 ablation table | **Partial**<br>`explain.py` (SHAP), the autoencoder’s `feature_errors()` and the ablation code (`src/ablation.py`, #32) are merged, with SHAP plots on v0. The T7 run waits for Arva’s tuned defaults (Ayo’s merged in #41); F6, `feature_importance.csv` and T7 due Nov 11–13. | Ayo, Arva, Supriye · Y11, Y18, A8, S22 |
 | Investigate detected anomalies | 2–4 case studies, each saying why the system flagged it | `notebooks/05_anomaly_investigation.ipynb`, paper §VI-B | F7 explanation plots and written cases | **Not started**<br>Due Nov 13–14. The pipeline’s alert reasons are a starting point; the case narratives are human-only. | Arva · A19 |
 
 ### Prototype and paper
@@ -111,12 +111,12 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 - **Arva:**
   - **Due today (Nov 8):** the DEC-A decisions (autoencoder architecture and grids, alert levels, keep or drop OCSVM) and the REV-A reviews (13 merged PRs, plus #31, which names Arva as reviewer).
   - **Already overdue:** the A-LIT1–4 notes (due Nov 7) and `arva/notes`.
-  - **Open requests:** a review of #40 (S20b); confirming `explain.py` once the data arrives.
-  - **Fixes:** re-apply the A17 code lost from #34, and add a `pipeline.py` phrase for `http_competitor` (#38).
+  - **Open requests:** confirming `explain.py` once the data arrives. (The #40 review is posted.)
+  - **Fixes:** re-apply the A17 code lost from #34 (in progress), and add a `pipeline.py` phrase for `http_competitor` (#38).
   - **Next:** A15 on the 76-input v1 (Nov 9), tuned defaults and final scores (Nov 10), A17 results (Nov 11), the A18 run (Nov 12), case studies (Nov 13–14), F2 (by Nov 13).
 - **Ayo:**
-  - **In review:** PR #41 (Y14/Y15: tuned supervised set-up, `final` command, timing), waiting on Supriye.
-  - **Due today:** Y-LIT1–4 and the LOSO justification (DEC-Y). Y1 and REV-Y are still unticked.
+  - **Merged today:** #41 (Y14/Y15: v1 tuning, tuned defaults with RF + SMOTE and XGBoost + class weights, the supervised `final` command, `timing_supervised.csv`). The tracker hasn't ticked them yet.
+  - **Due today:** Y-LIT1–4 and DEC-Y's written reasons (imbalance set-up, LOSO design). Y1 and REV-Y are still unticked.
   - **Next:** LOSO results T6 (Nov 11); T5, F4, F5 and T8 (Nov 12).
 - **Supriye:**
   - **Open:**
@@ -124,18 +124,17 @@ Owner and task IDs refer to the task cards in `Tasks/`.
     - the v1 freeze and milestone tags (Nov 8);
     - the hand-checks (S6-H, S19-H) and EDA observations (S7-H);
     - Overleaf and Zotero;
-    - REV-S;
-    - PRs #39 and #40, plus the review of #41.
+    - REV-S and S3-rest (course rules).
   - **Next:** the v1 walkthrough (Nov 9) and the T7 ablation run (Nov 11).
 - **Not started anywhere:** notebooks 04–05, figures F2, F7 and F8 (the F8 code exists), the case studies, and any paper text.
 
 ### Blockers and loose ends
 
 - **No data drop yet.** The tracker doesn't show it as uploaded. The tooling is merged (`scripts/data_drop.py`, `scripts/rebuild_data.sh`, #31), and the zip has to be rebuilt after #38 changed v1. Arva can't start A15 until it arrives.
-- **A17's code is missing from `main`.** `results_extra()`, `timing()`, `alerts_per_day()` and their tests were in #34. The "Merge branch 'main'" commit on that branch kept only three import lines. `unsupervised_extra.csv` (Nov 11) and the unsupervised half of T8 depend on them.
-- **Almost nothing is reviewed.** Of PRs #1–#41, only #29 has a GitHub review (Arva's comment). The post-merge reviews in PROGRESS §3.7 are all open. Since Nov 6, `main` has branch protection (#39), so new PRs need an approval to merge.
+- **A17's code is missing from `main`.** `results_extra()`, `timing()`, `alerts_per_day()` and their tests were in #34. The "Merge branch 'main'" commit on that branch kept only three import lines. `unsupervised_extra.csv` (Nov 11) and the unsupervised half of T8 depend on them. A PR to re-apply them is being prepared.
+- **Old PRs are unreviewed.** Since Nov 7 `main` requires one approval (#39), and #39–#42 were approved. None of #1–#38 has an approving review (#29 has a comment from Arva), so the post-merge reviews in PROGRESS §3.7 are all open.
 - **Scenario 3 is thin.** The test split has 1 real insider (`JLM0364`) with 2 days, plus 2 days on the hijacked account `FBA0348`. Its per-scenario and LOSO results rest on very few rows, so say so in Limitations.
-- **Setup gaps.** The repository is now public, which is what allowed branch protection. Overleaf and Zotero aren't set up, and there are no milestone tags yet.
+- **Setup gaps.** Overleaf and Zotero aren't set up, and there are no milestone tags yet. The repository is public (that's what allowed branch protection), so nothing private belongs in it.
 
 ### Already covered
 
@@ -143,8 +142,8 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 - **Labels and split:** labels, insider timeline and split check; every split has malicious days from every scenario. The counts agree: 70 insiders (30/30/10), 72 accounts with malicious days, 984 malicious user-days.
 - **Decisions:** all five data decisions are final with written reasons (#36–#38): working hours, split dates, scenario-3 labels, email rule, web keyword lists.
 - **Feature table v1:** 1,000 users, 330,268 user-days, 76 model inputs (42 `f_*`, 15 `z_user_*`, 15 `z_peer_*`, 4 `new_*`), with [`docs/feature_dictionary.md`](feature_dictionary.md). Leakage checks 1, 2, 3 and 5 pass.
-- **Data tooling:** rebuild and data-drop scripts with checksums (#31). The web-log cache now rebuilds when the working hours change.
-- **Models:** all five (Isolation Forest, autoencoder, One-Class SVM, Random Forest, XGBoost) with tuning workflows, run on v0, plus the contamination variant, the imbalance experiment and the LOSO code. The unsupervised tuning log keeps every dataset's rows, the `final` command writes the five unsupervised score files, and the macOS test hang is fixed (#33).
+- **Data tooling:** rebuild and data-drop scripts with checksums (#31). The web-log cache now rebuilds when the working hours change. Tests check the rebuild's outputs (#40).
+- **Models:** all five (Isolation Forest, autoencoder, One-Class SVM, Random Forest, XGBoost) with tuning workflows, run on v0, plus the contamination variant, the imbalance experiment and the LOSO code. The unsupervised tuning log keeps every dataset's rows, the `final` command writes the five unsupervised score files, and the macOS test hang is fixed (#33). The supervised models are tuned on v1, with tuned defaults, a `final` command and measured timing (#41).
 - **Explanations and prototype:** `explain.py` (SHAP), the autoencoder's per-feature error, and `pipeline.py` with 3 reasons per alert. `precision_at_k()`, the F8 user rule and the risk-timeline plot (#35).
 - **Ablation and timing:** `src/ablation.py` with the 10 feature sets (#32), and the measured data-processing time (~138 s from Parquet logs to v1, `data_processing_time.csv`).
 - **Evaluation:** `evaluate.py` computes every metric the assignment lists, plus PR-AUC, detection delay and user-level recall.
