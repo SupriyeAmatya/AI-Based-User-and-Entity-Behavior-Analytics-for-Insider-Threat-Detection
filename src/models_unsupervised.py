@@ -31,6 +31,9 @@ highest val PR-AUC (never test, never accuracy):
 Final score files (A16), every row, with the detector defaults:
     python -m src.models_unsupervised final                                        # features_v1
     python -m src.models_unsupervised final data/processed/features_v1_1.parquet
+
+Extra results for Ayo (A17) from those score files -> results/tables/unsupervised_extra.csv:
+    python -m src.models_unsupervised extra [features]
 """
 import json
 import platform
@@ -54,7 +57,7 @@ from sklearn.svm import OneClassSVM
 from torch import nn
 
 from src.config import FIGURES_DIR, PROCESSED_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
-from src.evaluate import ranking_metrics, threshold_metrics, threshold_top_k
+from src.evaluate import evaluate_file, ranking_metrics, threshold_metrics, threshold_top_k
 from src.features import get_model_matrix
 
 SCORE_KEYS = ["user", "date", "split", "label", "scenario"]
@@ -454,6 +457,83 @@ def final(features_path=None, df=None, params=None):
     return paths
 
 
+# ---------------------------------------------------------------- A17: extra results for Ayo (M3)
+EXTRA_TABLE = "unsupervised_extra.csv"
+OPERATING_POINTS = ("best_f1", "top_1pct")
+
+
+def alerts_per_day(scores: pd.DataFrame, threshold) -> float:
+    """Mean number of flagged user-days (score >= threshold) per test day."""
+    test = scores[scores["split"] == "test"]
+    return int((test["score"] >= threshold).sum()) / test["date"].nunique()
+
+
+def cpu_name() -> str:
+    """The processor's name, e.g. "Apple M2" (macOS) or "Intel64 Family 6 ..." (Windows)."""
+    if platform.system() == "Darwin":
+        result = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"],
+                                capture_output=True, text=True)
+        if result.stdout.strip():
+            return result.stdout.strip()
+    return platform.processor() or platform.machine()
+
+
+def timing(df, model, repeats=3, train_on="normal") -> dict:
+    """Detection time (a): mean fit seconds and inference seconds per 1,000 user-days over
+    `repeats` runs (time.perf_counter() inside train_and_score), plus the machine it ran on."""
+    runs = [train_and_score(df, model, save=False, train_on=train_on)[1] for _ in range(repeats)]
+    return {"fit_seconds": float(np.mean([r["fit_seconds"] for r in runs])),
+            "score_seconds_per_1000": float(np.mean([r["score_seconds_per_1000"] for r in runs])),
+            "timing_runs": repeats,
+            "cpu": cpu_name(),
+            "cores": psutil.cpu_count(logical=False), "threads": psutil.cpu_count(logical=True),
+            "ram_gb": round(psutil.virtual_memory().total / 1e9, 1)}
+
+
+def results_extra(df, repeats=3, save=True) -> pd.DataFrame:
+    """One row per final score file in results/scores/ (A17); missing files are skipped.
+
+    Columns: test PR-AUC and ROC-AUC; precision, recall and user-level recall at best-F1 and
+    top-1%; recall per scenario at both thresholds and PR-AUC per scenario; alerts per test day at
+    both thresholds; contam_delta_pr_auc (<model>_contam PR-AUC minus <model> PR-AUC, on the
+    <model> row); and the timing() columns, measured on the feature table df.
+    Saved to results/tables/unsupervised_extra.csv.
+    """
+    rows = []
+    for model, train_on in FINAL_RUNS:
+        name = model if train_on == "normal" else f"{model}_contam"
+        path = SCORES_DIR / f"{name}.parquet"
+        if not path.exists():
+            print(f"skipped {name}: no {path.name} (run `python -m src.models_unsupervised final`)")
+            continue
+        result = evaluate_file(path)
+        scores = pd.read_parquet(path)
+        row = {"model": name, "test_pr_auc": result["ranking"]["pr_auc"],
+               "test_roc_auc": result["ranking"]["roc_auc"]}
+        for op in OPERATING_POINTS:
+            point = result["operating_points"][op]
+            row.update({f"precision_{op}": point["precision"], f"recall_{op}": point["recall"],
+                        f"user_recall_{op}": point["user_recall"],
+                        f"alerts_per_day_{op}": alerts_per_day(scores, result["thresholds"][op])})
+        for s in (1, 2, 3):
+            per = result["per_scenario"].get(s, {})
+            for op in OPERATING_POINTS:
+                row[f"s{s}_recall_{op}"] = per.get(f"recall_{op}", np.nan)
+            row[f"s{s}_pr_auc"] = per.get("pr_auc", np.nan)
+        row.update(timing(df, model, repeats, train_on))
+        rows.append(row)
+    table = pd.DataFrame(rows)
+    if len(table):
+        pr_auc = table.set_index("model")["test_pr_auc"]
+        table["contam_delta_pr_auc"] = [pr_auc.get(f"{m}_contam", np.nan) - pr_auc[m]
+                                        if not m.endswith("_contam") else np.nan
+                                        for m in table["model"]]
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        table.to_csv(TABLES_DIR / EXTRA_TABLE, index=False)
+    return table
+
+
 def demo():
     """A5/A6 checks on synthetic data: ROC-AUC of both detectors and the autoencoder loss curve."""
     from src.synthetic import make_synthetic_features
@@ -480,5 +560,8 @@ if __name__ == "__main__":
         demo()
     elif sys.argv[1:2] == ["final"] and len(sys.argv) <= 3:
         final(*sys.argv[2:])
+    elif sys.argv[1:2] == ["extra"] and len(sys.argv) <= 3:
+        features = sys.argv[2] if len(sys.argv) == 3 else PROCESSED_DIR / "features_v1.parquet"
+        print(results_extra(pd.read_parquet(features)).round(4).to_string(index=False))
     else:
         print(__doc__)
