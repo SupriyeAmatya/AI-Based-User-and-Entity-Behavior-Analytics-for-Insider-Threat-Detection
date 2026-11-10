@@ -95,8 +95,9 @@ class IsolationForestDetector(UnsupervisedDetector):
     name = "iforest"
     card = {"n_estimators": 200, "max_samples": "auto", "max_features": 1.0,
             "contamination": "auto", "random_state": RANDOM_STATE}           # A5 card
-    # PROVISIONAL (A16, Arva): replace with the best v1 setting by val PR-AUC.
-    defaults = dict(card)
+    # A16: the best of the 18 IF_GRID runs on v1 by val PR-AUC (tuning log, Nov 10). max_samples
+    # 256 and "auto" give the same forest here, because "auto" means min(256, rows).
+    defaults = {**card, "n_estimators": 100, "max_samples": 256, "max_features": 1.0}
 
     def fit(self, X_train_normal, X_val_normal=None):
         self.pipeline = Pipeline([("scaler", StandardScaler()),
@@ -110,7 +111,9 @@ class IsolationForestDetector(UnsupervisedDetector):
 
 # ---------------------------------------------------------------- A6: autoencoder
 class AutoencoderDetector(UnsupervisedDetector):
-    """Dense autoencoder: n -> 64 -> 32 -> 16 -> 32 -> 64 -> n, ReLU, linear output (A6 card).
+    """Dense autoencoder: n -> hidden layers -> bottleneck -> hidden layers reversed -> n, ReLU,
+    linear output. A6 card: n -> 64 -> 32 -> 16 -> 32 -> 64 -> n; tuned on v1 (A16):
+    n -> 128 -> 64 -> 16 -> 64 -> 128 -> n.
 
     Trained with MSE and Adam; early stopping on the validation normal rows (patience 5) keeps
     the best epoch. score() = mean squared reconstruction error per row.
@@ -119,8 +122,9 @@ class AutoencoderDetector(UnsupervisedDetector):
     name = "autoencoder"
     card = {"hidden": (64, 32), "bottleneck": 16, "dropout": 0.0, "lr": 1e-3,
             "batch_size": 256, "epochs": 50, "patience": 5, "seed": RANDOM_STATE}  # A6 card
-    # PROVISIONAL (A16, Arva): replace with the best v1 setting by val PR-AUC.
-    defaults = dict(card)
+    # A16: the best of the 16 AE_GRID runs on v1 by val PR-AUC (tuning log, Nov 10): wider hidden
+    # layers; bottleneck, dropout and learning rate came out at the card values.
+    defaults = {**card, "hidden": (128, 64), "bottleneck": 16, "dropout": 0.0, "lr": 1e-3}
 
     def _network(self, n_features):
         sizes = [n_features, *self.params["hidden"], self.params["bottleneck"]]
