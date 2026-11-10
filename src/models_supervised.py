@@ -27,6 +27,7 @@ Final score files and timing (Y15), with the tuned defaults (RF_DEFAULTS / XGB_D
 values stay in RF_CARD / XGB_CARD) and each model's FINAL_SETUP:
     python -m src.models_supervised final [features path]   # -> results/scores/{random_forest,xgboost}.parquet
     python -m src.models_supervised timing [features path]  # -> results/tables/timing_supervised.csv
+    python -m src.models_supervised loso [features path]    # -> results/tables/loso.csv (T6), loso_pr_auc.csv
 
 Leave-one-scenario-out (Y12), the "unseen anomaly" experiment:
     scores, metrics = run_loso(df, "xgboost", held_out=2)   # -> results/scores/xgboost_loso_s2.parquet
@@ -375,10 +376,45 @@ def loso_table(df, models=MODELS, unsupervised=None, params=None, held_out=(1, 2
             rows.append({"held_out": s, "model": name, "kind": "unsupervised",
                          **loso_metrics(same_rows)})
     table = pd.DataFrame(rows)
+    for column in ("n_train", "held_out_accounts"):     # empty on unsupervised rows: keep ints
+        if column in table:
+            table[column] = table[column].astype("Int64")
     if save:
         TABLES_DIR.mkdir(parents=True, exist_ok=True)
         table.to_csv(TABLES_DIR / LOSO_TABLE, index=False)
+        loso_pivot(table)
     return table
+
+
+# ---------------------------------------------------------------- Y16: T6
+LOSO_PIVOT = "loso_pr_auc.csv"
+LOSO_UNSUPERVISED = ("iforest", "autoencoder")
+
+
+def loso_pivot(table: pd.DataFrame, metric="pr_auc", save=True) -> pd.DataFrame:
+    """Y16 step 3: one row per model (order as in `table`), one column per held-out scenario
+    (s1, s2, s3) holding `metric`. Saved as results/tables/loso_pr_auc.csv."""
+    pivot = table.pivot(index="model", columns="held_out", values=metric)
+    pivot.columns = [f"s{s}" for s in pivot.columns]
+    kinds = table.drop_duplicates("model").set_index("model")["kind"]
+    pivot = pd.concat([kinds, pivot], axis=1).loc[kinds.index]
+    pivot.index.name = "model"
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        pivot.to_csv(TABLES_DIR / LOSO_PIVOT)
+    return pivot
+
+
+def loso(features_path=None, df=None, unsupervised=LOSO_UNSUPERVISED):
+    """Y16 step 2: `loso_table` on v1 with the tuned defaults and set-ups (6 supervised runs) and
+    the unsupervised score files in results/scores/ on the same test rows. Writes loso.csv (T6),
+    loso_pr_auc.csv and the <model>_loso_s<1|2|3> score files."""
+    df = _features(features_path, df)
+    paths = {name: SCORES_DIR / f"{name}.parquet" for name in unsupervised}
+    missing = [str(p) for p in paths.values() if not p.exists()]
+    if missing:
+        raise FileNotFoundError(f"run `python -m src.models_unsupervised final` first: {missing}")
+    return loso_table(df, unsupervised=paths)
 
 
 # ---------------------------------------------------------------- Y13: table T4 draft
@@ -500,6 +536,9 @@ if __name__ == "__main__":
         demo()
     elif sys.argv[1:2] == ["final"] and len(sys.argv) <= 3:    # Y15: ... final [features path]
         final(*sys.argv[2:])
+    elif sys.argv[1:2] == ["loso"] and len(sys.argv) <= 3:     # Y16: ... loso [features path]
+        print(loso(*sys.argv[2:]).to_string(index=False))
+        print(pd.read_csv(TABLES_DIR / LOSO_PIVOT).to_string(index=False))
     elif sys.argv[1:2] == ["timing"] and len(sys.argv) <= 3:   # Y15: ... timing [features path]
         data = _features(*sys.argv[2:])
         print(pd.DataFrame([timing(data, name) for name in MODELS]).to_string(index=False))

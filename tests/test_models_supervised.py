@@ -131,6 +131,27 @@ def test_loso_table_puts_unsupervised_on_the_same_rows(df, tmp_outputs):
     for s, rows in table.groupby("held_out"):
         assert rows["n_rows"].nunique() == 1 and rows["n_malicious"].nunique() == 1  # same test rows
     assert (tmp_outputs / "tables" / ms.LOSO_TABLE).exists()
+    assert str(table["n_train"].dtype) == "Int64" and table["n_train"].isna().sum() == 3
+
+
+# ---------------------------------------------------------------- Y16: T6 pivot
+def test_loso_pivot_has_one_row_per_model_and_one_column_per_scenario(tmp_outputs):
+    table = pd.DataFrame({"held_out": [1, 1, 2, 2, 3, 3],
+                          "model": ["xgboost", "iforest"] * 3,
+                          "kind": ["supervised (LOSO)", "unsupervised"] * 3,
+                          "pr_auc": [0.9, 0.1, 0.8, 0.2, 0.7, 0.3]})
+    pivot = ms.loso_pivot(table)
+    assert list(pivot.columns) == ["kind", "s1", "s2", "s3"]
+    assert list(pivot.index) == ["xgboost", "iforest"]                 # order of first appearance
+    assert pivot.loc["xgboost", "s2"] == 0.8 and pivot.loc["iforest", "s3"] == 0.3
+    saved = pd.read_csv(tmp_outputs / "tables" / ms.LOSO_PIVOT, index_col="model")
+    assert saved.loc["iforest", "s1"] == 0.1
+
+
+def test_loso_table_also_saves_the_pivot(df, tmp_outputs):
+    ms.loso_table(df, models=("xgboost",), held_out=(1, 2))
+    pivot = pd.read_csv(tmp_outputs / "tables" / ms.LOSO_PIVOT)
+    assert list(pivot.columns) == ["model", "kind", "s1", "s2"] and len(pivot) == 1
 
 
 # ---------------------------------------------------------------- Y14: final set-up and v1 tuning
