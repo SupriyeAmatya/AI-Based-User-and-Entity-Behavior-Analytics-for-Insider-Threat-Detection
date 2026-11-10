@@ -1,0 +1,12 @@
+kind,component,fit_seconds,fit_seconds_std,inference_seconds_per_1000,inference_seconds_per_1000_std,seconds,seconds_per_1000_user_days,median_delay_days_best_f1,mean_delay_days_best_f1,runs,cpu,threads,ram_gb
+model,iforest,0.367935277333648,,0.004177343349441942,,,,0.0,0.2857142857142857,3,Apple M1,8,8.6
+model,autoencoder,21.259801305665558,,0.0011949384883401723,,,,0.0,0.1111111111111111,3,Apple M1,8,8.6
+model,iforest_contam,0.41940644433513324,,0.0040424935194092885,,,,0.0,0.0,3,Apple M1,8,8.6
+model,autoencoder_contam,24.12401690266658,,0.0013692411253877256,,,,0.0,0.0,3,Apple M1,8,8.6
+model,ocsvm,0.5136490693330416,,0.03889765269013648,,,,0.0,0.0,3,Apple M1,8,8.6
+model,random_forest,344.1417020136675,16.01318393457235,0.004470584620167715,0.0001164639891465258,,,0.0,0.5714285714285714,3,Apple M1,8,8.0
+model,xgboost,11.026961430667143,0.5579998230540172,0.001356702654612572,5.848520192378144e-05,,,0.0,0.0,3,Apple M1,8,8.0
+data processing,"archive -> Parquet conversion (S4, one-off; estimate ~10 min, not timed)",,,,,600.0,1.8167,,,0,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+data processing,labels (S6),,,,,0.07,0.0002,,,3,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+data processing,"web-log pass, 28.4M rows (S15)",,,,,26.02,0.0788,,,3,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4
+data processing,feature table v1 incl. baselines (S10-S18),,,,,112.38,0.3403,,,3,"Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",24,31.4

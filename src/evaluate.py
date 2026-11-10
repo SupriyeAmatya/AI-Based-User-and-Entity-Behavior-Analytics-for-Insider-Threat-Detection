@@ -12,6 +12,9 @@ Thresholds follow TEAM_PLAN 5.6:
     best_f1   - the threshold that maximises F1 on the val split, applied unchanged to test
     top_1pct  - flag the top 1% of test user-days (fixed analyst alert budget)
 All reported numbers are on the test split (TEAM_PLAN 10.2).
+
+Y17 tables and figures from the score files in results/scores/:
+    python -m src.evaluate report   # T5, model_per_scenario, detection_delay, F4, F5, T8
 """
 from pathlib import Path
 
@@ -28,7 +31,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 
-from src.config import FIGURES_DIR, RANDOM_STATE
+from src.config import FIGURES_DIR, RANDOM_STATE, SCORES_DIR, TABLES_DIR
 
 # One fixed color per model so every figure in the paper matches (Y5 step 4).
 MODEL_COLORS = {
@@ -277,6 +280,162 @@ def plot_score_distribution(path):
     return fig
 
 
+# ---------------------------------------------------------------- Y17: master comparison
+MAIN_MODELS = ["iforest", "autoencoder", "ocsvm", "random_forest", "xgboost"]
+ALL_MODELS = MAIN_MODELS[:3] + ["iforest_contam", "autoencoder_contam"] + MAIN_MODELS[3:]
+T5_TABLE = "model_comparison.csv"
+PER_SCENARIO_TABLE = "model_per_scenario.csv"
+DELAY_TABLE = "detection_delay.csv"
+T8_TABLE = "T8_timing.csv"
+
+
+def score_paths(models=ALL_MODELS):
+    """results/scores/<model>.parquet for each model, in the given order."""
+    return [SCORES_DIR / f"{m}.parquet" for m in models]
+
+
+def _save_table(table: pd.DataFrame, name, save):
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        table.to_csv(TABLES_DIR / name, index=False)
+    return table
+
+
+def model_comparison(paths, k: float = 0.01, save=True) -> pd.DataFrame:
+    """T5 (Y17 step 1): compare_files() on the test split, saved as model_comparison.csv."""
+    return _save_table(compare_files(paths, k), T5_TABLE, save)
+
+
+def per_scenario_table(paths, k: float = 0.01, save=True) -> pd.DataFrame:
+    """Y17 step 2: one row per model x scenario (test rows of scenario 0 + that scenario):
+    PR-AUC and recall at both thresholds. Saved as model_per_scenario.csv."""
+    rows = []
+    for path in paths:
+        r = evaluate_file(path, k)
+        for s, m in r["per_scenario"].items():
+            rows.append({"model": r["model"], "scenario": s, **m})
+    columns = ["model", "scenario", "n_malicious_days", "pr_auc", "recall_best_f1",
+               "recall_top_1pct"]
+    return _save_table(pd.DataFrame(rows, columns=columns), PER_SCENARIO_TABLE, save)
+
+
+def delay_table(paths, k: float = 0.01, save=True) -> pd.DataFrame:
+    """Y17 step 5: per model x operating point, the detection delay (days from an insider's first
+    malicious test day to their first alert), user-level recall and the missed insiders.
+    Saved as detection_delay.csv."""
+    rows = []
+    for path in paths:
+        r = evaluate_file(path, k)
+        for name in OPERATING_POINTS:
+            point, per_user = r["operating_points"][name], r["delay_per_user"][name]
+            missed = sorted(per_user.loc[per_user["delay_days"].isna(), "user"])
+            rows.append({"model": r["model"], "operating_point": name,
+                         "n_insiders": point["n_insiders"],
+                         "n_detected": point["n_insiders"] - point["n_missed"],
+                         "n_missed": point["n_missed"],
+                         "median_delay_days": point["median_delay_days"],
+                         "mean_delay_days": point["mean_delay_days"],
+                         "user_recall": point["user_recall"], "missed_insiders": ";".join(missed)})
+    return _save_table(pd.DataFrame(rows), DELAY_TABLE, save)
+
+
+def plot_confusion_grid(paths, threshold_type="best_f1", name=None):
+    """F5 (Y17 step 4): one confusion-matrix panel per model at `threshold_type`, test split."""
+    fig, axes = plt.subplots(1, len(paths), figsize=(2.6 * len(paths), 2.8), squeeze=False)
+    for ax, path in zip(axes[0], paths):
+        m = evaluate_file(path)["operating_points"][threshold_type]
+        matrix = np.array([[m["tn"], m["fp"]], [m["fn"], m["tp"]]])
+        ax.imshow(np.log1p(matrix), cmap="Blues")          # log scale: TN dwarfs the other cells
+        for (i, j), v in np.ndenumerate(matrix):
+            ax.text(j, i, f"{v:,}", ha="center", va="center", fontsize=8,
+                    color="white" if np.log1p(v) > np.log1p(matrix.max()) / 2 else "black")
+        ax.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["normal", "malicious"],
+               yticklabels=["normal", "malicious"], xlabel="Predicted", title=Path(path).stem)
+        ax.tick_params(labelsize=7)
+    axes[0][0].set_ylabel("Actual")
+    fig.suptitle(f"Confusion matrices at {threshold_type} (test)", fontsize=10)
+    fig.tight_layout()
+    _save(fig, name or f"F5_confusion_{threshold_type}")
+    return fig
+
+
+def _read(name):
+    path = TABLES_DIR / name
+    if not path.exists():
+        print(f"T8: skipped {name} (not in {TABLES_DIR})")
+        return None
+    return pd.read_csv(path)
+
+
+def timing_table(delay=None, save=True) -> pd.DataFrame:
+    """T8 (Y17 step 6): one row per model with fit time and inference time per 1,000 user-days
+    (timing_supervised.csv from models_supervised; the timing columns of unsupervised_extra.csv
+    from models_unsupervised) and the best-F1 detection delay (`delay`, a delay_table() frame,
+    default detection_delay.csv), then one row per data-processing step
+    (data_processing_time.csv from ablation). Missing source files are skipped."""
+    parts = []
+    unsupervised = _read("unsupervised_extra.csv")
+    if unsupervised is not None:
+        parts.append(pd.DataFrame({
+            "kind": "model", "component": unsupervised["model"],
+            "fit_seconds": unsupervised["fit_seconds"], "fit_seconds_std": np.nan,
+            "inference_seconds_per_1000": unsupervised["score_seconds_per_1000"],
+            "inference_seconds_per_1000_std": np.nan, "runs": unsupervised["timing_runs"],
+            "cpu": unsupervised["cpu"], "threads": unsupervised["threads"],
+            "ram_gb": unsupervised["ram_gb"]}))
+    supervised = _read("timing_supervised.csv")
+    if supervised is not None:
+        parts.append(pd.DataFrame({
+            "kind": "model", "component": supervised["model"],
+            "fit_seconds": supervised["fit_seconds_mean"],
+            "fit_seconds_std": supervised["fit_seconds_std"],
+            "inference_seconds_per_1000": supervised["score_seconds_per_1000_mean"],
+            "inference_seconds_per_1000_std": supervised["score_seconds_per_1000_std"],
+            "runs": supervised["repeats"], "cpu": supervised["cpu"],
+            "threads": supervised["threads"], "ram_gb": supervised["ram_gb"]}))
+    processing = _read("data_processing_time.csv")
+    if processing is not None:
+        parts.append(pd.DataFrame({
+            "kind": "data processing", "component": processing["step"],
+            "seconds": processing["seconds"],
+            "seconds_per_1000_user_days": processing["seconds_per_1000_user_days"],
+            "runs": processing["runs"], "cpu": processing["cpu"],
+            "threads": processing["threads"], "ram_gb": processing["ram_gb"]}))
+    if not parts:
+        return pd.DataFrame()
+    table = pd.concat(parts, ignore_index=True)
+    for column in ("seconds", "seconds_per_1000_user_days"):
+        if column not in table:
+            table[column] = np.nan
+    if delay is None:
+        delay = _read(DELAY_TABLE)
+    if delay is not None:
+        best = delay[delay["operating_point"] == "best_f1"].set_index("model")
+        table["median_delay_days_best_f1"] = table["component"].map(best["median_delay_days"])
+        table["mean_delay_days_best_f1"] = table["component"].map(best["mean_delay_days"])
+    columns = ["kind", "component", "fit_seconds", "fit_seconds_std", "inference_seconds_per_1000",
+               "inference_seconds_per_1000_std", "seconds", "seconds_per_1000_user_days",
+               "median_delay_days_best_f1", "mean_delay_days_best_f1", "runs", "cpu", "threads",
+               "ram_gb"]
+    table = table[[c for c in columns if c in table]]
+    return _save_table(table, T8_TABLE, save)
+
+
+def report(models=ALL_MODELS, main=MAIN_MODELS):
+    """Y17: T5, the per-scenario and delay tables, F4 and F5 (main models) and T8, from the score
+    files in results/scores/. Run: python -m src.evaluate report"""
+    paths, main_paths = score_paths(models), score_paths(main)
+    t5 = model_comparison(paths)
+    per_scenario_table(paths)
+    delay = delay_table(paths)
+    plot_roc(main_paths, name="F4_roc_curves")
+    plot_pr(main_paths, name="F4_pr_curves")
+    plot_confusion_grid(main_paths)
+    t8 = timing_table(delay)
+    plt.close("all")
+    return t5, t8
+
+
 # ---------------------------------------------------------------- synthetic scores for testing (Y3 step 1)
 def make_synthetic_scores(n_users=50, n_days=200, seed=RANDOM_STATE) -> pd.DataFrame:
     """~10,000 user-days in TEAM_PLAN 5.2 format with ~0.5% malicious rows.
@@ -303,3 +462,14 @@ def make_synthetic_scores(n_users=50, n_days=200, seed=RANDOM_STATE) -> pd.DataF
         df.loc[run, ["label", "scenario"]] = [1, scenario]
     df["score"] = rng.normal(size=len(df)) + 1.5 * df["label"]
     return df
+
+
+if __name__ == "__main__":
+    import sys
+
+    if sys.argv[1:] == ["report"]:
+        t5, t8 = report()
+        print(t5.round(4).to_string(index=False))
+        print(t8.round(4).to_string(index=False))
+    else:
+        print(__doc__)
