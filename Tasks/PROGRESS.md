@@ -103,7 +103,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [x] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~360 MB, checksums) | Supriye → Arva, Ayo |
 | [ ] | Sun Nov 8 | v1 frozen + feature dictionary *(tag `m2-features-v1` pushed; announce the freeze in chat)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* | Supriye → Arva, Ayo |
-| [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` | Arva → all (Git) |
+| [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(PR from `arva/A16-tuned-defaults` open Nov 10; tick when merged and announced)* | Arva → all (Git) |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` | Ayo → all (Git) |
 | [ ] | Wed Nov 11 | `unsupervised_extra.csv` | Arva → Ayo (Git) |
 | [ ] | Wed Nov 11 | `loso.csv` (T6) | Ayo → all (Git) |
@@ -202,8 +202,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **A-LIT2** L4 [H]
 - [ ] **A-LIT3** L5 [H]
 - [ ] **A-LIT4** L10a (+ L10b) [H]
-- [ ] **A15** log-reset fix; v1 grids; `_contam` runs; T4 (v1)
+- [x] **A15** log-reset fix; v1 grids; `_contam` runs; T4 (v1) *(code in #33; v1 run Nov 10 on `arva/A16-tuned-defaults`: 18 IF + 16 AE grid runs, the card reference, the `_contam` and OCSVM runs in the tuning log next to the v0 rows; T4 shows the v1 best)* **(Claude)**
 - [ ] **A16** tuned defaults + `final` command; `evaluate_file()` on all files
+  - [x] **`final` command** + its test (#33) **(Claude)**
+  - [x] **Tuned defaults** committed on `arva/A16-tuned-defaults` (best v1 run by val PR-AUC: IF 100 trees / 256 samples / all features; AE 128-64-16, no dropout, lr 1e-3; the `card` dicts keep the card values for T4); notebook 03a runs `final` and `evaluate_file()` on all 5 files **(Claude)**
+  - [ ] **Ayo confirms** `final` + `evaluate_file()` run on his laptop; Arva reads the change and writes the DEC-A reasons [H]
 - [ ] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
 - [ ] **A17-H** interpret it [H]
 - [ ] **A18** pipeline on v1, `precision_at_20.csv`, F8

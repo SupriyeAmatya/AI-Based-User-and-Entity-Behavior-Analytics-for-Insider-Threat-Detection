@@ -46,7 +46,7 @@ def test_autoencoder_shape_loss_and_early_stopping(df):
     _, info = mu.train_and_score(df, "autoencoder", {"epochs": 40, "patience": 2}, save=False)
     detector = info["detector"]
     sizes = [m.out_features for m in detector.network if hasattr(m, "out_features")]
-    p = detector.params        # whatever the defaults are (card values until A16 tunes them)
+    p = detector.params        # the tuned defaults (A16), not the card architecture
     assert sizes == [*p["hidden"], p["bottleneck"], *reversed(p["hidden"]), len(info["features"])]
     assert isinstance(detector.network[-1], mu.nn.Linear)           # linear output layer
     loss = detector.history["train_loss"]
@@ -173,6 +173,39 @@ def test_hyperparameter_table_uses_one_dataset_and_normal_runs(df, tmp_outputs, 
     assert row["runs"] == 1 and row["dataset"] == "v1" and "40" in row["best_params"]
     assert mu.json.loads(row["card"])["n_estimators"] == 200
     assert mu.hyperparameter_table(dataset="v0").set_index("model").loc["iforest", "runs"] == 2
+
+
+@pytest.mark.parametrize("name", ["iforest", "autoencoder"])
+def test_tuned_defaults_keep_the_card_and_come_from_the_grid(name):
+    cls = mu.DETECTORS[name]
+    assert set(cls.defaults) == set(cls.card)              # same parameters, so T4 can show both
+    for key, value in cls.defaults.items():
+        if key in mu.GRIDS[name]:
+            assert value in mu.GRIDS[name][key]            # a tuned value is one the grid searched
+        else:
+            assert value == cls.card[key]                  # everything else stays at the card value
+    assert cls().params == cls.defaults                    # a run without params uses the defaults
+    assert cls.card["random_state" if name == "iforest" else "seed"] == mu.RANDOM_STATE
+
+
+def test_final_uses_the_module_defaults(tmp_outputs, monkeypatch):
+    used = []
+    real = mu.train_and_score
+
+    def spy(df, model, params=None, **kwargs):
+        scores, info = real(df, model, params, **kwargs)
+        used.append((model, kwargs["train_on"], info["params"]))
+        return scores, info
+
+    monkeypatch.setattr(mu, "train_and_score", spy)
+    monkeypatch.setattr(mu.AutoencoderDetector, "defaults",
+                        {**mu.AutoencoderDetector.defaults, "epochs": 2})    # quick to run
+    monkeypatch.setattr(mu.OneClassSVMDetector, "defaults",
+                        {**mu.OneClassSVMDetector.defaults, "max_train": 500})
+    mu.final(df=make_synthetic_features(n_users=20, n_days=200))
+    assert [(m, t) for m, t, _ in used] == mu.FINAL_RUNS
+    for model, _, params in used:                          # the normal and _contam runs alike
+        assert params == mu.DETECTORS[model].defaults
 
 
 def test_final_writes_every_score_file(tmp_outputs):
