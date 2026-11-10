@@ -22,7 +22,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - **Reviews:** #39–#48 each had an approving review before merge (branch protection since Nov 7). None of #1–#28 has its post-merge review (§3.7), and #29–#38 merged without one.
   - **Literature:** `paper/lit_notes/` is empty. No notes branch is on GitHub.
 - **Decisions:** Supriye's 5 are final (Nov 6). Ayo's imbalance set-up is recorded in #41. Arva's AE architecture, alert levels and OCSVM (DEC-A) are open, and the course rules (S3-rest) are not confirmed.
-- **Milestones:** M2 is done. M0 lacks only its tag; M1 lacks the teammates' v0 confirmation. "Tuned models" (due today) is half done: Y15 yes, A16 no. M3 is due Wed Nov 11 and depends on A16.
+- **Milestones:** M0 and M2 are done. M1 lacks the teammates' v0 confirmation. "Tuned models" (due today) is half done: Y15 yes, A16 no. M3 is due Wed Nov 11 and depends on A16.
 
 ### 1.2 Next three actions each
 | Person | 1 | 2 | 3 |
@@ -39,7 +39,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | Ayo lines (§3.6) | 13 | 27: Y16–Y25 (Y16, Y17 outputs merged), decisions, LIT |
 | Hand-offs (§3.3) | 6 | 10 |
 | Post-merge reviews (§3.7) | 0 / 27 | 27 |
-| Milestones (§3.1) | 3 / 15 | 12 |
+| Milestones (§3.1) | 4 / 15 | 11 |
 
 ---
 
@@ -59,9 +59,9 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 
 ### 3.1 Milestones
 - [ ] **Kickoff** (Thu Oct 29): rules agreed. *Status unknown; the rules are in TEAM_PLAN 2.5*
-- [ ] **M0 Setup complete** (Sat Oct 31)
+- [x] **M0 Setup complete** (Sat Oct 31) *(tag `m0-setup` pushed Nov 10, on #41's commit `5bbcf77`)*
   - [x] **Repo cloned:** Supriye, Arva (PRs #9, #10)
-  - [x] **Repo cloned + installed:** Ayo (Y1) *(his PRs #41, #46 and #48 report the full test suite and the v1 runs on his laptop; only the `m0-setup` tag is left for M0)*
+  - [x] **Repo cloned + installed:** Ayo (Y1) *(his PRs #41, #46 and #48 report the full test suite and the v1 runs on his laptop)*
   - [x] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20) *(confirmed by Supriye Nov 8)*
 - [x] **`evaluate.py` ready** (Sun Nov 1): merged Nov 3 (#3 via #7)
 - [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request*
@@ -157,7 +157,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **REV-S** read own code [H]; reviews done (§3.7)
 - [ ] **S20-tag** `m0-setup`, `m1-features-v0`, `m2-features-v1`
   - [x] **`m2-features-v1`** tagged and pushed (Nov 8) **(Claude)**
-  - [ ] **`m0-setup`, `m1-features-v0`** once their conditions in §3.1 are met; announce the freeze in chat
+  - [x] **`m0-setup`** tagged and pushed (Nov 10) **(Claude)**
+  - [ ] **`m1-features-v0`** once Arva and Ayo confirm v0 loads (§3.1); announce the freeze in chat
 - [ ] **S20-walk** v1 walkthrough (Mon Nov 9)
 - [x] **S21** bug-fix window closed (Tue Nov 10 12:00) *(checked at 12:01: the repo has never had a GitHub Issue, and PRs #46–#48 report no feature bug; feature code unchanged since the `m2-features-v1` tag; 145 tests pass; no `features_v1_1.parquet`)* **(Claude)**
 - [ ] **S23a** III. Dataset [H]
@@ -341,7 +342,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **`supriye/S33-final`** (Ayo)
 
 ### 3.9 Milestone tags (Supriye)
-- [ ] **`m0-setup`:** after M0
+- [x] **`m0-setup`:** after M0 *(pushed Nov 10, `5bbcf77`: the first commit that shows Ayo's installed environment and the v1 data in use)*
 - [ ] **`m1-features-v0`:** after M1
 - [x] **`m2-features-v1`:** Sun Nov 8 *(pushed Nov 8, `2710789`)*
 - [ ] **`m3-all-scores`:** after A16, Y15, Y16, S22 merge
