@@ -1,41 +1,45 @@
 # Progress Checker (v2)
 
-**Last updated:** Thu Nov 5, 2026 (`main` at `8060fc3`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
+**Last updated:** Tue Nov 10, 2026 (`main` at `810557b`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
 Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arva.md](Arva.md), [Ayo.md](Ayo.md)
 
 ---
 
 ## 1. Executive Summary
 
-### 1.1 Snapshot (Thu Nov 5)
+### 1.1 Snapshot (Tue Nov 10, tracker audit against the repo and GitHub)
 - **Code:**
-  - **Weeks 0–1 are complete and merged:** PRs #1–#28, 83/83 tests on `main`.
-  - **Week 2 has not started:** no v1 model results, final score files, T5–T8, F4–F8 or notebooks 04–05.
+  - **Merged:** PRs #1–#50; 156/156 tests on `main`.
+  - **Supervised models are final on v1:** tuned defaults, `FINAL_SETUP` and the `final` command (Y14, Y15, #41).
+  - **Results on `main`:** `loso.csv` (T6, #46); `model_comparison.csv` (T5), the per-scenario and delay tables, F4, F5 and `T8_timing.csv` (#48).
+  - **Unsupervised models are tuned on v1** (A15, A16, #50). The Isolation Forest and autoencoder rows in T5, T6, T8, F4 and F5 still use the card settings until Ayo re-runs `loso` and `report`.
+  - **Not started or not on `main`:** `ablation.csv` (T7, can run now that A16 merged), `unsupervised_extra.csv`, the v1 prototype outputs (`precision_at_20.csv`, F8), SHAP on v1 (F6), FP/FN, notebook 05 (case studies, F7), F2.
 - **Data:**
-  - **Feature table v1** is built on Supriye's laptop: 330,268 user-days, 73 inputs (76 since Nov 6).
-  - **The data drop** is not on the shared drive yet.
+  - **Feature table v1 is frozen:** 330,268 user-days, 76 inputs, tag `m2-features-v1` (Nov 8).
+  - **The data drop** is delivered; both teammates load v1.
+  - **Bug-fix window** closed Tue Nov 10 12:00 with no feature bug, so there is no `features_v1_1.parquet`.
 - **People:**
-  - **Reviews:** none of the 28 merged PRs has a review.
-  - **Ayo** has no commits yet.
-  - **Literature:** `paper/lit_notes/` is empty.
-- **Decisions:** 5 PROVISIONAL values (Supriye), the AE architecture and alert levels (Arva), and the imbalance set-up and LOSO justification (Ayo) are open.
-- **Milestones:** M0, split dates and M1 are past due. M2 (Sun Nov 8) is close: only the decisions, the data drop and teammate confirmations remain.
+  - **Reviews:** #39–#48 each had an approving review before merge (branch protection since Nov 7). None of #1–#28 has its post-merge review (§3.7), and #29–#38 merged without one.
+  - **Literature:** `paper/lit_notes/` is empty. No notes branch is on GitHub.
+- **Decisions:** Supriye's 5 are final (Nov 6). Ayo's imbalance set-up is recorded in #41. Arva's AE architecture, alert levels and OCSVM (DEC-A) are open, and the course rules (S3-rest) are not confirmed.
+- **Milestones:** M0, M2 and "Tuned models" are done (Y15 #41, A16 #50). M1 lacks the teammates' v0 confirmation. M3 is due Wed Nov 11.
 
 ### 1.2 Next three actions each
 | Person | 1 | 2 | 3 |
 |---|---|---|---|
-| **Supriye** | Decide the 5 PROVISIONAL values (S8) | Upload `ueba_data_v1.zip` (Sat) | Branch protection + Overleaf/Zotero |
-| **Arva** | Read `models_unsupervised`/`risk_scoring`/`pipeline` | AE architecture + alert levels (DEC-A) | Reviews + fix `coverage.md` |
-| **Ayo** | Clone, install, run tests (Y1) | Read `evaluate`/`models_supervised`/`explain` | Reviews + Y3 hand-check |
+| **Supriye** | III. Dataset [H] (due Tue Nov 10) | Run the ablation (T7, due Wed); A16 merged in #50 | Overleaf + Zotero, course rules (S2-rest, S3-rest) |
+| **Arva** | Commit `unsupervised_extra.csv` (A17) | DEC-A decisions and reasons, incl. the A16 choice | The v1 prototype outputs (A18) |
+| **Ayo** | Re-run `final`, LOSO and `python -m src.evaluate report` (A16 merged in #50) | SHAP on v1 (Y18, Fri) | Notebook 04 observations [H]; reviews (§3.7) |
 
 ### 1.3 Counts
 | Area | Done | Open |
 |---|---:|---:|
-| Supriye tasks (S1–S35, LIT) | 13 lines | Decisions, paper, finish |
-| Arva tasks (A1–A26, LIT) | 10 lines | A15–A26, decisions, LIT |
-| Ayo tasks (Y1–Y25, LIT) | 11 lines | Y14–Y25, decisions, LIT |
-| Post-merge reviews | 0 / 27 | 27 |
-| Milestones | 1 / 15 | 14 |
+| Supriye lines (§3.4) | 20 | 27: setup leftovers, hand-checks, ablation run, literature, paper, finish |
+| Arva lines (§3.5) | 11 | 25: A15–A26 (code parts of A15–A18 merged), decisions, LIT |
+| Ayo lines (§3.6) | 13 | 27: Y16–Y25 (Y16, Y17 outputs merged), decisions, LIT |
+| Hand-offs (§3.3) | 6 | 10 |
+| Post-merge reviews (§3.7) | 0 / 27 | 27 |
+| Milestones (§3.1) | 5 / 15 | 10 |
 
 ---
 
@@ -55,9 +59,9 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 
 ### 3.1 Milestones
 - [ ] **Kickoff** (Thu Oct 29): rules agreed. *Status unknown; the rules are in TEAM_PLAN 2.5*
-- [ ] **M0 Setup complete** (Sat Oct 31)
+- [x] **M0 Setup complete** (Sat Oct 31) *(tag `m0-setup` pushed Nov 10, on #41's commit `5bbcf77`)*
   - [x] **Repo cloned:** Supriye, Arva (PRs #9, #10)
-  - [ ] **Repo cloned + installed:** Ayo (Y1)
+  - [x] **Repo cloned + installed:** Ayo (Y1) *(his PRs #41, #46 and #48 report the full test suite and the v1 runs on his laptop)*
   - [x] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20) *(confirmed by Supriye Nov 8)*
 - [x] **`evaluate.py` ready** (Sun Nov 1): merged Nov 3 (#3 via #7)
 - [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request*
@@ -72,7 +76,9 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Decisions final** and v1 rebuilt if needed (S8, S20b) *Decided Nov 6 (#36); values unchanged, rebuild ran clean; reasons written*
   - [x] **Data drop uploaded**; both teammates load v1 *(confirmed by Supriye Nov 8)*
   - [x] **Tag** `m2-features-v1` *(Nov 8, on `main` at `2710789`; feature code unchanged since the drop's commit `e5dc881`; 142 tests pass; the real v1 matches the 76 frozen inputs)* **(Claude)**
-- [ ] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
+- [x] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
+  - [x] **Y15** merged (#41): tuned `RF_DEFAULTS` / `XGB_DEFAULTS`, `FINAL_SETUP`, `final`
+  - [x] **A16** merged (#50): tuned Isolation Forest and autoencoder defaults, `final` (#33)
 - [ ] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all
 - [ ] **Analysis done** (Sat Nov 14): T5–T8, F4–F8, FP/FN, cases; walkthrough held
 - [ ] **M4 All sections drafted** (Mon Nov 16)
@@ -102,13 +108,13 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [ ] | Fri Nov 6 | Final decision values (#36, #37 + competitor category) announced in chat | Supriye → all |
 | [x] | Sat Nov 7 | **The one data drop** `ueba_data_v1.zip` (~360 MB, checksums) | Supriye → Arva, Ayo |
 | [ ] | Sun Nov 8 | v1 frozen + feature dictionary *(tag `m2-features-v1` pushed; announce the freeze in chat)* | Supriye → Arva, Ayo |
-| [ ] | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* | Supriye → Arva, Ayo |
-| [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(PR from `arva/A16-tuned-defaults` open Nov 10; tick when merged and announced)* | Arva → all (Git) |
-| [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` | Ayo → all (Git) |
-| [ ] | Wed Nov 11 | `unsupervised_extra.csv` | Arva → Ayo (Git) |
-| [ ] | Wed Nov 11 | `loso.csv` (T6) | Ayo → all (Git) |
-| [ ] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(time measured Nov 5, PR open)* | Supriye → Ayo (Git) |
-| [ ] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` | Ayo → all (Git) |
+| — | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* *(not needed: no feature bug was reported, so `features_v1.parquet` stays the final table and no second data drop happens)* | Supriye → Arva, Ayo |
+| [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(`final` in #33, tuned defaults in #50 on Nov 10; tick when announced)* | Arva → all (Git) |
+| [x] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` *(#41, Nov 8)* | Ayo → all (Git) |
+| [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV is not on `main`)* | Arva → Ayo (Git) |
+| [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)* | Ayo → all (Git) |
+| [ ] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` can run now that A16 merged, #50)* | Supriye → Ayo (Git) |
+| [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)* | Ayo → all (Git) |
 | [ ] | Fri Nov 13 | Related Work paragraphs | Arva, Ayo → Supriye (Overleaf) |
 | [ ] | Sun Nov 15 | IV-C, IV-D, V, VI-B | Arva, Ayo → Supriye (Overleaf) |
 | [ ] | Mon Nov 16 | VI-A, VI-C, VIII, README run section | Arva, Ayo → Supriye |
@@ -151,14 +157,15 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **REV-S** read own code [H]; reviews done (§3.7)
 - [ ] **S20-tag** `m0-setup`, `m1-features-v0`, `m2-features-v1`
   - [x] **`m2-features-v1`** tagged and pushed (Nov 8) **(Claude)**
-  - [ ] **`m0-setup`, `m1-features-v0`** once their conditions in §3.1 are met; announce the freeze in chat
+  - [x] **`m0-setup`** tagged and pushed (Nov 10) **(Claude)**
+  - [ ] **`m1-features-v0`** once Arva and Ayo confirm v0 loads (§3.1); announce the freeze in chat
 - [ ] **S20-walk** v1 walkthrough (Mon Nov 9)
-- [ ] **S21** bug-fix window closed (Tue Nov 10 12:00)
+- [x] **S21** bug-fix window closed (Tue Nov 10 12:00) *(checked at 12:01: the repo has never had a GitHub Issue, and PRs #46–#48 report no feature bug; feature code unchanged since the `m2-features-v1` tag; 145 tests pass; no `features_v1_1.parquet`)* **(Claude)**
 - [ ] **S23a** III. Dataset [H]
 - [ ] **S22** `src/ablation.py` + tests → `ablation.csv` (T7) + `data_processing_time.csv`
   - [x] **Code:** `feature_group()` (all v1 inputs → 7 groups; 76 since Nov 6), `feature_sets()` (a, b, c + 7 × d = 10 sets), `run_ablation()` (XGBoost + Isolation Forest retrained with their module defaults, test PR-AUC / ROC-AUC / recall at top 1% and best-F1; each row records the model settings and commit), tests on `supriye/S22-ablation` **(Claude)**
   - [x] **T8 data time:** `data_processing_time.csv` (3-run means): Parquet logs → v1 in ~138 s (labels 0.07 s, web-log pass 26 s, v1 incl. baselines 112 s) + the one-off conversion, an untimed ~10 min estimate (`measured` = False); 24 threads, 31.4 GB RAM on `supriye/S22-ablation` **(Claude)**
-  - [ ] **Run** `python -m src.ablation` once A16 and Y15 (tuned defaults) are merged → `ablation.csv`
+  - [ ] **Run** `python -m src.ablation` once A16 and Y15 (tuned defaults) are merged → `ablation.csv` *(Y15 merged Nov 8, #41; A16 merged Nov 10, #50: ready to run)*
 - [ ] **S22-H** interpret the ablation [H]
 - [ ] **S24** LANL features *(stretch, only if agreed)*
 - [ ] **S-LIT1** L1, L2 [H]
@@ -197,19 +204,24 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **DEC-A** AE architecture + grids [H]
 - [ ] **DEC-A** alert levels [H]
 - [ ] **DEC-A** keep/drop OCSVM [H]
-- [ ] **COV-A** `coverage.md` fixes (7 web features, timing claim, T2/T3)
+- [x] **COV-A** `coverage.md` fixes (7 web features, timing claim, T2/T3) (#30)
 - [ ] **A-LIT1** IF paper + Chandola [H]
 - [ ] **A-LIT2** L4 [H]
 - [ ] **A-LIT3** L5 [H]
 - [ ] **A-LIT4** L10a (+ L10b) [H]
-- [x] **A15** log-reset fix; v1 grids; `_contam` runs; T4 (v1) *(code in #33; v1 run Nov 10 on `arva/A16-tuned-defaults`: 18 IF + 16 AE grid runs, the card reference, the `_contam` and OCSVM runs in the tuning log next to the v0 rows; T4 shows the v1 best)* **(Claude)**
+- [x] **A15** log-reset fix; v1 grids; `_contam` runs; T4 (v1) *(code in #33; v1 run Nov 10 in #50: 18 IF + 16 AE grid runs, the card reference, the `_contam` and OCSVM runs in the tuning log next to the v0 rows; T4 shows the v1 best)* **(Claude)**
 - [ ] **A16** tuned defaults + `final` command; `evaluate_file()` on all files
   - [x] **`final` command** + its test (#33) **(Claude)**
-  - [x] **Tuned defaults** committed on `arva/A16-tuned-defaults` (best v1 run by val PR-AUC: IF 100 trees / 256 samples / all features; AE 128-64-16, no dropout, lr 1e-3; the `card` dicts keep the card values for T4); notebook 03a runs `final` and `evaluate_file()` on all 5 files **(Claude)**
-  - [ ] **Ayo confirms** `final` + `evaluate_file()` run on his laptop; Arva reads the change and writes the DEC-A reasons [H]
+  - [x] **Tuned defaults** merged (#50) (best v1 run by val PR-AUC: IF 100 trees / 256 samples / all features; AE 128-64-16, no dropout, lr 1e-3; the `card` dicts keep the card values for T4); notebook 03a runs `final` and `evaluate_file()` on all 5 files **(Claude)**
+  - [x] **Ayo confirms** `final` + `evaluate_file()` run on his laptop (#50 review, Nov 10: 5 files in 82 s on the M1)
+  - [ ] **Arva** reads the change and writes the DEC-A reasons [H]
 - [ ] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
+  - [x] **Code:** `results_extra()`, `timing()`, `alerts_per_day()` + tests (#34; restored by #43 after a merge dropped them)
+  - [ ] **`unsupervised_extra.csv`** on `main` *(Ayo built it locally for T8 in #48; it is not committed)*
 - [ ] **A17-H** interpret it [H]
 - [ ] **A18** pipeline on v1, `precision_at_20.csv`, F8
+  - [x] **Code:** `precision_at_k()`, `f8_user()`, `plot_risk_timeline()` (#35)
+  - [ ] **Outputs** from the v1 run: `precision_at_20.csv`, `top_risky_users_autoencoder.csv`, `F8_risk_timeline.*`
 - [ ] **A19** notebook 05: 4 cases × parts 1–4, F7
 - [ ] **A19-H** narratives + verdicts [H]
 - [ ] **A14-rest** F2 [H]; IV-C/IV-D notes [H]; `arva/notes` merged
@@ -237,23 +249,29 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 
 **Open:**
 - [ ] **Y1** clone, install, tests, `ayo/notes` *(overdue)*
+  - [x] **Clone, install, tests** on his laptop (#41 reports the full suite passing)
+  - [ ] **`ayo/notes`** branch on GitHub
 - [ ] **Y2** kickoff *(missed; replaced by the Fri Nov 6 check)*
 - [ ] **REV-Y** read own code [H]
 - [ ] **REV-Y** Y3 10-row hand-check [H]
 - [ ] **REV-Y** A3/M1/Y6 confirmations
 - [ ] **REV-Y** reviews done (§3.7)
-- [ ] **DEC-Y** imbalance set-up [H]
+- [ ] **DEC-Y** imbalance set-up [H] *(#41 records it as decided by Ayo on Nov 8: RF with SMOTE, XGBoost with class weights; Ayo ticks this)*
 - [ ] **DEC-Y** LOSO justification [H]
 - [ ] **Y-LIT1** Saito & Rehmsmeier [H]
 - [ ] **Y-LIT2** L6 [H]
 - [ ] **Y-LIT3** L7 [H]
 - [ ] **Y-LIT4** L8 + L11a (+ L11b) [H]
 - [ ] **Y13-rest** IV-C/V notes [H]; `ayo/notes` merged
-- [ ] **Y14** log fixes; v1 imbalance; v1 grids; T4 (v1)
-- [ ] **Y15** tuned defaults + `FINAL_SETUP` + `final`; `timing_supervised.csv`; `evaluate_file()` on all 7
+- [x] **Y14** log fixes; v1 imbalance; v1 grids; T4 (v1) (#41: 42 v1 runs in the tuning log, `imbalance.csv` keeps v0 and v1, T4 shows the v1 choice and set-up)
+- [x] **Y15** tuned defaults + `FINAL_SETUP` + `final`; `timing_supervised.csv`; `evaluate_file()` on all 7 (#41; `evaluate_file()` on all 7 runs in notebook 04, #46)
 - [ ] **Y16** notebook 04 + `loso.csv` (T6) → M3
+  - [x] **Notebook 04**, `loso.csv` (T6), `loso_pr_auc.csv` and the `loso` command merged (#46)
+  - [ ] **Re-run** the Isolation Forest and autoencoder rows after A16, then M3 *(the card needs every score file final)*
 - [ ] **Y16-H** observations [H]
 - [ ] **Y17** T5, per-scenario, delay, F4, F5, T8
+  - [x] **Tables and figures:** `model_comparison.csv` (T5), `model_per_scenario.csv`, `detection_delay.csv`, `T8_timing.csv`, F4, F5, `python -m src.evaluate report` + tests (#48)
+  - [ ] **Regenerate** with `report` after A16 (IF and AE rows use the card settings); walkthrough material (card step 8)
 - [ ] **Y18** F6, `feature_importance.csv`, per-scenario importance
 - [ ] **Y18-H** interpretation [H]
 - [ ] **Y19** Related Work paragraphs [H]
@@ -303,18 +321,18 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **`docs/coverage.md` first version** (pushed straight to `main` without a PR): read by a teammate.
 
 ### 3.8 Branches and PRs still to come (tick when merged)
-- [ ] **`supriye/S8-decisions`** (Arva)
-- [ ] **`arva/docs-coverage-fixes`** (any)
-- [ ] **`supriye/S21-v1-fixes`** *(only if needed)* (Arva)
-- [ ] **`arva/A15-final-models`** (Supriye)
-- [ ] **`ayo/Y14-final-models`** (Supriye)
-- [ ] **`supriye/S22-ablation`** (Ayo)
-- [ ] **`arva/A17-results`** (Ayo)
-- [ ] **`ayo/Y16-loso-results`** (Arva)
+- [x] **`supriye/S8-decisions`** (Arva) (#36)
+- [x] **`arva/docs-coverage-fixes`** (any) (#30)
+- [x] **`supriye/S21-v1-fixes`** *(only if needed)* (Arva) *(not needed: no feature bug by Tue Nov 10 12:00; S21 closed on `supriye/S21-close-tracker-audit`)*
+- [x] **`arva/A15-final-models`** (Supriye) (#33; the v1 runs and tuned defaults still need a new branch)
+- [x] **`ayo/Y14-final-models`** (Supriye) (#41)
+- [x] **`supriye/S22-ablation`** (Ayo) (#32: code and the data time; the `ablation.csv` run needs a new branch after A16)
+- [x] **`arva/A17-results`** (Ayo) (#34, restored by #43; the CSV is still to come)
+- [x] **`ayo/Y16-loso-results`** (Arva) (#46)
 - [ ] **`supriye/S24-lanl`** *(stretch)* (Arva)
-- [ ] **`ayo/Y17-comparison`** (Arva)
+- [x] **`ayo/Y17-comparison`** (Arva) (#48)
 - [ ] **`supriye/notes`, `arva/notes`, `ayo/notes`** (any)
-- [ ] **`arva/A18-prototype-cases`** (Ayo)
+- [x] **`arva/A18-prototype-cases`** (Ayo) (#35: A18 code only; the outputs and A19 are still to come)
 - [ ] **`ayo/Y18-shap-fpfn`** (Arva)
 - [ ] **`arva/A21-dashboard`** *(optional)* (Supriye)
 - [ ] **`arva/A23-readme-run`** (Supriye)
@@ -324,7 +342,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **`supriye/S33-final`** (Ayo)
 
 ### 3.9 Milestone tags (Supriye)
-- [ ] **`m0-setup`:** after M0
+- [x] **`m0-setup`:** after M0 *(pushed Nov 10, `5bbcf77`: the first commit that shows Ayo's installed environment and the v1 data in use)*
 - [ ] **`m1-features-v0`:** after M1
 - [x] **`m2-features-v1`:** Sun Nov 8 *(pushed Nov 8, `2710789`)*
 - [ ] **`m3-all-scores`:** after A16, Y15, Y16, S22 merge
@@ -389,21 +407,21 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **Study insider threats / compromised accounts / UEBA:** §I + §II with checked citations
 - [ ] **≥ 5 recent papers:** ≥ 5 `paper/lit_notes/*.md` + T1 (venue, year)
 - [ ] **Dataset chosen:** §III; checksums
-- [ ] **Preprocessing:** `cleaning_report.csv`, `split_check.csv`; split final
+- [x] **Preprocessing:** `cleaning_report.csv`, `split_check.csv`; split final (Nov 6, #36)
 - [x] **Login patterns:** `f_logon_*` family in v1 + feature dictionary
 - [ ] **Authentication failures:** LANL features **or** the gap stated in §III + §VII
 - [x] **File / resource access:** `f_file_*`, `f_usb_*` in v1
 - [ ] **Application usage:** 7 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
-- [ ] **Activity times:** after-hours/weekend/duration features in v1; window final with its reason
+- [x] **Activity times:** after-hours/weekend/duration features in v1; window final with its reason (07:00–19:00, #36/#37)
 - [x] **Deviation from baseline:** `z_user_*`, `z_peer_*`, `new_*`, F3
 - [ ] **Normal-behavior baseline in the paper:** §IV-B
-- [ ] **≥ 2 models compared:** 7 score files + T5
+- [x] **≥ 2 models compared:** 7 score files + T5 (`model_comparison.csv`, #48) *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)*
 - [ ] **Models justified:** §IV-C + T4
 - [ ] **Risk score:** pipeline output, alert levels final, F8
-- [ ] **All listed metrics:** T5, F4, F5
-- [ ] **Detection time:** T8
+- [x] **All listed metrics:** T5, F4, F5 (#48) *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)*
+- [x] **Detection time:** T8 (`T8_timing.csv`, #48)
 - [ ] **Precision/recall vs. accuracy:** §V paragraph
-- [ ] **Unseen behavior:** T6
+- [x] **Unseen behavior:** T6 (`loso.csv`, #46) *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)*
 - [ ] **FP / FN analysis:** §VI-C + `fp_fn_causes.csv`
 - [ ] **Feature importance:** F6, `feature_importance.csv`, T7
 - [ ] **Anomaly explanations:** notebook 05 + §VI-B + F7
@@ -413,7 +431,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **Research question answered:** §VIII with numbers
 
 ### 5.3 Health checks (check at every stand-up)
-- **`main` is green:** `python -m pytest tests` passes (83 on Nov 5; the count only grows).
+- **`main` is green:** `python -m pytest tests` passes (83 on Nov 5, 153 on Nov 10; the count only grows).
 - **No overdue hand-off is undiscussed:** every late item in §3.3 has a new date.
 - **No [H] box was ticked by an agent.**
 - **Data moved at most once** (twice if S21 or S24 needed it); no score file or model was sent around.
