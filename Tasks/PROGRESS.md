@@ -12,7 +12,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - **Merged:** PRs #1–#50; 156/156 tests on `main`.
   - **Supervised models are final on v1:** tuned defaults, `FINAL_SETUP` and the `final` command (Y14, Y15, #41).
   - **Results on `main`:** `loso.csv` (T6, #46); `model_comparison.csv` (T5), the per-scenario and delay tables, F4, F5 and `T8_timing.csv` (#48).
-  - **Unsupervised models are tuned on v1** (A15, A16, #50). The Isolation Forest and autoencoder rows in T5, T6, T8, F4 and F5 still use the card settings until Ayo re-runs `loso` and `report`.
+  - **Unsupervised models are tuned on v1** (A15, A16, #50). T5, T6, T8, F4 and F5 were regenerated with the tuned defaults on `ayo/Y17-rerun-tuned` (Nov 10).
   - **Not started or not on `main`:** `ablation.csv` (T7, can run now that A16 merged), `unsupervised_extra.csv`, the v1 prototype outputs (`precision_at_20.csv`, F8), SHAP on v1 (F6), FP/FN, notebook 05 (case studies, F7), F2.
 - **Data:**
   - **Feature table v1 is frozen:** 330,268 user-days, 76 inputs, tag `m2-features-v1` (Nov 8).
@@ -29,7 +29,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 |---|---|---|---|
 | **Supriye** | III. Dataset [H] (due Tue Nov 10) | Run the ablation (T7, due Wed); A16 merged in #50 | Overleaf + Zotero, course rules (S2-rest, S3-rest) |
 | **Arva** | Commit `unsupervised_extra.csv` (A17) | DEC-A decisions and reasons, incl. the A16 choice | The v1 prototype outputs (A18) |
-| **Ayo** | Re-run `final`, LOSO and `python -m src.evaluate report` (A16 merged in #50) | SHAP on v1 (Y18, Fri) | Notebook 04 observations [H]; reviews (§3.7) |
+| **Ayo** | SHAP on v1 (Y18, Fri) | Notebook 04 observations [H]; Y17 walkthrough material | Reviews (§3.7) |
 
 ### 1.3 Counts
 | Area | Done | Open |
@@ -112,9 +112,9 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(`final` in #33, tuned defaults in #50 on Nov 10; tick when announced)* | Arva → all (Git) |
 | [x] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` *(#41, Nov 8)* | Ayo → all (Git) |
 | [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV is not on `main`)* | Arva → Ayo (Git) |
-| [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)* | Ayo → all (Git) |
+| [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
 | [ ] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` can run now that A16 merged, #50)* | Supriye → Ayo (Git) |
-| [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)* | Ayo → all (Git) |
+| [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
 | [ ] | Fri Nov 13 | Related Work paragraphs | Arva, Ayo → Supriye (Overleaf) |
 | [ ] | Sun Nov 15 | IV-C, IV-D, V, VI-B | Arva, Ayo → Supriye (Overleaf) |
 | [ ] | Mon Nov 16 | VI-A, VI-C, VIII, README run section | Arva, Ayo → Supriye |
@@ -265,13 +265,14 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **Y13-rest** IV-C/V notes [H]; `ayo/notes` merged
 - [x] **Y14** log fixes; v1 imbalance; v1 grids; T4 (v1) (#41: 42 v1 runs in the tuning log, `imbalance.csv` keeps v0 and v1, T4 shows the v1 choice and set-up)
 - [x] **Y15** tuned defaults + `FINAL_SETUP` + `final`; `timing_supervised.csv`; `evaluate_file()` on all 7 (#41; `evaluate_file()` on all 7 runs in notebook 04, #46)
-- [ ] **Y16** notebook 04 + `loso.csv` (T6) → M3
+- [x] **Y16** notebook 04 + `loso.csv` (T6) → M3 **(Claude)**
   - [x] **Notebook 04**, `loso.csv` (T6), `loso_pr_auc.csv` and the `loso` command merged (#46)
-  - [ ] **Re-run** the Isolation Forest and autoencoder rows after A16, then M3 *(the card needs every score file final)*
+  - [x] **Re-run** with the tuned Isolation Forest and autoencoder (#50) on `ayo/Y17-rerun-tuned`: supervised LOSO rows reproduce exactly; notebook 04 re-run and its reading's numbers updated **(Claude)**
 - [ ] **Y16-H** observations [H]
 - [ ] **Y17** T5, per-scenario, delay, F4, F5, T8
   - [x] **Tables and figures:** `model_comparison.csv` (T5), `model_per_scenario.csv`, `detection_delay.csv`, `T8_timing.csv`, F4, F5, `python -m src.evaluate report` + tests (#48)
-  - [ ] **Regenerate** with `report` after A16 (IF and AE rows use the card settings); walkthrough material (card step 8)
+  - [x] **Regenerate** with `report` after A16 on `ayo/Y17-rerun-tuned`: only the IF, AE and `_contam` rows change **(Claude)**
+  - [ ] **Walkthrough material** (card step 8)
 - [ ] **Y18** F6, `feature_importance.csv`, per-scenario importance
 - [ ] **Y18-H** interpretation [H]
 - [ ] **Y19** Related Work paragraphs [H]
@@ -415,13 +416,13 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **Activity times:** after-hours/weekend/duration features in v1; window final with its reason (07:00–19:00, #36/#37)
 - [x] **Deviation from baseline:** `z_user_*`, `z_peer_*`, `new_*`, F3
 - [ ] **Normal-behavior baseline in the paper:** §IV-B
-- [x] **≥ 2 models compared:** 7 score files + T5 (`model_comparison.csv`, #48) *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)*
+- [x] **≥ 2 models compared:** 7 score files + T5 (`model_comparison.csv`, #48) *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)*
 - [ ] **Models justified:** §IV-C + T4
 - [ ] **Risk score:** pipeline output, alert levels final, F8
-- [x] **All listed metrics:** T5, F4, F5 (#48) *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)*
+- [x] **All listed metrics:** T5, F4, F5 (#48) *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)*
 - [x] **Detection time:** T8 (`T8_timing.csv`, #48)
 - [ ] **Precision/recall vs. accuracy:** §V paragraph
-- [x] **Unseen behavior:** T6 (`loso.csv`, #46) *(the Isolation Forest and autoencoder rows use the card settings until A16; regenerate after it)*
+- [x] **Unseen behavior:** T6 (`loso.csv`, #46) *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)*
 - [ ] **FP / FN analysis:** §VI-C + `fp_fn_causes.csv`
 - [ ] **Feature importance:** F6, `feature_importance.csv`, T7
 - [ ] **Anomaly explanations:** notebook 05 + §VI-B + F7
