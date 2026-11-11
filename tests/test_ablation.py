@@ -78,6 +78,31 @@ def test_run_ablation_on_synthetic(tmp_path, monkeypatch):
     assert len(pd.read_csv(tmp_path / ablation.TABLE)) == 18
 
 
+def test_committed_ablation_table_is_the_tuned_v1_run():
+    """T7 on main (S22 step 4): 10 feature sets x 2 models on the 76 v1 inputs, run with the
+    current tuned module defaults (A16, Y15). Fails if the table is from an untuned or older run."""
+    from src.config import TABLES_DIR
+    from src.models_supervised import DEFAULTS
+    from src.models_unsupervised import DETECTORS
+
+    table = pd.read_csv(TABLES_DIR / ablation.TABLE)
+    sets = ablation.feature_sets(V1_INPUTS)
+    assert len(table) == 20 and set(table["model"]) == set(ablation.MODELS)
+    assert sorted(table.groupby("model")["feature_set"].apply(sorted).iloc[0]) == sorted(sets)
+    assert (table.groupby("model")["feature_set"].nunique() == len(sets)).all()
+    assert (table["n_features"] == table["feature_set"].map(lambda s: len(sets[s]))).all()
+    assert (table.loc[table["feature_set"] == "c_full", "delta_pr_auc_vs_full"] == 0).all()
+    for col in ("test_pr_auc", "test_roc_auc", "recall_top_1pct", "recall_best_f1"):
+        assert table[col].between(0, 1).all(), col
+    defaults = {"xgboost": DEFAULTS["xgboost"], "iforest": DETECTORS["iforest"].defaults}
+    for row in table.itertuples():
+        used = json.loads(row.params)
+        for key, value in defaults[row.model].items():
+            if key in used:
+                assert used[key] == value, (row.model, row.feature_set, key)
+    assert table["commit"].nunique() == 1
+
+
 def test_unknown_model_is_refused():
     with pytest.raises(ValueError, match="unknown model"):
         ablation.run_ablation(make_synthetic_features(), models=("lstm",), save=False)
