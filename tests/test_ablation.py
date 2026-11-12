@@ -97,9 +97,12 @@ def test_committed_ablation_table_is_the_tuned_v1_run():
     defaults = {"xgboost": DEFAULTS["xgboost"], "iforest": DETECTORS["iforest"].defaults}
     for row in table.itertuples():
         used = json.loads(row.params)
-        for key, value in defaults[row.model].items():
-            if key in used:
-                assert used[key] == value, (row.model, row.feature_set, key)
+        # every tuned setting the table records (ablation.PARAM_KEYS) must be there and match
+        expected = {k: v for k, v in defaults[row.model].items() if k in ablation.PARAM_KEYS}
+        assert expected, row.model
+        for key, value in expected.items():
+            assert key in used, (row.model, row.feature_set, key)
+            assert used[key] == value, (row.model, row.feature_set, key)
     assert table["commit"].nunique() == 1
 
 
