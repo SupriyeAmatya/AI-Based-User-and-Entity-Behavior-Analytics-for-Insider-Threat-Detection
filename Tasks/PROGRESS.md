@@ -181,6 +181,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **S31** editing pass [H]
 - [ ] **S32** circulate → M5
 - [ ] **S33** read-through + README results
+  - [x] **README Results** table from `model_comparison.csv` (T5, all 7 score files × 2 operating points), written by `python scripts/readme_results.py`; `tests/test_readme_results.py` fails if README and T5 drift apart, so re-run the script after any `python -m src.evaluate report` on `supriye/S33-readme-results` **(Claude)**
+  - [ ] **Final read-through** (Thu Nov 19), then re-run the script on the final T5
 - [ ] **S34** fresh-clone test, tag, archive
 - [ ] **S35** submit
 
