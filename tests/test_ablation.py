@@ -74,13 +74,29 @@ def test_run_ablation_on_synthetic(tmp_path, monkeypatch):
     assert (table.loc[table["feature_set"] == "c_full", "delta_pr_auc_vs_full"] == 0).all()
     params = table.set_index("model")["params"].map(json.loads)
     assert "scale_pos_weight" in params["xgboost"].iloc[0] and "n_estimators" in params["iforest"].iloc[0]
+    # XGBoost: every set uses the full set's early-stopped tree count, with no early stopping
+    trees = {p["n_estimators"] for p in params["xgboost"]}
+    assert trees == {ablation.xgboost_trees(df)}
+    assert not any("best_iteration" in p for p in params["xgboost"])
     assert table["commit"].nunique() == 1
     assert len(pd.read_csv(tmp_path / ablation.TABLE)) == 18
 
 
+def test_fixed_trees_turn_off_early_stopping():
+    from src.models_supervised import DEFAULTS
+    assert DEFAULTS["xgboost"]["early_stopping_rounds"]          # the module default stops early
+    df = make_synthetic_features()
+    n = ablation.xgboost_trees(df)
+    assert ablation.fixed_trees(n) == {"n_estimators": n, "early_stopping_rounds": None}
+    _, info = ablation._scores(df, "xgboost", feature_columns(df), ablation.fixed_trees(n))
+    booster = info["pipeline"].named_steps["model"].get_booster()
+    assert booster.num_boosted_rounds() == n and info["best_iteration"] is None
+
+
 def test_committed_ablation_table_is_the_tuned_v1_run():
     """T7 on main (S22 step 4): 10 feature sets x 2 models on the 76 v1 inputs, run with the
-    current tuned module defaults (A16, Y15). Fails if the table is from an untuned or older run."""
+    current tuned module defaults (A16, Y15). Fails if the table is from an untuned or older run.
+    XGBoost: one fixed tree count for every set (no early stopping), the other settings tuned."""
     from src.config import TABLES_DIR
     from src.models_supervised import DEFAULTS
     from src.models_unsupervised import DETECTORS
@@ -99,10 +115,16 @@ def test_committed_ablation_table_is_the_tuned_v1_run():
         used = json.loads(row.params)
         # every tuned setting the table records (ablation.PARAM_KEYS) must be there and match
         expected = {k: v for k, v in defaults[row.model].items() if k in ablation.PARAM_KEYS}
+        if row.model == "xgboost":
+            expected.pop("n_estimators")                       # the fixed tree count, checked below
+            assert "best_iteration" not in used, row.feature_set
         assert expected, row.model
         for key, value in expected.items():
             assert key in used, (row.model, row.feature_set, key)
             assert used[key] == value, (row.model, row.feature_set, key)
+    xgb = table.loc[table["model"] == "xgboost", "params"].map(json.loads)
+    trees = {p["n_estimators"] for p in xgb}
+    assert len(trees) == 1 and 0 < trees.pop() < DEFAULTS["xgboost"]["n_estimators"]
     assert table["commit"].nunique() == 1
 
 
