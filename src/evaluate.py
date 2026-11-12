@@ -15,6 +15,10 @@ All reported numbers are on the test split (TEAM_PLAN 10.2).
 
 Y17 tables and figures from the score files in results/scores/:
     python -m src.evaluate report   # T5, model_per_scenario, detection_delay, F4, F5, T8
+
+Y20 false-positive / false-negative analysis of the best supervised and best unsupervised model
+(by test PR-AUC in T5) at the best-F1 threshold:
+    python -m src.evaluate fpfn     # fp_breakdown.csv, fp_top10.csv, fn_by_insider.csv
 """
 from pathlib import Path
 
@@ -436,6 +440,136 @@ def report(models=ALL_MODELS, main=MAIN_MODELS):
     return t5, t8
 
 
+# ---------------------------------------------------------------- Y20: FP/FN analysis
+FP_BREAKDOWN_TABLE = "fp_breakdown.csv"
+FP_TOP_TABLE = "fp_top10.csv"
+FN_TABLE = "fn_by_insider.csv"
+FP_DIMENSIONS = ("role", "department", "weekday", "user")
+FPFN_FAMILIES = {"supervised": ["random_forest", "xgboost"],
+                 "unsupervised": ["iforest", "autoencoder", "ocsvm"]}
+
+
+def fp_fn_rows(scores: pd.DataFrame, features: pd.DataFrame = None, threshold=None,
+               threshold_type="best_f1", k: float = 0.01) -> pd.DataFrame:
+    """Every test user-day of one score file with its `outcome` (TP, FP, FN or TN) at a threshold
+    (Y20 step 2), its `weekday`, and, if `features` is given, the feature-table columns for that
+    user-day (role, department, z_user_* ...). The score file's split, label and scenario win over
+    the feature table's. threshold: a number, or None to use `threshold_type` ("best_f1" from val,
+    "top_1pct" on test) as in evaluate_df. The threshold used is in `.attrs["threshold"]`."""
+    scores = scores.copy()
+    scores["date"] = pd.to_datetime(scores["date"])
+    if threshold is None:
+        if threshold_type == "best_f1":
+            threshold = threshold_best_f1(scores[scores["split"] == "val"])
+        elif threshold_type == "top_1pct":
+            threshold = threshold_top_k(scores[scores["split"] == "test"], k)
+        else:
+            raise ValueError(f"threshold_type must be one of {OPERATING_POINTS}")
+    rows = scores[scores["split"] == "test"].reset_index(drop=True)
+    flagged = rows["score"].to_numpy() >= threshold
+    malicious = rows["label"].to_numpy() == 1
+    rows["outcome"] = np.select([flagged & malicious, flagged & ~malicious, ~flagged & malicious],
+                                ["TP", "FP", "FN"], "TN")
+    rows["weekday"] = rows["date"].dt.day_name()
+    if features is not None:
+        extra = features.drop(columns=[c for c in features.columns
+                                       if c in rows.columns and c not in ("user", "date")])
+        extra = extra.assign(date=pd.to_datetime(extra["date"]))
+        rows = rows.merge(extra, on=["user", "date"], how="left")
+    rows.attrs["threshold"] = float(threshold)
+    return rows
+
+
+def fp_breakdown(rows: pd.DataFrame, dimensions=FP_DIMENSIONS) -> pd.DataFrame:
+    """Where the false positives fall (Y20 step 3), one block per dimension (role, department,
+    weekday, user). Per value: normal test user-days, FPs among them, the FP rate (FP / normal) and
+    the value's share of all FPs. The user block lists only users with an FP. Largest n_fp first."""
+    normal = rows[rows["label"] == 0]
+    total_fp = int((normal["outcome"] == "FP").sum())
+    parts = []
+    for dim in dimensions:
+        if dim not in normal:
+            continue
+        g = normal.groupby(normal[dim].fillna("(none)"))
+        part = pd.DataFrame({"n_normal": g.size(), "n_fp": g["outcome"].apply(lambda o: int((o == "FP").sum()))})
+        part = part.reset_index().rename(columns={dim: "value"})
+        part.insert(0, "dimension", dim)
+        part["fp_rate"] = part["n_fp"] / part["n_normal"]
+        part["share_of_fp"] = part["n_fp"] / total_fp if total_fp else 0.0
+        if dim == "user":
+            part = part[part["n_fp"] > 0]
+        parts.append(part.sort_values(["n_fp", "value"], ascending=[False, True], kind="mergesort"))
+    columns = ["dimension", "value", "n_normal", "n_fp", "fp_rate", "share_of_fp"]
+    return pd.concat(parts, ignore_index=True)[columns] if parts else pd.DataFrame(columns=columns)
+
+
+def top_deviations(rows: pd.DataFrame, n=10, k=3, prefix="z_user_") -> pd.DataFrame:
+    """The n highest-scoring false positives (Y20 step 3) with each one's k largest deviations
+    from the user's own baseline: the `prefix` columns with the largest |value|, as dev_<i> (name)
+    and dev_<i>_z (value)."""
+    fps = rows[rows["outcome"] == "FP"].sort_values("score", ascending=False, kind="mergesort").head(n)
+    z_cols = [c for c in rows.columns if c.startswith(prefix)]
+    keep = [c for c in ("user", "date", "role", "department", "weekday", "score") if c in fps]
+    out = fps[keep].reset_index(drop=True)
+    out["date"] = pd.to_datetime(out["date"]).dt.strftime("%Y-%m-%d")
+    if z_cols:
+        z = fps[z_cols].fillna(0.0).to_numpy(dtype=float)
+        order = np.argsort(-np.abs(z), axis=1, kind="stable")[:, :k]
+        for i in range(min(k, len(z_cols))):
+            out[f"dev_{i + 1}"] = [z_cols[j] for j in order[:, i]]
+            out[f"dev_{i + 1}_z"] = z[np.arange(len(z)), order[:, i]]
+    return out
+
+
+def fn_breakdown(rows: pd.DataFrame) -> pd.DataFrame:
+    """Missed malicious days per insider account (Y20 step 3), ordered by scenario then user:
+    malicious test days, detected, missed, missed share, first malicious day, first detected day
+    and the missed days (";"-joined)."""
+    mal = rows[rows["label"] == 1].sort_values("date")
+    out = []
+    for (scenario, user), g in mal.groupby(["scenario", "user"], sort=True):
+        hit, miss = g[g["outcome"] == "TP"], g[g["outcome"] == "FN"]
+        out.append({"scenario": int(scenario), "user": user, "n_malicious_days": len(g),
+                    "n_detected": len(hit), "n_missed": len(miss), "missed_share": len(miss) / len(g),
+                    "first_malicious_day": g["date"].min().strftime("%Y-%m-%d"),
+                    "first_detected_day": hit["date"].min().strftime("%Y-%m-%d") if len(hit) else "",
+                    "missed_days": ";".join(miss["date"].dt.strftime("%Y-%m-%d"))})
+    return pd.DataFrame(out)
+
+
+def pick_fpfn_models(t5: pd.DataFrame) -> dict:
+    """Y20 step 1: the best supervised and the best unsupervised main model by test PR-AUC."""
+    pr = t5.drop_duplicates("model").set_index("model")["pr_auc"]
+    return {family: pr[pr.index.isin(models)].idxmax() for family, models in FPFN_FAMILIES.items()}
+
+
+def fpfn_analysis(features_path=None, features: pd.DataFrame = None, t5: pd.DataFrame = None,
+                  threshold_type="best_f1", n=10, k=3, save=True) -> dict:
+    """Y20 steps 1-3 for the models pick_fpfn_models() chooses from T5 (read from
+    results/tables/model_comparison.csv unless given): writes fp_breakdown.csv, fp_top10.csv and
+    fn_by_insider.csv, each with a `model` column."""
+    from src.config import PROCESSED_DIR
+    if t5 is None:
+        t5 = pd.read_csv(TABLES_DIR / T5_TABLE)
+    if features is None:
+        features = pd.read_parquet(features_path or PROCESSED_DIR / "features_v1.parquet")
+    models = pick_fpfn_models(t5)
+    tables = {"fp_breakdown": [], "fp_top": [], "fn": []}
+    for model in models.values():
+        rows = fp_fn_rows(load_scores(SCORES_DIR / f"{model}.parquet"), features,
+                          threshold_type=threshold_type)
+        for key, table in (("fp_breakdown", fp_breakdown(rows)), ("fp_top", top_deviations(rows, n, k)),
+                           ("fn", fn_breakdown(rows))):
+            table.insert(0, "threshold", rows.attrs["threshold"])
+            table.insert(0, "model", model)
+            tables[key].append(table)
+    out = {key: pd.concat(parts, ignore_index=True) for key, parts in tables.items()}
+    for key, name in (("fp_breakdown", FP_BREAKDOWN_TABLE), ("fp_top", FP_TOP_TABLE), ("fn", FN_TABLE)):
+        _save_table(out[key], name, save)
+    out["models"] = models
+    return out
+
+
 # ---------------------------------------------------------------- synthetic scores for testing (Y3 step 1)
 def make_synthetic_scores(n_users=50, n_days=200, seed=RANDOM_STATE) -> pd.DataFrame:
     """~10,000 user-days in TEAM_PLAN 5.2 format with ~0.5% malicious rows.
@@ -467,7 +601,11 @@ def make_synthetic_scores(n_users=50, n_days=200, seed=RANDOM_STATE) -> pd.DataF
 if __name__ == "__main__":
     import sys
 
-    if sys.argv[1:] == ["report"]:
+    if sys.argv[1:2] == ["fpfn"] and len(sys.argv) <= 3:
+        result = fpfn_analysis(*sys.argv[2:3])
+        print("models:", result["models"])
+        print(result["fn"].to_string(index=False))
+    elif sys.argv[1:] == ["report"]:
         t5, t8 = report()
         print(t5.round(4).to_string(index=False))
         print(t8.round(4).to_string(index=False))

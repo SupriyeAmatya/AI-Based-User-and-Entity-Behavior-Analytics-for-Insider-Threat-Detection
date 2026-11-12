@@ -276,7 +276,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **Y18** F6, `feature_importance.csv`, per-scenario importance *(on `ayo/Y18-shap-fpfn`: `python -m src.explain shap` refits XGBoost, RF (tuned, `FINAL_SETUP`) and Isolation Forest (tuned, #50) and explains all 170 test positives + 5,000 negatives; F6 + RF/IF summaries, `feature_importance.csv`, `feature_importance_per_scenario.csv`, `feature_importance_top10_overlap.csv`; `importance_table()`, `top10_overlap()`, `per_scenario_importance()` + tests)* **(Claude)**
 - [ ] **Y18-H** interpretation [H] *(step 5, the comparison with T7, waits for #51's ablation fix)*
 - [ ] **Y19** Related Work paragraphs [H]
-- [ ] **Y20** FP/FN tables
+- [x] **Y20** FP/FN tables *(on `ayo/Y20-fp-fn`: `python -m src.evaluate fpfn` picks XGBoost and the autoencoder by test PR-AUC from T5 and writes `fp_breakdown.csv`, `fp_top10.csv`, `fn_by_insider.csv` at best-F1; `fp_fn_rows()`, `fp_breakdown()`, `top_deviations()`, `fn_breakdown()`, `pick_fpfn_models()` + tests)* **(Claude)**
 - [ ] **Y20-H** causes + fixes (`fp_fn_causes.csv`) [H]
 - [ ] **Y20** walkthrough presented
 - [ ] **Y21** IV-C (supervised), V [H]
