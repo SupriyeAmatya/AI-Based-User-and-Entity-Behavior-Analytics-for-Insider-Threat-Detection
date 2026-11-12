@@ -15,6 +15,10 @@ Works for Random Forest and XGBoost (src/models_supervised.py) and for Arva's Is
     plot_summary(sv, X, name="shap_summary_xgboost") # beeswarm -> results/figures/
     plot_waterfall(sv, X, row=0, name="shap_waterfall_example")
 
+Y18 (F6 and the importance tables) in one command, with the tuned defaults and FINAL_SETUP:
+
+    python -m src.explain shap [features path]   # features_v1 by default
+
 Sign convention: a positive SHAP value always pushes a user-day towards "malicious / anomalous".
 For RF the values are for class 1 (probability), for XGBoost they are in log-odds, and for
 Isolation Forest they explain the anomaly score (-decision_function), so the sign of shap's raw
@@ -29,9 +33,14 @@ import pandas as pd
 import shap
 from sklearn.ensemble import IsolationForest
 
-from src.config import FIGURES_DIR, RANDOM_STATE
+from src.config import FIGURES_DIR, PROCESSED_DIR, RANDOM_STATE, TABLES_DIR
 
 N_NEGATIVES = 5000
+SHAP_MODELS = ("xgboost", "random_forest", "iforest")
+F6_MODEL = "xgboost"                                  # the paper figure; the others are backups
+IMPORTANCE_TABLE = "feature_importance.csv"
+PER_SCENARIO_TABLE = "feature_importance_per_scenario.csv"
+OVERLAP_TABLE = "feature_importance_top10_overlap.csv"
 
 
 def explain_sample(df: pd.DataFrame, split="test", n_negatives=N_NEGATIVES, seed=RANDOM_STATE):
@@ -117,9 +126,122 @@ def plot_waterfall(shap_values: shap.Explanation, X, row, name="shap_waterfall",
     return fig
 
 
+# ---------------------------------------------------------------- Y18: importance tables
+def _group(feature):
+    from src.ablation import feature_group
+    try:
+        return feature_group(feature)
+    except ValueError:
+        return None
+
+
+def _ranked(values: np.ndarray, names) -> pd.DataFrame:
+    """Mean |SHAP| per feature over the rows of `values`, largest first; ties keep column order."""
+    importance = np.abs(np.asarray(values, dtype=float)).mean(axis=0)
+    table = pd.DataFrame({"feature": list(names), "mean_abs_shap": importance})
+    table = table.sort_values("mean_abs_shap", ascending=False, kind="mergesort")
+    table.insert(0, "rank", np.arange(1, len(table) + 1))
+    table.insert(2, "group", table["feature"].map(_group))
+    return table.reset_index(drop=True)
+
+
+def importance_table(shap_values: dict) -> pd.DataFrame:
+    """Y18 step 3: mean |SHAP| of every feature for each model ({model: Explanation}), with the
+    T7 feature group (src.ablation.feature_group) so the two can be compared.
+    Columns: model, rank, feature, group, mean_abs_shap."""
+    parts = [_ranked(sv.values, sv.feature_names).assign(model=model)
+             for model, sv in shap_values.items()]
+    table = pd.concat(parts, ignore_index=True)
+    return table[["model", "rank", "feature", "group", "mean_abs_shap"]]
+
+
+def top10_overlap(rankings: dict, k=10) -> pd.DataFrame:
+    """Y18 step 4: features shared by each pair of models' top-k. `rankings` maps a model to its
+    features in rank order (a list, or a table with a `feature` column such as top_features()).
+    Columns: model_a, model_b, k, n_shared, shared (";"-joined, sorted)."""
+    tops = {}
+    for model, ranking in rankings.items():
+        features = ranking["feature"] if isinstance(ranking, pd.DataFrame) else ranking
+        tops[model] = set(list(features)[:k])
+    models = list(tops)
+    rows = []
+    for i, a in enumerate(models):
+        for b in models[i + 1:]:
+            shared = sorted(tops[a] & tops[b])
+            rows.append({"model_a": a, "model_b": b, "k": k, "n_shared": len(shared),
+                         "shared": ";".join(shared)})
+    return pd.DataFrame(rows, columns=["model_a", "model_b", "k", "n_shared", "shared"])
+
+
+def per_scenario_importance(shap_values: shap.Explanation, rows: pd.DataFrame) -> pd.DataFrame:
+    """Y18 step 4: mean |SHAP| over each scenario's malicious rows. `rows` are the explained rows,
+    in the same order as the SHAP values (needs `label` and `scenario`).
+    Columns: scenario, n_rows, rank, feature, group, mean_abs_shap."""
+    values = np.asarray(shap_values.values)
+    if len(rows) != len(values):
+        raise ValueError(f"{len(rows)} rows for {len(values)} SHAP rows; pass the explained rows")
+    label = rows["label"].to_numpy()
+    scenario = rows["scenario"].to_numpy()
+    parts = []
+    for s in sorted(set(scenario[label == 1])):
+        mask = (label == 1) & (scenario == s)
+        part = _ranked(values[mask], shap_values.feature_names)
+        part.insert(0, "n_rows", int(mask.sum()))
+        part.insert(0, "scenario", int(s))
+        parts.append(part)
+    return pd.concat(parts, ignore_index=True)
+
+
+def _fit(df, model, params=None):
+    """The fitted pipeline/detector for `model` with its tuned defaults (and FINAL_SETUP for the
+    supervised models), plus the set-up name."""
+    if model == "iforest":
+        from src.models_unsupervised import train_and_score
+        info = train_and_score(df, model, params, save=False)[1]
+        return info["detector"], "normal train rows"
+    from src.models_supervised import train_and_score_supervised
+    info = train_and_score_supervised(df, model, params, save=False)[1]
+    return info["pipeline"], info["setup"]
+
+
+def shap_analysis(features_path=None, df=None, models=SHAP_MODELS, n_negatives=N_NEGATIVES,
+                  params=None, save=True) -> dict:
+    """Y18 steps 1-4. Refits each model (tuned defaults; RF/XGB with FINAL_SETUP), explains
+    explain_sample() (every test positive + n_negatives test negatives) and writes:
+    F6_shap_summary_xgboost (paper figure), shap_summary_<model> for the others,
+    feature_importance.csv, feature_importance_per_scenario.csv and the top-10 overlap table.
+    params: optional {model: overrides} (the tests use it to train faster)."""
+    from src.features import get_model_matrix
+    if df is None:
+        df = pd.read_parquet(features_path or PROCESSED_DIR / "features_v1.parquet")
+    rows = explain_sample(df, n_negatives=n_negatives)
+    X, _, _ = get_model_matrix(rows)
+    print(f"explaining {len(X):,} test rows ({int(rows['label'].sum())} malicious)")
+    values, setups, per_scenario = {}, {}, []
+    for model in models:
+        fitted, setups[model] = _fit(df, model, (params or {}).get(model))
+        sv = get_shap_values(fitted, X)
+        values[model] = sv
+        name = f"F6_shap_summary_{model}" if model == F6_MODEL else f"shap_summary_{model}"
+        if save:
+            plot_summary(sv, X, name=name)
+        per_scenario.append(per_scenario_importance(sv, rows).assign(model=model))
+        print(f"{model:14s} {setups[model]}  -> {name}")
+    importance = importance_table(values)
+    per = pd.concat(per_scenario, ignore_index=True)
+    per = per[["model"] + [c for c in per.columns if c != "model"]]
+    overlap = top10_overlap({m: importance.loc[importance["model"] == m, "feature"] for m in models})
+    if save:
+        TABLES_DIR.mkdir(parents=True, exist_ok=True)
+        importance.to_csv(TABLES_DIR / IMPORTANCE_TABLE, index=False)
+        per.to_csv(TABLES_DIR / PER_SCENARIO_TABLE, index=False)
+        overlap.to_csv(TABLES_DIR / OVERLAP_TABLE, index=False)
+    return {"shap_values": values, "rows": rows, "importance": importance, "per_scenario": per,
+            "overlap": overlap, "setups": setups}
+
+
 def demo(features="features_v0"):
     """Y11 "done when": every function on the v0 XGBoost and Isolation Forest."""
-    from src.config import PROCESSED_DIR
     from src.features import get_model_matrix
     from src.models_supervised import train_and_score_supervised
     from src.models_unsupervised import train_and_score
@@ -145,5 +267,12 @@ if __name__ == "__main__":
     import sys
     if sys.argv[1:2] == ["demo"]:
         demo(*sys.argv[2:3])
+    elif sys.argv[1:2] == ["shap"] and len(sys.argv) <= 3:
+        result = shap_analysis(*sys.argv[2:3])
+        imp = result["importance"]
+        for model in result["setups"]:
+            print(f"\n{model}: top 10 by mean |SHAP|")
+            print(imp[imp["model"] == model].head(10).to_string(index=False))
+        print("\n" + result["overlap"].to_string(index=False))
     else:
         print(__doc__)

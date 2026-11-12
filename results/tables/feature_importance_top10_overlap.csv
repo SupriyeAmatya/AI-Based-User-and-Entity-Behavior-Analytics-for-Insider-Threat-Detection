@@ -1,0 +1,4 @@
+model_a,model_b,k,n_shared,shared
+xgboost,random_forest,10,9,f_email_sent;f_http_competitor;f_http_count;f_usb_connect;f_usb_duration;z_peer_http_count;z_user_http_competitor;z_user_http_count;z_user_usb_connect
+xgboost,iforest,10,2,f_http_competitor;f_usb_duration
+random_forest,iforest,10,2,f_http_competitor;f_usb_duration
