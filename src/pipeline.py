@@ -30,6 +30,11 @@ from src.risk_scoring import MEDIUM, HIGH, rank_users, score_risk
 MODELS_DIR = ROOT / "models"
 OUTPUT = "top_risky_users.csv"
 N_REASONS = 3
+# A z-score closer to its baseline than this is never given as a reason (review of #57: the
+# autoencoder named features "0.0σ above own baseline"). PROVISIONAL: Arva sets the floor.
+MIN_REASON_Z = 1.0
+# Non-count features whose 0 means "nothing happened" (no email sent): never a reason at 0.
+ZERO_IS_NOTHING = ("f_email_size",)
 
 # Readable names for the reasons column (A12 step 2), keyed by the feature name without its prefix.
 PHRASES = {
@@ -105,13 +110,18 @@ def contributions(detector, model_name, X: pd.DataFrame, df: pd.DataFrame) -> pd
 
 def alert_reasons(contrib: pd.DataFrame, df: pd.DataFrame, k=N_REASONS) -> pd.Series:
     """The k largest contributions of each row as readable text, joined with '; '.
-    A count of 0 or a novelty flag that is off is never given as a reason."""
+    Never given as a reason: a count of 0, a novelty flag that is off, a ZERO_IS_NOTHING feature
+    at 0, and a z-score with |z| < MIN_REASON_Z (or missing). A row can so have fewer than k."""
     reasons = {}
     raw = df.loc[contrib.index, contrib.columns]
     zero_count = [c for c in contrib.columns
-                  if (c.startswith("f_") and c not in NOT_COUNTS) or c.startswith("new_")]
+                  if (c.startswith("f_") and c not in NOT_COUNTS) or c.startswith("new_")
+                  or c in ZERO_IS_NOTHING]
+    z_scores = [c for c in contrib.columns if c.startswith(("z_user_", "z_peer_"))]
     contrib = contrib.copy()
     contrib[zero_count] = contrib[zero_count].where(raw[zero_count].to_numpy() != 0, 0.0)
+    contrib[z_scores] = contrib[z_scores].where(
+        raw[z_scores].abs().to_numpy() >= MIN_REASON_Z, 0.0)
     values = contrib.to_numpy()
     for i, idx in enumerate(contrib.index):
         top = np.argsort(-values[i])[:k]
