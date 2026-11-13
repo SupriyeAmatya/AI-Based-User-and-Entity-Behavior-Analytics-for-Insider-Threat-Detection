@@ -11,6 +11,9 @@ that contributed most on their riskiest day -> results/tables/top_risky_users.cs
 
 The table is what an analyst would see, so it holds no labels. With --date it ranks users for one
 day instead of the whole test period.
+
+The A18 outputs (both models retrained, both ranked tables, precision_at_20.csv and figure F8):
+    python -m src.pipeline --prototype
 """
 import argparse
 import sys
@@ -25,7 +28,8 @@ import pandas as pd
 from src.config import ROOT, TABLES_DIR
 from src.features import NOT_COUNTS, get_model_matrix
 from src.models_unsupervised import DETECTORS, SCORE_KEYS, load_detector, save_detector
-from src.risk_scoring import MEDIUM, HIGH, rank_users, score_risk
+from src.risk_scoring import (MEDIUM, HIGH, f8_user, plot_risk_timeline, precision_at_k, rank_users,
+                              score_risk)
 
 MODELS_DIR = ROOT / "models"
 OUTPUT = "top_risky_users.csv"
@@ -194,6 +198,44 @@ def run(features_path, model_name="iforest", top=20, date=None, retrain=False, p
     return table, risk
 
 
+# ---------------------------------------------------------------- A18: prototype outputs on v1
+PROTOTYPE_MODELS = ("iforest", "autoencoder")
+PRECISION_TABLE = "precision_at_20.csv"
+
+
+def output_name(model_name) -> str:
+    """top_risky_users.csv for the default model (iforest), top_risky_users_<model>.csv otherwise."""
+    return OUTPUT if model_name == "iforest" else OUTPUT.replace(".csv", f"_{model_name}.csv")
+
+
+def prototype(features_path, models=PROTOTYPE_MODELS, top=20, f8_model="iforest", params=None,
+              verbose=True):
+    """The A18 outputs in one call. Each model is retrained (so no stale saved model is reused),
+    its ranked table is saved (top_risky_users.csv, top_risky_users_autoencoder.csv), and one row
+    per model goes to precision_at_20.csv: how many of the listed users are test-period insiders,
+    and what share of all test insiders they are. Figure F8 is the risk timeline of f8_user() from
+    `f8_model`'s risk scores, saved as F8_risk_timeline.png/.pdf.
+
+    params: optional {model: {parameter: value}} overrides (the tests use it to train faster).
+    Returns (precision table, the F8 user).
+    """
+    rows, user = [], None
+    for model in models:
+        table, risk = run(features_path, model, top, retrain=True, params=(params or {}).get(model),
+                          output=output_name(model), verbose=verbose)
+        rows.append({"model": model, **precision_at_k(table, risk, k=top)})
+        if model == f8_model:
+            user = f8_user(risk)
+            plot_risk_timeline(risk, user)
+    precision = pd.DataFrame(rows)
+    precision.to_csv(TABLES_DIR / PRECISION_TABLE, index=False)
+    if verbose:
+        print(f"\nprecision@{top} -> {(TABLES_DIR / PRECISION_TABLE).relative_to(ROOT)}; "
+              f"F8 user ({f8_model}): {user}")
+        print(precision.drop(columns="insiders_listed").to_string(index=False))
+    return precision, user
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--features", default=str(ROOT / "data/processed/features_v1.parquet"))
@@ -201,8 +243,14 @@ def main(argv=None):
     parser.add_argument("--top", type=int, default=20)
     parser.add_argument("--date", help="rank users for this day instead of the test period")
     parser.add_argument("--retrain", action="store_true", help="ignore a saved model")
+    parser.add_argument("--prototype", action="store_true",
+                        help="A18: retrain iforest and autoencoder, save both ranked tables, "
+                             "precision_at_20.csv and figure F8")
     args = parser.parse_args(argv)
-    run(args.features, args.model, args.top, args.date, args.retrain)
+    if args.prototype:
+        prototype(args.features, top=args.top)
+    else:
+        run(args.features, args.model, args.top, args.date, args.retrain)
 
 
 if __name__ == "__main__":

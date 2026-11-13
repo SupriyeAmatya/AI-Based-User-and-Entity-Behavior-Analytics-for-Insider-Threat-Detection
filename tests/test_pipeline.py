@@ -2,7 +2,7 @@
 import pandas as pd
 import pytest
 
-from src import pipeline
+from src import pipeline, risk_scoring
 from src.synthetic import make_synthetic_features
 
 
@@ -55,3 +55,41 @@ def test_describe_reasons():
     assert pipeline.describe("f_file_copy", 37) == "37 files copied"
     assert pipeline.describe("new_leak_site", 1) == "first-ever leak or file-sharing site visit"
     assert pipeline.describe("f_first_logon_hour", 3.5) == "first logon hour: 3.5"
+
+
+# ---------------------------------------------------------------- A18
+def test_prototype_writes_both_tables_precision_and_f8(features_file, tmp_path, monkeypatch):
+    monkeypatch.setattr(risk_scoring, "FIGURES_DIR", tmp_path / "figures")
+    precision, user = pipeline.prototype(features_file, top=10, verbose=False,
+                                         params={"autoencoder": {"epochs": 5}})
+    tables = tmp_path / "tables"
+    assert pipeline.output_name("iforest") == "top_risky_users.csv"
+    for model in pipeline.PROTOTYPE_MODELS:
+        ranked = pd.read_csv(tables / pipeline.output_name(model))
+        assert len(ranked) == 10 and "label" not in ranked.columns
+        assert pipeline.model_path(model, features_file).exists()
+    assert (tables / "top_risky_users_autoencoder.csv").exists()
+    saved = pd.read_csv(tables / pipeline.PRECISION_TABLE)
+    assert saved["model"].tolist() == ["iforest", "autoencoder"] == precision["model"].tolist()
+    # the 3 synthetic test insiders all make each top 10: precision 3/10, insider recall 1
+    assert (saved["k"] == 10).all() and (saved["n_test_insiders"] == 3).all()
+    assert saved["precision_at_k"].tolist() == pytest.approx([0.3, 0.3])
+    assert saved["insider_recall"].tolist() == pytest.approx([1, 1])
+    _, risk = pipeline.run(features_file, "iforest", top=10, verbose=False)
+    assert user == pipeline.f8_user(risk) and user in saved.loc[0, "insiders_listed"].split()
+    for ext in ("png", "pdf"):
+        assert (tmp_path / "figures" / f"F8_risk_timeline.{ext}").exists()
+
+
+def test_prototype_retrains_instead_of_reusing_a_saved_model(features_file, capsys):
+    pipeline.run(features_file, "iforest", top=5)
+    capsys.readouterr()
+    pipeline.prototype(features_file, models=("iforest",), top=5, f8_model=None)
+    assert "trained and saved" in capsys.readouterr().out
+
+
+def test_main_prototype_flag(features_file, monkeypatch):
+    called = {}
+    monkeypatch.setattr(pipeline, "prototype", lambda features, top: called.update(f=features, top=top))
+    pipeline.main(["--features", str(features_file), "--prototype", "--top", "7"])
+    assert called == {"f": str(features_file), "top": 7}
