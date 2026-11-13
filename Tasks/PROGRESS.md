@@ -79,7 +79,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
   - [x] **Y15** merged (#41): tuned `RF_DEFAULTS` / `XGB_DEFAULTS`, `FINAL_SETUP`, `final`
   - [x] **A16** merged (#50): tuned Isolation Forest and autoencoder defaults, `final` (#33)
-- [ ] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all
+- [ ] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all *(tag `m3-all-scores` pushed Nov 13; the box waits for A17's `unsupervised_extra.csv` on `main`)*
 - [ ] **Analysis done** (Sat Nov 14): T5–T8, F4–F8, FP/FN, cases; walkthrough held
 - [ ] **M4 All sections drafted** (Mon Nov 16)
 - [ ] **M5 Full draft** circulated by 18:00 (Wed Nov 18)
@@ -348,7 +348,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **`m0-setup`:** after M0 *(pushed Nov 10, `5bbcf77`: the first commit that shows Ayo's installed environment and the v1 data in use)*
 - [ ] **`m1-features-v0`:** after M1
 - [x] **`m2-features-v1`:** Sun Nov 8 *(pushed Nov 8, `2710789`)*
-- [ ] **`m3-all-scores`:** after A16, Y15, Y16, S22 merge
+- [x] **`m3-all-scores`:** after A16, Y15, Y16, S22 merge *(pushed Nov 13 on `main` at `0729548`, after #51 (S22); A16 #50, Y15 #41, Y16 #46/#52)* **(Claude)**
 - [ ] **`analysis-done`:** after A18–A19 and Y18–Y20 merge
 - [ ] **`final-submission`:** Thu Nov 19
 
