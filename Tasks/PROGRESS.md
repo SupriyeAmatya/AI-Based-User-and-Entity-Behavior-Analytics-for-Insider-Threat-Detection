@@ -13,7 +13,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - **Supervised models are final on v1:** tuned defaults, `FINAL_SETUP` and the `final` command (Y14, Y15, #41).
   - **Results on `main`:** `loso.csv` (T6, #46); `model_comparison.csv` (T5), the per-scenario and delay tables, F4, F5 and `T8_timing.csv` (#48).
   - **Unsupervised models are tuned on v1** (A15, A16, #50). T5, T6, T8, F4 and F5 were regenerated with the tuned defaults on `ayo/Y17-rerun-tuned` (Nov 10).
-  - **Not started or not on `main`:** `ablation.csv` (T7, can run now that A16 merged), `unsupervised_extra.csv`, the v1 prototype outputs (`precision_at_20.csv`, F8), SHAP on v1 (F6), FP/FN, notebook 05 (case studies, F7), F2.
+  - **Not started or not on `main`:** `unsupervised_extra.csv`, the v1 prototype outputs (`precision_at_20.csv`, F8), SHAP on v1 (F6), FP/FN, notebook 05 (case studies, F7), F2.
 - **Data:**
   - **Feature table v1 is frozen:** 330,268 user-days, 76 inputs, tag `m2-features-v1` (Nov 8).
   - **The data drop** is delivered; both teammates load v1.
@@ -113,7 +113,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | [x] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` *(#41, Nov 8)* | Ayo → all (Git) |
 | [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV is not on `main`)* | Arva → Ayo (Git) |
 | [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
-| [ ] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` can run now that A16 merged, #50)* | Supriye → Ayo (Git) |
+| [x] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` in #51, re-run Nov 11 with one fixed XGBoost tree count)* | Supriye → Ayo (Git) |
 | [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
 | [ ] | Fri Nov 13 | Related Work paragraphs | Arva, Ayo → Supriye (Overleaf) |
 | [ ] | Sun Nov 15 | IV-C, IV-D, V, VI-B | Arva, Ayo → Supriye (Overleaf) |
@@ -162,11 +162,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **S20-walk** v1 walkthrough (Mon Nov 9)
 - [x] **S21** bug-fix window closed (Tue Nov 10 12:00) *(checked at 12:01: the repo has never had a GitHub Issue, and PRs #46–#48 report no feature bug; feature code unchanged since the `m2-features-v1` tag; 145 tests pass; no `features_v1_1.parquet`)* **(Claude)**
 - [ ] **S23a** III. Dataset [H]
-- [ ] **S22** `src/ablation.py` + tests → `ablation.csv` (T7) + `data_processing_time.csv`
+- [x] **S22** `src/ablation.py` + tests → `ablation.csv` (T7) + `data_processing_time.csv` **(Claude)**
   - [x] **Code:** `feature_group()` (all v1 inputs → 7 groups; 76 since Nov 6), `feature_sets()` (a, b, c + 7 × d = 10 sets), `run_ablation()` (XGBoost + Isolation Forest retrained with their module defaults, test PR-AUC / ROC-AUC / recall at top 1% and best-F1; each row records the model settings and commit), tests on `supriye/S22-ablation` **(Claude)**
   - [x] **T8 data time:** `data_processing_time.csv` (3-run means): Parquet logs → v1 in ~138 s (labels 0.07 s, web-log pass 26 s, v1 incl. baselines 112 s) + the one-off conversion, an untimed ~10 min estimate (`measured` = False); 24 threads, 31.4 GB RAM on `supriye/S22-ablation` **(Claude)**
-  - [ ] **Run** `python -m src.ablation` once A16 and Y15 (tuned defaults) are merged → `ablation.csv` *(Y15 merged Nov 8, #41; A16 merged Nov 10, #50: ready to run)*
-- [ ] **S22-H** interpret the ablation [H]
+  - [x] **Run** `python -m src.ablation` once A16 and Y15 (tuned defaults) are merged → `ablation.csv` *(Nov 11, code at `d75fbf8`: 10 feature sets × 2 models = 20 rows. Method decided by Supriye on Nov 11 after Ayo's review of #51: XGBoost trains every set with one fixed tree count, the full set's early-stopped count (545), instead of early-stopping each set; the first run had stopped two sets at ~30 trees. Isolation Forest is unchanged and reproduced exactly on Ayo's M1)* on `supriye/S22-ablation-run` **(Claude)**
+- [ ] **S22-H** interpret the ablation [H] *(Ayo's M1 re-run in his #51 review: every XGBoost row is within 0.011 PR-AUC of the committed table, and the M1 derives 576 trees vs. 545 here. Drops below about 0.01 (time, file, context, logon) are inside that machine difference, so he suggests the T7 caption or these notes say they shouldn't be ranked against each other)*
 - [ ] **S24** LANL features *(stretch, only if agreed)*
 - [ ] **S-LIT1** L1, L2 [H]
 - [ ] **S-LIT2** L3 [H]

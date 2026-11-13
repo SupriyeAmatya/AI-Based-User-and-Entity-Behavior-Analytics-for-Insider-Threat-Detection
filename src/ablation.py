@@ -6,9 +6,15 @@ default settings** on these feature sets and scored on `test` with evaluate.py (
     (a) raw f_* only    (b) f_* + z_user_*    (c) full = f_* + z_user_* + z_peer_* + new_*
     (d) full minus one group at a time: logon, time, usb, file, email, http, context
 
-The defaults are the card settings until Arva's A16 and Ayo's Y15 merge their tuned settings, so
-run the ablation for T7 only after that. Every row of ablation.csv records the model settings it
-used (`params`) and the commit, so an untuned run can't pass for the final table.
+The defaults are the tuned settings of Arva's A16 (#50) and Ayo's Y15 (#41). Every row of
+ablation.csv records the model settings it used (`params`) and the commit, so an untuned run
+can't pass for the final table.
+
+XGBoost uses one fixed number of trees for every feature set (decided by Supriye, Nov 11, after
+Ayo's review of #51): the full set is fitted once with its usual early stopping on val, and every
+set is then trained with that many trees (best_iteration + 1) and no early stopping. Early stopping
+each set on its own made some sets stop after ~30 trees, which moved the group drops from one
+machine to another; with one tree count the drops compare like with like.
 
     python -m src.ablation            # -> results/tables/ablation.csv (T7)
     python -m src.ablation time       # -> results/tables/data_processing_time.csv (for T8)
@@ -84,15 +90,28 @@ def feature_sets(columns) -> dict:
     return sets
 
 
-def _scores(df, model, columns):
-    """Retrain one model on `columns` with its module defaults and score every row."""
+def _scores(df, model, columns, params=None):
+    """Retrain one model on `columns` with its module defaults (`params` on top) and score every
+    row."""
     if model in UNSUPERVISED:
         from src.models_unsupervised import train_and_score
-        return train_and_score(df, model, save=False, columns=columns)
+        return train_and_score(df, model, params, save=False, columns=columns)
     if model in SUPERVISED:
         from src.models_supervised import train_and_score_supervised
-        return train_and_score_supervised(df, model, save=False, columns=columns)
+        return train_and_score_supervised(df, model, params, save=False, columns=columns)
     raise ValueError(f"unknown model {model!r}; choose from {SUPERVISED + UNSUPERVISED}")
+
+
+def xgboost_trees(df, columns=None) -> int:
+    """The fixed XGBoost tree count for every feature set: the full set (`columns`, default every
+    model input) fitted with the module defaults and early stopping on val; best_iteration + 1."""
+    _, info = _scores(df, "xgboost", columns or feature_columns(df))
+    return int(info["best_iteration"]) + 1
+
+
+def fixed_trees(n_trees: int) -> dict:
+    """XGBoost settings on top of the tuned defaults: exactly `n_trees` trees, no early stopping."""
+    return {"n_estimators": int(n_trees), "early_stopping_rounds": None}
 
 
 def _settings(info) -> str:
@@ -114,15 +133,20 @@ def _commit() -> str:
 def run_ablation(df, models=MODELS, k=0.01, save=True) -> pd.DataFrame:
     """One row per model x feature set: test PR-AUC, ROC-AUC, recall at the top-k budget and at the
     best-F1 threshold (S22 step 3), the change in test PR-AUC against the full set, and the model
-    settings + commit that produced the row."""
+    settings + commit that produced the row. XGBoost trains every set with the full set's tree
+    count (xgboost_trees, fixed_trees)."""
+    for model in models:
+        if model not in SUPERVISED + UNSUPERVISED:
+            raise ValueError(f"unknown model {model!r}; choose from {SUPERVISED + UNSUPERVISED}")
     top = f"recall_top_{100 * k:g}pct"
     commit = _commit()
+    params = {"xgboost": fixed_trees(xgboost_trees(df))} if "xgboost" in models else {}
     rows = []
     for name, columns in feature_sets(feature_columns(df)).items():
         if not columns:
             raise ValueError(f"feature set {name} is empty")
         for model in models:
-            scores, info = _scores(df, model, columns)
+            scores, info = _scores(df, model, columns, params.get(model))
             r = evaluate_df(scores, k)
             rows.append({"model": model, "feature_set": name, "n_features": len(columns),
                          "test_pr_auc": r["ranking"]["pr_auc"], "test_roc_auc": r["ranking"]["roc_auc"],
