@@ -225,6 +225,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Code:** `precision_at_k()`, `f8_user()`, `plot_risk_timeline()` (#35)
   - [ ] **Outputs** from the v1 run: `precision_at_20.csv`, `top_risky_users_autoencoder.csv`, `F8_risk_timeline.*`
 - [ ] **A19** notebook 05: 4 cases × parts 1–4, F7
+  - [x] **Notebook 05** on `arva/A19-case-studies` (Nov 13): the 4 picks by the card rule (`pick_cases()`), context, baseline vs. the day, F7 (IF SHAP waterfall + AE feature errors, `F7_case<1-4>_*`), raw evidence incl. web domains; `case_studies.csv`; helper tests **(Claude)**
+  - [ ] **Arva confirms the picks** [H] and presents 2 cases at the Sat walkthrough
 - [ ] **A19-H** narratives + verdicts [H]
 - [ ] **A14-rest** F2 [H]; IV-C/IV-D notes [H]; `arva/notes` merged
 - [ ] **A20** Related Work paragraphs [H]
