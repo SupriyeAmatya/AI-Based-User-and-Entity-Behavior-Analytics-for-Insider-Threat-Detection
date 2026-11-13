@@ -137,6 +137,45 @@ jupyter notebook
 
 Then run the notebooks in order (`01` → `05`).
 
+## Run the prototype
+
+The prototype goes from the frozen feature table to a ranked list of the riskiest users in the test period, each with the three features that made their riskiest day stand out. Set up the environment as in Getting Started first.
+
+1. **Get the data.** Unzip `ueba_data_v1.zip` from the team drive in the repo root, then check it:
+
+   ```bash
+   python scripts/data_drop.py verify
+   ```
+
+2. **Run the pipeline** (Isolation Forest, top 20 users of the test period):
+
+   ```bash
+   python src/pipeline.py
+   ```
+
+   The first run trains the model and saves it in `models/`; later runs load it. The table is printed and saved to `results/tables/top_risky_users.csv`.
+
+3. **Options:**
+   - `--model autoencoder` (or `ocsvm`) ranks with another detector;
+   - `--date 2011-03-22` ranks users by their risk over the 7 days ending that day, instead of the whole test period;
+   - `--top 50` lists more users, and `--retrain` ignores a saved model;
+   - `--features data/processed/features_v0.parquet` runs on the 100-user sample.
+
+**Reading the table** (one row per user):
+- `peak_date`, `peak_risk`: the user's riskiest day and its daily risk. Daily risk (0–100) is the percentile of that day's score among the normal training days.
+- `high_days`, `medium_days`: test days at the High level, and at Medium but below High (levels in `src/risk_scoring.py`).
+- `active_days`: test days with activity. `first_alert`: the first day at Medium or above.
+- `alert_level`: High, Medium or Low, from `peak_risk`.
+- `reasons`: the three features that contributed most on `peak_date`, e.g. "24 files copied; 9 USB connects; 1 after-hours logons".
+
+The table holds no labels, as an analyst would see it. To rebuild every score file for the evaluation (not needed for the pipeline):
+
+```bash
+python -m src.models_unsupervised final   # iforest, autoencoder, the two _contam variants, ocsvm
+python -m src.models_supervised final     # random_forest, xgboost
+python -m src.evaluate report             # T5 and the other result tables
+```
+
 ## Results
 
 Model comparison on the **test** split (Feb 1 – May 17, 2011: 65,007 user-days, 170 malicious, on 15 accounts: 14 insiders and the hijacked supervisor account `FBA0348`), from `results/tables/model_comparison.csv` (T5). The numbers come from the results machine (TEAM_PLAN 2.5.12); rebuild them with the two `final` commands and `python -m src.evaluate report`.
