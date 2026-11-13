@@ -211,7 +211,6 @@ def run(features_path, model_name="iforest", top=20, date=None, retrain=False, p
 
 # ---------------------------------------------------------------- A18: prototype outputs on v1
 PROTOTYPE_MODELS = ("iforest", "autoencoder")
-PRECISION_TABLE = "precision_at_20.csv"
 
 
 def output_name(model_name) -> str:
@@ -219,11 +218,16 @@ def output_name(model_name) -> str:
     return OUTPUT if model_name == "iforest" else OUTPUT.replace(".csv", f"_{model_name}.csv")
 
 
+def precision_table_name(top=20) -> str:
+    """precision_at_20.csv for the default top 20; the name follows `top`."""
+    return f"precision_at_{top}.csv"
+
+
 def prototype(features_path, models=PROTOTYPE_MODELS, top=20, f8_model="iforest", params=None,
               verbose=True):
     """The A18 outputs in one call. Each model is retrained (so no stale saved model is reused),
     its ranked table is saved (top_risky_users.csv, top_risky_users_autoencoder.csv), and one row
-    per model goes to precision_at_20.csv: how many of the listed users are test-period insiders,
+    per model goes to precision_at_<top>.csv: how many of the listed users are test-period insiders,
     and what share of all test insiders they are. Figure F8 is the risk timeline of f8_user() from
     `f8_model`'s risk scores, saved as F8_risk_timeline.png/.pdf.
 
@@ -239,9 +243,10 @@ def prototype(features_path, models=PROTOTYPE_MODELS, top=20, f8_model="iforest"
             user = f8_user(risk)
             plot_risk_timeline(risk, user)
     precision = pd.DataFrame(rows)
-    precision.to_csv(TABLES_DIR / PRECISION_TABLE, index=False)
+    path = TABLES_DIR / precision_table_name(top)
+    precision.to_csv(path, index=False)
     if verbose:
-        print(f"\nprecision@{top} -> {(TABLES_DIR / PRECISION_TABLE).relative_to(ROOT)}; "
+        print(f"\nprecision@{top} -> {path.relative_to(ROOT)}; "
               f"F8 user ({f8_model}): {user}")
         print(precision.drop(columns="insiders_listed").to_string(index=False))
     return precision, user

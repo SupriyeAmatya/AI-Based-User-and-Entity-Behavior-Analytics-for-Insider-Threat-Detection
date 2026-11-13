@@ -38,7 +38,7 @@ Models and prototype:
 ```bash
 python -m src.models_unsupervised demo     # synthetic data; also models_supervised / risk_scoring / explain demo
 python -m src.models_unsupervised final    # -> results/scores/{iforest,autoencoder,iforest_contam,autoencoder_contam,ocsvm}.parquet
-python -m src.models_unsupervised extra    # A17, after `final` -> results/tables/unsupervised_extra.csv
+python -m src.models_unsupervised extra    # A17, after `final` -> results/tables/unsupervised_extra.csv (commit the one built on Ayo's M1)
 python -m src.pipeline --features data/processed/features_v1.parquet --model iforest --top 20
 python -m src.pipeline --prototype         # A18: retrains IF + AE -> both top_risky_users tables, precision_at_20.csv, F8
 python -m src.ablation                     # T7 (run after the tuned defaults merge); `time` -> data_processing_time.csv

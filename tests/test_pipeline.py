@@ -88,7 +88,9 @@ def test_prototype_writes_both_tables_precision_and_f8(features_file, tmp_path, 
         assert len(ranked) == 10 and "label" not in ranked.columns
         assert pipeline.model_path(model, features_file).exists()
     assert (tables / "top_risky_users_autoencoder.csv").exists()
-    saved = pd.read_csv(tables / pipeline.PRECISION_TABLE)
+    assert pipeline.precision_table_name() == "precision_at_20.csv"
+    assert not (tables / "precision_at_20.csv").exists()            # the name follows `top`
+    saved = pd.read_csv(tables / "precision_at_10.csv")
     assert saved["model"].tolist() == ["iforest", "autoencoder"] == precision["model"].tolist()
     # the 3 synthetic test insiders all make each top 10: precision 3/10, insider recall 1
     assert (saved["k"] == 10).all() and (saved["n_test_insiders"] == 3).all()

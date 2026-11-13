@@ -1,21 +1,21 @@
 rank,user,peak_date,peak_risk,high_days,medium_days,active_days,first_alert,alert_level,reasons
-1,WDD0366,2011-02-24,100.0,20,2,36,2011-02-03,High,leak-site visits 1.0σ above own baseline; leak-site visits 0.8σ above peers; neuroticism score: 28
-2,MAR0955,2011-02-08,100.0,6,2,25,2011-02-05,High,leak-site visits 1.0σ above own baseline; leak-site visits 0.9σ above peers; neuroticism score: 25
-3,JLM0364,2011-04-28,100.0,4,13,63,2011-02-01,High,keylogger/hacking-site visits 6.0σ above own baseline; first-ever USB use; job-site visits 0.4σ below own baseline
-4,DCH0843,2011-02-04,100.0,4,5,17,2011-02-02,High,leak-site visits 1.0σ above own baseline; leak-site visits 0.9σ above peers; neuroticism score: 36
-5,PPF0435,2011-02-09,100.0,3,3,18,2011-02-02,High,leak-site visits 1.0σ above own baseline; leak-site visits 0.8σ above peers; neuroticism score: 27
-6,KLH0596,2011-02-12,100.0,3,0,20,2011-02-01,High,leak-site visits 1.0σ above own baseline; leak-site visits 0.7σ above peers; neuroticism score: 29
-7,TEB0251,2011-03-18,99.99952036989075,31,0,74,2011-03-18,High,keylogger/hacking-site visits 1.0σ above own baseline; job-site visits 0.0σ above own baseline; 3 external emails with attachments
-8,LHL0309,2011-04-26,99.99952036989075,15,0,74,2011-04-26,High,job-site visits 0.0σ above own baseline; 1 external emails with attachments; http competitor 0.0σ above own baseline
-9,VTT0385,2011-05-12,99.99904073978148,6,8,74,2011-02-22,High,job-site visits 0.7σ below own baseline; keylogger/hacking-site visits 1.0σ above own baseline; file-sharing site visits 0.2σ above own baseline
-10,ZKS0899,2011-03-28,99.9952036989074,1,3,74,2011-02-09,High,mean email size (bytes): 0; email recipients 2.6σ below own baseline; hours between first logon and last logoff 0.1σ above own baseline
-11,BAL0044,2011-02-24,99.99184628814258,62,11,74,2011-02-01,High,12 after-hours file copies; web visits 2.6σ above peers; 11 http competitor
+1,WDD0366,2011-02-24,100.0,20,2,36,2011-02-03,High,leak-site visits 1.0σ above own baseline; neuroticism score: 28; 2 external emails with attachments
+2,MAR0955,2011-02-08,100.0,6,2,25,2011-02-05,High,leak-site visits 1.0σ above own baseline; neuroticism score: 25; mean email size (bytes): 15869
+3,JLM0364,2011-04-28,100.0,4,13,63,2011-02-01,High,keylogger/hacking-site visits 6.0σ above own baseline; first-ever USB use; 1 after-hours USB connects
+4,DCH0843,2011-02-04,100.0,4,5,17,2011-02-02,High,leak-site visits 1.0σ above own baseline; neuroticism score: 36; mean email size (bytes): 24702
+5,PPF0435,2011-02-09,100.0,3,3,18,2011-02-02,High,leak-site visits 1.0σ above own baseline; neuroticism score: 27; external emails 1.3σ below own baseline
+6,KLH0596,2011-02-12,100.0,3,0,20,2011-02-01,High,leak-site visits 1.0σ above own baseline; neuroticism score: 29; web visits 1.9σ below peers
+7,TEB0251,2011-03-18,99.99952036989075,31,0,74,2011-03-18,High,keylogger/hacking-site visits 1.0σ above own baseline; 3 external emails with attachments; 3 file-sharing site visits
+8,LHL0309,2011-04-26,99.99952036989075,15,0,74,2011-04-26,High,1 external emails with attachments; 4 email attachments; keylogger/hacking-site visits 1.0σ above own baseline
+9,VTT0385,2011-05-12,99.99904073978148,6,8,74,2011-02-22,High,keylogger/hacking-site visits 1.0σ above own baseline; 1 file-sharing site visits; 8 email attachments
+10,ZKS0899,2011-03-28,99.9952036989074,1,3,74,2011-02-09,High,email recipients 2.6σ below own baseline; email recipients 1.9σ below peers; agreeableness score: 43
+11,BAL0044,2011-02-24,99.99184628814258,62,11,74,2011-02-01,High,12 after-hours file copies; web visits 2.6σ above peers; 11 competitor-site visits
 12,EIS0041,2011-02-24,99.98992776770555,8,42,74,2011-02-07,High,5 images copied; 9 after-hours file copies; 3 external emails with attachments
-13,ATE0869,2011-03-05,99.98992776770555,4,13,102,2011-02-10,High,hours between first logon and last logoff 4.8σ above own baseline; http competitor 3.5σ above own baseline; 1 weekend day
+13,ATE0869,2011-03-05,99.98992776770555,4,13,102,2011-02-10,High,hours between first logon and last logoff 4.8σ above own baseline; competitor-site visits 3.5σ above own baseline; 1 weekend day
 14,IIW0249,2011-03-17,99.98992776770555,4,12,83,2011-02-10,High,hours between first logon and last logoff 5.6σ above own baseline; 5 after-hours USB connects; after-hours events 51.0σ above own baseline
 15,BJM0111,2011-02-19,99.98848887737776,8,8,86,2011-02-08,High,1 weekend day; 2 images copied; first-ever leak or file-sharing site visit
 16,AJF0370,2011-03-02,99.98752961715925,25,45,79,2011-02-01,High,2 images copied; 9 after-hours file copies; files copied 4.1σ above peers
-17,JDF0593,2011-05-17,99.98752961715925,9,14,80,2011-02-01,High,share of activity after hours: 1; mean email size (bytes): 0; files copied 0.4σ below own baseline
+17,JDF0593,2011-05-17,99.98752961715925,9,14,80,2011-02-01,High,share of activity after hours: 1; email recipients 1.8σ below own baseline; 1 after-hours logons
 18,IBB0359,2011-03-02,99.98704998704999,15,45,74,2011-02-01,High,12 after-hours file copies; 4 after-hours logons; USB connects 2.4σ above peers
-19,BMG0917,2011-03-19,99.98081479562961,13,25,75,2011-02-02,High,neuroticism score: 34; mean email size (bytes): 0; external emails 1.0σ below own baseline
-20,HRL0540,2011-03-21,99.98081479562961,5,43,74,2011-02-01,High,hours between first logon and last logoff 0.2σ below own baseline; web visits 1.7σ below peers; 11.9167 hours between first logon and last logoff
+19,BMG0917,2011-03-19,99.98081479562961,13,25,75,2011-02-02,High,neuroticism score: 34; external emails 1.0σ below own baseline; openness score: 43
+20,HRL0540,2011-03-21,99.98081479562961,5,43,74,2011-02-01,High,web visits 1.7σ below peers; 11.9167 hours between first logon and last logoff; last logoff hour: 21.1833
