@@ -55,6 +55,8 @@ Linear pipeline. Each stage writes files the next stage reads, and the file form
 7. **`src/risk_scoring.py`** + **`src/pipeline.py`**: daily risk is the percentile of a score among the normal training days' scores (0–100); user risk is the 7-day maximum; alert levels come from `HIGH`/`MEDIUM`. `pipeline.py` goes from a feature table to ranked users with 3 readable reasons each (`PHRASES` maps features to wording). `precision_at_k()`, `f8_user()` and `plot_risk_timeline()` produce the A18 outputs.
 8. **`src/explain.py`** (SHAP for RF/XGB) and **`src/ablation.py`** (feature-group ablation, T7, and data-processing time for T8).
 
+Case studies (A19): `notebooks/05_anomaly_investigation.ipynb` uses the helpers in `pipeline.py` (`pick_cases`, `baseline_vs_day`, `shap_for_row`, `plot_ae_errors`, `raw_evidence`; tests in `tests/test_case_studies.py`) and writes `F7_case<1-4>_*` and `case_studies.csv`. Its narrative and verdict cells are human-only.
+
 Outputs: figures go to `results/figures/` as PNG and PDF (300 dpi). Tables go to `results/tables/` as CSV. `data/`, `results/scores/`, `models/` and `*.parquet` are gitignored.
 
 ## Tests

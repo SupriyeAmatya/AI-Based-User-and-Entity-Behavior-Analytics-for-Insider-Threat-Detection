@@ -50,6 +50,7 @@ PHRASES = {
     "http_domains": "distinct web domains", "http_afterhours": "after-hours web visits",
     "http_job": "job-site visits", "http_leak": "leak-site visits",
     "http_cloud": "file-sharing site visits", "http_hack": "keylogger/hacking-site visits",
+    "http_competitor": "competitor-site visits",
     "ctx_O": "openness score", "ctx_C": "conscientiousness score", "ctx_E": "extraversion score",
     "ctx_A": "agreeableness score", "ctx_N": "neuroticism score",
     "usb_user": "first-ever USB use", "pc": "first logon on a new PC",
@@ -118,6 +119,141 @@ def alert_reasons(contrib: pd.DataFrame, df: pd.DataFrame, k=N_REASONS) -> pd.Se
                  if values[i, j] > 0]
         reasons[idx] = "; ".join(parts)
     return pd.Series(reasons)
+
+
+# ---------------------------------------------------------------- A19: case studies
+CASE_SCENARIOS = (1, 2, 3)
+N_BASELINE_DAYS = 30        # the per-user baseline window of src/baseline.py (WINDOW)
+EVIDENCE_LOGS = ("logon", "device", "file", "email")
+WEB_CACHE = "http_user_day_domain.parquet"
+
+
+def pick_cases(risk: pd.DataFrame, threshold, df: pd.DataFrame = None) -> pd.DataFrame:
+    """The 4 test-period cases of A19 step 1, from a risk table (score_risk output) and a score
+    threshold (Isolation Forest's best-F1 threshold in the notebook).
+
+    For each scenario: its highest-scoring malicious day that is flagged (score >= threshold), a
+    "true positive"; if no day of that scenario is flagged, its highest-scoring malicious day, a
+    "missed" case. Then the highest-scoring normal day, the top "false positive".
+    The index is the row's index in the feature table; with `df`, role and department are added
+    (the context of A19 step 2).
+    """
+    test = risk[risk["split"] == "test"]
+    picks = []
+    for s in CASE_SCENARIOS:
+        bad = test[(test["label"] == 1) & (test["scenario"] == s)]
+        if bad.empty:
+            continue
+        flagged = bad[bad["score"] >= threshold]
+        kind = "true positive" if len(flagged) else "missed"
+        picks.append((f"scenario {s}", kind, (flagged if len(flagged) else bad)["score"].idxmax()))
+    normal = test[test["label"] == 0]
+    if len(normal):
+        top = normal["score"].idxmax()
+        kind = "false positive" if normal.at[top, "score"] >= threshold else "normal, not flagged"
+        picks.append(("top normal day", kind, top))
+    rows = [idx for _, _, idx in picks]
+    cases = risk.loc[rows, ["user", "date", "scenario", "label", "score", "daily_risk",
+                            "user_risk", "alert_level"]].copy()
+    cases.insert(0, "kind", [kind for _, kind, _ in picks])
+    cases.insert(0, "case", [name for name, _, _ in picks])
+    cases.insert(cases.columns.get_loc("score") + 1, "threshold", threshold)
+    if df is not None:
+        for i, col in enumerate(c for c in ("role", "department") if c in df.columns):
+            cases.insert(4 + i, col, df.loc[rows, col].to_numpy())
+    return cases
+
+
+def baseline_vs_day(df: pd.DataFrame, row, k=5, window=N_BASELINE_DAYS) -> pd.DataFrame:
+    """A19 step 3 for one row (an index label of the feature table): the k baselined features with
+    the largest |z_user| that day. Columns: the day's value, the mean over the user's previous
+    `window` active days (and how many such days there were), z_user and z_peer."""
+    user, date = df.at[row, "user"], df.at[row, "date"]
+    past = df[(df["user"] == user) & (df["date"] < date)].sort_values("date").tail(window)
+    rows = []
+    for z in (c for c in df.columns if c.startswith("z_user_")):
+        short = z[len("z_user_"):]
+        rows.append({"feature": f"f_{short}", "what": _phrase(f"f_{short}"),
+                     "value": df.at[row, f"f_{short}"],
+                     "mean_previous_days": past[f"f_{short}"].mean(), "previous_days": len(past),
+                     "z_user": df.at[row, z],
+                     "z_peer": df.at[row, f"z_peer_{short}"] if f"z_peer_{short}" in df else np.nan})
+    table = pd.DataFrame(rows)
+    order = table["z_user"].abs().sort_values(ascending=False, na_position="last").index
+    return table.loc[order].head(k).reset_index(drop=True)
+
+
+def shap_for_row(detector, X: pd.DataFrame, df: pd.DataFrame, row):
+    """SHAP explanation of one user-day for a tree detector (Isolation Forest), ready for
+    explain.plot_waterfall(sv, X_row, 0, name). The explanation shows the raw feature values of
+    the table, not the log1p values the model saw."""
+    from src.explain import get_shap_values
+
+    X_row = X.loc[[row]]
+    sv = get_shap_values(detector, X_row)
+    sv.data = df.loc[[row], X.columns].to_numpy(dtype=float)
+    return sv, X_row
+
+
+def plot_ae_errors(detector, X: pd.DataFrame, row, name, k=10, title=None):
+    """Bar chart of the k largest per-feature reconstruction errors of one user-day (A19 step 4,
+    the autoencoder half of F7), saved as PNG and PDF. Red bars: the value was above what the
+    autoencoder expected; grey: below. Returns (figure, the k errors as a table)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from src.config import FIGURES_DIR
+
+    residuals = detector.feature_residuals(X.loc[[row]]).iloc[0]
+    errors = (residuals ** 2).sort_values(ascending=False).head(k)
+    table = pd.DataFrame({"feature": errors.index, "error": errors.to_numpy(),
+                          "above_expected": (residuals[errors.index] > 0).to_numpy()})
+    fig, ax = plt.subplots(figsize=(5, 3.2))
+    ax.barh(table["feature"][::-1], table["error"][::-1],
+            color=["tab:red" if up else "0.6" for up in table["above_expected"][::-1]])
+    ax.set(xlabel="Squared reconstruction error (scaled units)",
+           title=title or "Autoencoder: largest feature errors")
+    ax.tick_params(axis="y", labelsize=7)
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    for ext in ("png", "pdf"):
+        fig.savefig(FIGURES_DIR / f"{name}.{ext}", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    return fig, table
+
+
+def raw_evidence(user, date, loaders=None, web_path=None) -> dict:
+    """A19 step 5: every logon, device (USB), file and email event of `user` on `date` from the 4
+    small Parquet logs, and that day's web domains with visits and after-hours visits from the web
+    cache (http.parquet is never needed). Returns {"logon": ..., "device": ..., "file": ...,
+    "email": ..., "web": ...}, events in time order. The web table names each domain's keyword
+    category (job, leak, cloud, hack, competitor or other) and lists the categorised domains first,
+    then the rest by visits.
+
+    loaders: {log: function(users=[...]) -> events}; default: the src.data_loader loaders.
+    """
+    from src.features import domain_categories
+
+    if loaders is None:
+        from src import data_loader
+        loaders = {log: getattr(data_loader, f"load_{log}") for log in EVIDENCE_LOGS}
+    day = pd.Timestamp(date).normalize()
+    out = {}
+    for log, load in loaders.items():
+        events = load(users=[user])
+        events = events[pd.to_datetime(events["date"]).dt.normalize() == day].sort_values("date")
+        out[log] = events.drop(columns=[c for c in ("id", "day", "hour", "content") if c in events]
+                               ).reset_index(drop=True)
+    if web_path is None:
+        from src.config import PROCESSED_DIR
+        web_path = PROCESSED_DIR / WEB_CACHE
+    web = pd.read_parquet(web_path, filters=[("user", "==", user)])
+    web = web[pd.to_datetime(web["date"]).dt.normalize() == day].drop(columns=["user", "date"])
+    web.insert(1, "category", domain_categories(web["domain"]))
+    web = web.assign(_other=web["category"] == "other")
+    out["web"] = web.sort_values(["_other", "visits", "domain"], ascending=[True, False, True]
+                                 ).drop(columns="_other").reset_index(drop=True)
+    return out
 
 
 def model_path(model_name, features_path) -> Path:
