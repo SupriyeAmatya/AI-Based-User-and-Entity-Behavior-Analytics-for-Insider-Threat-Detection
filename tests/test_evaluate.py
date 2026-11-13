@@ -172,3 +172,98 @@ def test_timing_table_merges_every_source(two_files, tmp_path):
 def test_timing_table_skips_missing_sources(two_files, tmp_path):
     t8 = ev.timing_table(save=False)
     assert t8.empty
+
+
+# ---------------------------------------------------------------- Y20: FP/FN analysis
+@pytest.fixture
+def fpfn_case():
+    """8 test user-days (+2 val), threshold 0.5. Outcomes, in order:
+    A Mon TP, A Tue FN, B Mon FP (0.9), B Tue FP (0.6), C Mon TN, C Tue TN, D Mon FN, D Tue TP."""
+    dates = pd.to_datetime(["2011-02-07", "2011-02-08"] * 4)      # Mon, Tue
+    scores = pd.DataFrame({
+        "user": ["A", "A", "B", "B", "C", "C", "D", "D"], "date": dates, "split": "test",
+        "label": [1, 1, 0, 0, 0, 0, 1, 1], "scenario": [2, 2, 0, 0, 0, 0, 1, 1],
+        "score": [0.8, 0.1, 0.9, 0.6, 0.2, 0.3, 0.4, 0.7]})
+    val = pd.DataFrame({"user": ["A", "B"], "date": pd.to_datetime(["2011-01-03"] * 2),
+                        "split": "val", "label": [1, 0], "scenario": [2, 0], "score": [0.5, 0.1]})
+    features = scores[["user", "date"]].assign(
+        role=["Eng", "Eng", "Sales", "Sales", "Sales", "Sales", "Eng", "Eng"],
+        department=["R&D"] * 2 + ["Field"] * 4 + ["R&D"] * 2,
+        label=9, split="x",                                        # must not override the scores
+        z_user_http_count=[0, 0, 5.0, -1.0, 0, 0, 0, 0],
+        z_user_usb_connect=[0, 0, -7.0, 0.5, 0, 0, 0, 0],
+        z_user_email_sent=[0, 0, 1.0, 3.0, 0, 0, 0, 0],
+        f_http_count=[0, 0, 99.0, 99.0, 0, 0, 0, 0])
+    return pd.concat([scores, val], ignore_index=True), features
+
+
+def test_fp_fn_rows_marks_every_test_row(fpfn_case):
+    scores, features = fpfn_case
+    rows = ev.fp_fn_rows(scores, features, threshold=0.5)
+    assert len(rows) == 8 and set(rows["split"]) == {"test"}
+    assert list(rows["outcome"]) == ["TP", "FN", "FP", "FP", "TN", "TN", "FN", "TP"]
+    assert list(rows["weekday"][:2]) == ["Monday", "Tuesday"]
+    assert list(rows["label"]) == [1, 1, 0, 0, 0, 0, 1, 1]                # from the score file
+    assert rows.loc[2, "role"] == "Sales" and rows.attrs["threshold"] == 0.5
+    picked = ev.fp_fn_rows(scores, features)                                # best-F1 from val
+    assert picked.attrs["threshold"] == ev.threshold_best_f1(scores[scores["split"] == "val"])
+    with pytest.raises(ValueError, match="threshold_type"):
+        ev.fp_fn_rows(scores, features, threshold_type="median")
+
+
+def test_fp_breakdown_counts_and_rates(fpfn_case):
+    rows = ev.fp_fn_rows(*fpfn_case, threshold=0.5)
+    table = ev.fp_breakdown(rows)
+    assert list(table.columns) == ["dimension", "value", "n_normal", "n_fp", "fp_rate", "share_of_fp"]
+    role = table[table["dimension"] == "role"].set_index("value")
+    assert role.loc["Sales", "n_normal"] == 4 and role.loc["Sales", "n_fp"] == 2
+    assert role.loc["Sales", "fp_rate"] == 0.5 and role.loc["Sales", "share_of_fp"] == 1.0
+    assert "Eng" not in role.index                     # no normal Eng rows: FPs come from normal days
+    user = table[table["dimension"] == "user"]
+    assert list(user["value"]) == ["B"]                                     # users with an FP only
+    assert list(table["dimension"].unique()) == ["role", "department", "weekday", "user"]
+
+
+def test_top_deviations_lists_each_fps_largest_z_user_features(fpfn_case):
+    rows = ev.fp_fn_rows(*fpfn_case, threshold=0.5)
+    top = ev.top_deviations(rows, n=10, k=2)
+    assert len(top) == 2 and list(top["score"]) == [0.9, 0.6]               # FPs, highest first
+    first = top.iloc[0]
+    assert first["dev_1"] == "z_user_usb_connect" and first["dev_1_z"] == -7.0   # by |z|
+    assert first["dev_2"] == "z_user_http_count" and first["dev_2_z"] == 5.0
+    assert top.iloc[1]["dev_1"] == "z_user_email_sent"
+    assert "f_http_count" not in set(top[["dev_1", "dev_2"]].stack())
+    assert len(ev.top_deviations(rows, n=1, k=2)) == 1
+
+
+def test_fn_breakdown_per_insider(fpfn_case):
+    rows = ev.fp_fn_rows(*fpfn_case, threshold=0.5)
+    table = ev.fn_breakdown(rows)
+    assert list(table["user"]) == ["D", "A"]                               # by scenario, then user
+    a = table.set_index("user").loc["A"]
+    assert (a["scenario"], a["n_malicious_days"], a["n_detected"], a["n_missed"]) == (2, 2, 1, 1)
+    assert a["missed_share"] == 0.5 and a["missed_days"] == "2011-02-08"
+    assert a["first_malicious_day"] == "2011-02-07" and a["first_detected_day"] == "2011-02-07"
+    d = table.set_index("user").loc["D"]
+    assert d["first_detected_day"] == "2011-02-08"
+
+
+def test_fpfn_analysis_picks_the_best_models_and_saves(fpfn_case, tmp_path, monkeypatch):
+    scores, features = fpfn_case
+    monkeypatch.setattr(ev, "SCORES_DIR", tmp_path)
+    monkeypatch.setattr(ev, "TABLES_DIR", tmp_path / "tables")
+    for model, bonus in (("xgboost", 0.0), ("random_forest", 0.9), ("iforest", 0.3),
+                         ("autoencoder", 0.0), ("ocsvm", 0.9)):
+        s = scores.copy()
+        s.loc[s["label"] == 0, "score"] -= bonus                           # bigger bonus = better
+        s.to_parquet(tmp_path / f"{model}.parquet")
+    t5 = ev.compare_files([tmp_path / f"{m}.parquet" for m in ev.MAIN_MODELS])
+    picked = ev.pick_fpfn_models(t5)
+    assert picked == {"supervised": "random_forest", "unsupervised": "ocsvm"}
+    out = ev.fpfn_analysis(features=features, t5=t5)
+    for name in (ev.FP_BREAKDOWN_TABLE, ev.FN_TABLE):
+        saved = pd.read_csv(tmp_path / "tables" / name)
+        assert set(saved["model"]) == {"random_forest", "ocsvm"}, name
+    assert (tmp_path / "tables" / ev.FP_TOP_TABLE).exists()    # empty here: both models have no FP
+    assert out["fp_top"].empty
+    assert set(out) == {"models", "fp_breakdown", "fp_top", "fn"}

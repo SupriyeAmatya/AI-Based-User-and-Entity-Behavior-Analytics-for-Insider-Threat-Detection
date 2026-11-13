@@ -274,12 +274,12 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **Y17** T5, per-scenario, delay, F4, F5, T8
   - [x] **Tables and figures:** `model_comparison.csv` (T5), `model_per_scenario.csv`, `detection_delay.csv`, `T8_timing.csv`, F4, F5, `python -m src.evaluate report` + tests (#48)
   - [x] **Regenerate** with `report` after A16 on `ayo/Y17-rerun-tuned`: only the IF, AE and `_contam` rows change **(Claude)**
-  - [ ] **Walkthrough material** (card step 8)
+  - [x] **Walkthrough material** (card step 8): notebook 04 section 5 (T5, per-scenario recall, F4) on `ayo/Y20-fp-fn` **(Claude)**
 - [x] **Y18** F6, `feature_importance.csv`, per-scenario importance *(on `ayo/Y18-shap-fpfn`: `python -m src.explain shap` refits XGBoost, RF (tuned, `FINAL_SETUP`) and Isolation Forest (tuned, #50) and explains all 170 test positives + 5,000 negatives; F6 + RF/IF summaries, `feature_importance.csv`, `feature_importance_per_scenario.csv`, `feature_importance_top10_overlap.csv`; `importance_table()`, `top10_overlap()`, `per_scenario_importance()` + tests)* **(Claude)**
-- [ ] **Y18-H** interpretation [H] *(step 5, the comparison with T7, waits for #51's ablation fix)*
+- [ ] **Y18-H** interpretation [H] *(reading drafted by Claude at Ayo's request in notebook 04 section 6, with the T7 numbers from #51; Ayo checks it and ticks)*
 - [ ] **Y19** Related Work paragraphs [H]
-- [ ] **Y20** FP/FN tables
-- [ ] **Y20-H** causes + fixes (`fp_fn_causes.csv`) [H]
+- [x] **Y20** FP/FN tables *(on `ayo/Y20-fp-fn`: `python -m src.evaluate fpfn` picks XGBoost and the autoencoder by test PR-AUC from T5 and writes `fp_breakdown.csv`, `fp_top10.csv`, `fn_by_insider.csv` at best-F1; `fp_fn_rows()`, `fp_breakdown()`, `top_deviations()`, `fn_breakdown()`, `pick_fpfn_models()` + tests)* **(Claude)**
+- [ ] **Y20-H** causes + fixes (`fp_fn_causes.csv`) [H] *(`fp_fn_causes.csv` and the notebook 04 section 7 reading drafted by Claude at Ayo's request, marked as drafts; Ayo checks them and ticks)*
 - [ ] **Y20** walkthrough presented
 - [ ] **Y21** IV-C (supervised), V [H]
 - [ ] **Y22** VI-A, VI-C, P/R paragraph [H]

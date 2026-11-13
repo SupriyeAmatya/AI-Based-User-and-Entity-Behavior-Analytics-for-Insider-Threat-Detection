@@ -1,0 +1,17 @@
+model,threshold,user,date,role,department,weekday,score,dev_1,dev_1_z,dev_2,dev_2_z,dev_3,dev_3_z
+xgboost,0.602965235710144,DCH0843,2011-02-02,ProductionLineWorker,3 - Assembly,Wednesday,0.9918845891952515,z_user_first_logon_hour,-5.871964982818287,z_user_afterhours_events,3.3939778563622225,z_user_work_duration,2.944038891204848
+xgboost,0.602965235710144,WDD0366,2011-03-04,ITAdmin,6 - Security,Friday,0.8019892573356628,z_user_work_duration,1.073786001386253,z_user_email_external,-0.953661871223685,z_user_first_logon_hour,-0.8290328798039438
+xgboost,0.602965235710144,MAR0955,2011-02-05,ProductionLineWorker,3 - Assembly,Saturday,0.7944391965866089,z_user_afterhours_events,37.0,z_user_file_copy,24.0,z_user_work_duration,-7.757670206635198
+xgboost,0.602965235710144,DCH0843,2011-02-08,ProductionLineWorker,3 - Assembly,Tuesday,0.7647696733474731,z_user_file_copy,3.3185069289241396,z_user_afterhours_events,3.291123615906037,z_user_first_logon_hour,-2.728524333553458
+xgboost,0.602965235710144,WDD0366,2011-02-25,ITAdmin,6 - Security,Friday,0.7483012080192566,z_user_first_logon_hour,0.8175075506438599,z_user_email_external,0.7714578051338452,z_user_email_recipients,0.6897788580659028
+xgboost,0.602965235710144,CQW0652,2011-03-25,Technician,3 - FieldService,Friday,0.7318140268325806,z_user_file_copy,1.7520560939586536,z_user_usb_connect,0.9291943942370836,z_user_http_count,-0.9146362366932199
+autoencoder,0.746465802192688,LHL0309,2011-04-26,Salesman,2 - Sales,Tuesday,66.0961685180664,z_user_http_hack,1.0,z_user_email_recipients,0.4241451125707263,z_user_email_external,-0.2930822652114522
+autoencoder,0.746465802192688,VTT0385,2011-05-12,Scientist,1 - Research,Thursday,65.05345916748047,z_user_email_external,-1.2613541236242403,z_user_http_hack,1.0,z_user_http_job,-0.6557880137093273
+autoencoder,0.746465802192688,TEB0251,2011-03-18,MechanicalEngineer,3 - Engineering,Friday,60.05933380126953,z_user_http_hack,1.0,z_user_logon_count,0.8428288367119111,z_user_logon_other_pc,0.7444582273434897
+autoencoder,0.746465802192688,MAR0955,2011-02-05,ProductionLineWorker,3 - Assembly,Saturday,24.388259887695312,z_user_afterhours_events,37.0,z_user_file_copy,24.0,z_user_work_duration,-7.757670206635198
+autoencoder,0.746465802192688,KLH0596,2011-02-01,ProductionLineWorker,3 - Assembly,Tuesday,9.395856857299805,z_user_afterhours_events,47.0,z_user_file_copy,27.0,z_user_usb_connect,9.0
+autoencoder,0.746465802192688,BAL0044,2011-02-24,ITAdmin,6 - Security,Thursday,6.569074630737305,z_user_http_job,0.9394126081145817,z_user_first_logon_hour,0.7690541989587023,z_user_logon_count,0.7421800845488131
+autoencoder,0.746465802192688,ZKS0899,2011-03-28,Technician,3 - FieldService,Monday,5.729629993438721,z_user_http_count,-29.0,z_user_file_copy,-7.001040311192695,z_user_usb_connect,-5.589842839782141
+autoencoder,0.746465802192688,JDF0593,2011-03-12,ProductionLineWorker,3 - Assembly,Saturday,4.346282482147217,z_user_http_count,-10.0,z_user_work_duration,-5.337620207064961,z_user_usb_connect,-4.521820277073951
+autoencoder,0.746465802192688,HRL0540,2011-03-21,FieldServiceEngineer,3 - FieldService,Monday,4.3401055335998535,z_user_http_count,-100.0,z_user_usb_connect,-5.5159324896704565,z_user_email_recipients,-5.185737280202733
+autoencoder,0.746465802192688,BJM0111,2011-02-19,Technician,3 - Engineering,Saturday,4.282525062561035,z_user_afterhours_events,10.985697591980385,z_user_work_duration,1.7052528579170627,z_user_http_cloud,1.0
