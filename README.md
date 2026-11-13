@@ -139,10 +139,10 @@ Then run the notebooks in order (`01` → `05`).
 
 ## Results
 
-Model comparison on the **test** split (Feb 1 – May 17, 2011: 65,007 user-days, 170 malicious, 15 insiders), from `results/tables/model_comparison.csv` (T5). The numbers come from the results machine (TEAM_PLAN 2.5.12); rebuild them with the two `final` commands and `python -m src.evaluate report`.
+Model comparison on the **test** split (Feb 1 – May 17, 2011: 65,007 user-days, 170 malicious, on 15 accounts: 14 insiders and the hijacked supervisor account `FBA0348`), from `results/tables/model_comparison.csv` (T5). The numbers come from the results machine (TEAM_PLAN 2.5.12); rebuild them with the two `final` commands and `python -m src.evaluate report`.
 
 - **Operating points:** *best-F1* uses the threshold that maximises F1 on the validation split, applied unchanged to test; *top 1%* flags the 1% highest-scoring test user-days (651).
-- **Columns:** FPR and FNR are the false-positive and false-negative rates; *user recall* is the share of the 15 test insiders flagged on at least one malicious day; *median delay* is the days from an insider's first malicious test day to their first alert.
+- **Columns:** FPR and FNR are the false-positive and false-negative rates; *user recall* is the share of those 15 accounts flagged on at least one malicious day; *median delay* is the days from an account's first malicious test day to its first alert.
 - **"All train rows":** the `_contam` variants train on every train row, malicious ones included; the other unsupervised models train on normal rows only.
 - **More results:** per scenario `model_per_scenario.csv`, unseen scenarios `loso.csv` (T6), feature groups `ablation.csv` (T7), timing `T8_timing.csv` (T8), feature importance `feature_importance.csv` (F6).
 
