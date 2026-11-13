@@ -224,6 +224,7 @@ def plot_ae_errors(detector, X: pd.DataFrame, row, name, k=10, title=None):
             color=["tab:red" if up else "0.6" for up in table["above_expected"][::-1]])
     ax.set(xlabel="Squared reconstruction error (scaled units)",
            title=title or "Autoencoder: largest feature errors")
+    ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 3))   # errors reach 1e5: no run-together ticks
     ax.tick_params(axis="y", labelsize=7)
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):

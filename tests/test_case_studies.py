@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+import xgboost  # noqa: F401  (macOS: load xgboost's OpenMP before torch's, or test_ablation segfaults)
 
 from src import pipeline
 from src.models_unsupervised import train_and_score
