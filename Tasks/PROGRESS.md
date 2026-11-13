@@ -111,7 +111,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | — | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* *(not needed: no feature bug was reported, so `features_v1.parquet` stays the final table and no second data drop happens)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(`final` in #33, tuned defaults in #50 on Nov 10; tick when announced)* | Arva → all (Git) |
 | [x] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` *(#41, Nov 8)* | Ayo → all (Git) |
-| [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV is not on `main`)* | Arva → Ayo (Git) |
+| [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV has to be built on Ayo's M1, see A17)* | Arva → Ayo (Git) |
 | [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
 | [x] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` in #51, re-run Nov 11 with one fixed XGBoost tree count)* | Supriye → Ayo (Git) |
 | [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
@@ -219,11 +219,12 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [ ] **Arva** reads the change and writes the DEC-A reasons [H]
 - [ ] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
   - [x] **Code:** `results_extra()`, `timing()`, `alerts_per_day()` + tests (#34; restored by #43 after a merge dropped them)
-  - [ ] **`unsupervised_extra.csv`** on `main` *(Ayo built it locally for T8 in #48; it is not committed)*
+  - [ ] **`unsupervised_extra.csv`** on `main`, built on Ayo's M1 with `final` then `extra` *(Arva's review of #57, Nov 13: a CSV built on Supriye's Intel laptop gave autoencoder rows and timings that differ from T5/T8, so it was taken out of that PR)*
 - [ ] **A17-H** interpret it [H]
 - [ ] **A18** pipeline on v1, `precision_at_20.csv`, F8
-  - [x] **Code:** `precision_at_k()`, `f8_user()`, `plot_risk_timeline()` (#35)
-  - [ ] **Outputs** from the v1 run: `precision_at_20.csv`, `top_risky_users_autoencoder.csv`, `F8_risk_timeline.*`
+  - [x] **Code:** `precision_at_k()`, `f8_user()`, `plot_risk_timeline()` (#35); `python -m src.pipeline --prototype` writes every output in one run (#57) **(Claude)**
+  - [x] **Outputs** from the v1 run (Nov 13, #57): `top_risky_users.csv`, `top_risky_users_autoencoder.csv`, `precision_at_20.csv`, `F8_risk_timeline.*`; step 6 (LANL) does not apply, S24 was not agreed **(Claude)**
+  - [ ] **F8 model** (Isolation Forest, as drawn, or the autoencoder) and the reasons floor `MIN_REASON_Z` chosen by Arva [H]; Arva runs `prototype()` himself
 - [ ] **A19** notebook 05: 4 cases × parts 1–4, F7
 - [ ] **A19-H** narratives + verdicts [H]
 - [ ] **A14-rest** F2 [H]; IV-C/IV-D notes [H]; `arva/notes` merged

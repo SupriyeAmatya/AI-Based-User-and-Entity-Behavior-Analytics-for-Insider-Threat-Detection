@@ -1,21 +1,21 @@
 rank,user,peak_date,peak_risk,high_days,medium_days,active_days,first_alert,alert_level,reasons
-1,TSM0363,2011-03-22,99.04035433070867,1,6,74,2011-02-01,High,3 after-hours logons; 5 logoffs; 5 logons
-2,CLB0774,2011-03-30,98.91240157480316,0,24,74,2011-02-07,Medium,24 files copied; 9 USB connects; 1 after-hours logons
-3,JLM0364,2011-02-22,98.5482283464567,0,9,63,2011-02-22,Medium,6 logoffs; 3 after-hours logons; 6 logons
-4,DCH0843,2011-02-08,97.89862204724409,0,2,17,2011-02-02,Medium,13 files copied; 5 USB connects; 1 after-hours logons
-5,CBB0365,2011-02-14,97.80511811023622,0,29,74,2011-02-02,Medium,7 logoffs; 4 after-hours logons; 8 logons
-6,LBC0356,2011-03-17,97.72637795275591,0,9,74,2011-02-02,Medium,5 after-hours logons; 6 logoffs; 7 logons
-7,RSC0089,2011-05-13,97.58366141732283,0,7,78,2011-03-09,Medium,9 USB connects; 5 logons; 3 logoffs
-8,THR0873,2011-03-01,97.54429133858268,0,20,74,2011-02-03,Medium,21 files copied; 9 USB connects; 13 external emails
-9,RHO0732,2011-02-01,96.99803149606299,0,4,74,2011-02-01,Medium,3 logoffs; 15 external emails; 1 after-hours logons
-10,MLL0598,2011-02-10,96.7224409448819,0,1,74,2011-02-10,Medium,7 USB connects; 4 files copied
-11,IBB0696,2011-03-23,96.55511811023622,0,2,74,2011-03-23,Medium,4 files copied; 3 logons; 2 USB connects
-12,ATE0869,2011-03-05,96.45669291338582,0,1,102,2011-03-05,Medium,1 after-hours logons; 4 files copied; 11 external emails
-13,ILJ0526,2011-02-03,96.35826771653544,0,3,79,2011-02-03,Medium,6 files copied; 3 logons; 2 USB connects
-14,JJH0613,2011-03-18,96.27460629921259,0,1,74,2011-03-18,Medium,4 USB connects; 4 files copied; 2 logons
-15,WIQ0567,2011-04-27,95.51181102362204,0,1,95,2011-04-27,Medium,7 files copied; 2 logons; 1 USB connects
-16,BTR0403,2011-05-13,95.50688976377953,0,1,74,2011-05-13,Medium,4 logons; 7 files copied; 3 logoffs
-17,MDH0580,2011-02-17,93.24803149606299,0,0,24,,Low,6 USB connects; 8 files copied
-18,RDT0424,2011-03-17,91.19586614173228,0,0,74,,Low,3 logons; 2 USB connects; 2 logoffs
-19,SAB0781,2011-04-04,90.51181102362204,0,0,74,,Low,10 files copied; 2 logons; 1 USB connects
-20,CRO0027,2011-05-14,90.40354330708661,0,0,75,,Low,1 after-hours logons
+1,AJF0370,2011-04-11,100.0,79,0,79,2011-02-01,High,first logon on a new PC; after-hours events 1.8σ above own baseline; email recipients 1.4σ above own baseline
+2,EIS0041,2011-04-25,99.99952036989075,55,18,74,2011-02-01,High,first logon on a new PC; job-site visits 2.2σ above own baseline; after-hours events 1.9σ above own baseline
+3,BAL0044,2011-04-29,99.99904073978148,63,11,74,2011-02-01,High,first logon on a new PC; after-hours events 1.9σ above own baseline; external emails 1.5σ below own baseline
+4,IBB0359,2011-04-15,99.97793701497405,54,20,74,2011-02-01,High,first logon on a new PC; after-hours events 1.7σ above own baseline; job-site visits 1.3σ above own baseline
+5,HDS0367,2011-05-02,99.9702629332259,57,16,74,2011-02-01,High,web visits 24.0σ below own baseline; first logon on a new PC; email recipients 1.8σ above own baseline
+6,MAR0955,2011-02-05,99.88488877377766,3,3,25,2011-02-05,High,after-hours events 37.0σ above own baseline; files copied 24.0σ above own baseline; hours between first logon and last logoff 7.8σ below own baseline
+7,JLM0364,2011-04-28,99.82925168110353,3,43,63,2011-02-02,High,after-hours events 11.0σ above own baseline; web visits 7.0σ above own baseline; keylogger/hacking-site visits 6.0σ above own baseline
+8,DCH0843,2011-02-02,99.76785902711829,2,0,17,2011-02-02,High,first logon hour 5.9σ below own baseline; after-hours events 3.4σ above own baseline; hours between first logon and last logoff 2.9σ above own baseline
+9,BAJ0654,2011-02-01,99.6877607988719,4,18,74,2011-02-01,High,after-hours events 4.0σ above own baseline; first logon on a new PC
+10,LBF0214,2011-05-13,99.59519218778478,1,11,100,2011-02-11,High,after-hours events 9.5σ above own baseline; file-sharing site visits 2.2σ above own baseline; files copied 1.8σ above own baseline
+11,RHO0732,2011-02-01,99.5889569963644,1,8,74,2011-02-01,High,hours between first logon and last logoff 5.0σ above own baseline; first logon hour 3.0σ below own baseline; after-hours events 2.8σ above own baseline
+12,BJM0111,2011-02-19,99.58128291461625,1,17,86,2011-02-12,High,after-hours events 11.0σ above own baseline; first-ever leak or file-sharing site visit; hours between first logon and last logoff 1.7σ above own baseline
+13,PNH0761,2011-05-13,99.556821779044,2,3,74,2011-02-25,High,after-hours events 7.9σ above own baseline; first logon hour 3.3σ below own baseline; hours between first logon and last logoff 3.3σ above own baseline
+14,WDD0366,2011-02-28,99.55298473816993,3,17,36,2011-02-01,High,first logon on a new PC; files copied 2.9σ above own baseline; USB connects 1.4σ above own baseline
+15,DMG0358,2011-03-17,99.54674954674955,4,47,74,2011-02-01,High,job-site visits 5.7σ above own baseline; competitor-site visits 3.7σ above own baseline; first logon on a new PC
+16,KLH0596,2011-02-01,99.52756434237915,2,1,20,2011-02-01,High,after-hours events 47.0σ above own baseline; files copied 27.0σ above own baseline; USB connects 9.0σ above own baseline
+17,QNP0216,2011-03-08,99.50118468636987,5,48,74,2011-02-01,High,job-site visits 4.5σ above own baseline; first logon on a new PC; competitor-site visits 2.9σ above own baseline
+18,RSC0089,2011-05-13,99.48008096156244,2,11,78,2011-02-16,High,after-hours events 5.3σ above own baseline; first logon on a new PC; file-sharing site visits 2.1σ above own baseline
+19,HWW0436,2011-03-18,99.46521242817539,1,2,74,2011-02-04,High,after-hours events 7.0σ above own baseline; files copied 2.1σ above own baseline; email recipients 1.2σ above own baseline
+20,DLM0051,2011-04-02,99.45993649697354,9,84,98,2011-02-01,High,after-hours events 3.7σ above own baseline
