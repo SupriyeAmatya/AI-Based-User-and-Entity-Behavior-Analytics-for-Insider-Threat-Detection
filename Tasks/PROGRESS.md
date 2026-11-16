@@ -257,7 +257,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **REV-Y** read own code [H]
 - [ ] **REV-Y** Y3 10-row hand-check [H]
 - [ ] **REV-Y** A3/M1/Y6 confirmations
-- [ ] **REV-Y** reviews done (§3.7)
+- [x] **REV-Y** reviews done (§3.7) *(Nov 16: post-merge review comments on #1, #2, #8, #10, #13, #14, #19, #20, #22 after `python -m pytest tests` on `main` (172 passed); no Issue needed)* **(Claude)**
 - [ ] **DEC-Y** imbalance set-up [H] *(#41 records it as decided by Ayo on Nov 8: RF with SMOTE, XGBoost with class weights; Ayo ticks this)*
 - [ ] **DEC-Y** LOSO justification [H]
 - [ ] **Y-LIT1** Saito & Rehmsmeier [H]
@@ -292,28 +292,28 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 
 | ✓ | PR | What | Author (written by) | Reviewer |
 |---|---|---|---|---|
-| [ ] | #1 | S2 setup | Supriye (Claude) | Ayo |
-| [ ] | #2 | Plans + tracker | Supriye (Claude) | Ayo |
+| [x] | #1 | S2 setup | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
+| [x] | #2 | Plans + tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #3 | Y3–Y6 `evaluate.py` | Supriye for Ayo (Claude) | Arva |
 | [ ] | #4 | S4–S5 data loader | Supriye (Claude) | Arva |
 | [ ] | #5 | S6–S8 labels, EDA | Supriye (Claude) | Arva |
 | [ ] | #6 | S9 v0 | Supriye (Claude) | Arva |
 | — | #7 | Catch-up merge of #3–#6 | Supriye (Claude) | (covered by #3–#6) |
-| [ ] | #8 | Tracker | Supriye (Claude) | Ayo |
+| [x] | #8 | Tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #9 | `CLAUDE.md` | Arva | Supriye |
-| [ ] | #10 | A3 synthetic | Arva | Ayo |
+| [x] | #10 | A3 synthetic | Arva | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #11 | Review fixes | Supriye (Claude) | Arva |
 | [ ] | #12 | Cross-check, split counts | Supriye (Claude) | Arva |
-| [ ] | #13 | A3 rename | Supriye for Arva (Claude) | Ayo |
-| [ ] | #14 | A4–A6 | Supriye for Arva (Claude) | Ayo |
+| [x] | #13 | A3 rename | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
+| [x] | #14 | A4–A6 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #15 | A7 risk scoring | Supriye for Arva (Claude) | Supriye |
 | [ ] | #16 | Tracker audit | Supriye (Claude) | Arva |
 | [ ] | #17 | S10–S16 features | Supriye (Claude) | Arva |
 | [ ] | #18 | S17–S20 baselines | Supriye (Claude) | Arva |
-| [ ] | #19 | A8 | Supriye for Arva (Claude) | Ayo |
-| [ ] | #20 | A9–A10 | Supriye for Arva (Claude) | Ayo |
+| [x] | #19 | A8 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
+| [x] | #20 | A9–A10 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #21 | A11–A12 pipeline | Supriye for Arva (Claude) | Supriye |
-| [ ] | #22 | A13–A14 | Supriye for Arva (Claude) | Ayo |
+| [x] | #22 | A13–A14 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #23 | Y7–Y10 | Supriye for Ayo (Claude) | Supriye |
 | [ ] | #24 | Y11 `explain.py` | Supriye for Ayo (Claude) | Arva |
 | [ ] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva |
