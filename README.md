@@ -153,7 +153,7 @@ The prototype goes from the frozen feature table to a ranked list of the riskies
    python src/pipeline.py
    ```
 
-   The first run trains the model and saves it in `models/`; later runs load it. The table is printed and saved to `results/tables/top_risky_users.csv`.
+   The first run trains the model and saves it in `models/`; later runs load it. The table is printed and saved to `results/tables/top_risky_users.csv`. A saved model is reused whenever its feature columns match, so after the detector defaults change (as with the tuning in #50), run once with `--retrain` or delete `models/`.
 
 3. **Options:**
    - `--model autoencoder` (or `ocsvm`) ranks with another detector;
@@ -167,6 +167,7 @@ The prototype goes from the frozen feature table to a ranked list of the riskies
 - `active_days`: test days with activity. `first_alert`: the first day at Medium or above.
 - `alert_level`: High, Medium or Low, from `peak_risk`.
 - `reasons`: the three features that contributed most on `peak_date`, e.g. "24 files copied; 9 USB connects; 1 after-hours logons".
+- With `--date`, the table has `user_risk` (the highest daily risk in the 7 days ending that day), `active_days` (days with activity in that window), `last_active`, `alert_level` (from `user_risk`) and `reasons` (for the riskiest day in the window) instead.
 
 The table holds no labels, as an analyst would see it. To rebuild every score file for the evaluation (not needed for the pipeline):
 
