@@ -228,7 +228,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [ ] **A19-H** narratives + verdicts [H]
 - [ ] **A14-rest** F2 [H]; IV-C/IV-D notes [H]; `arva/notes` merged
 - [ ] **A20** Related Work paragraphs [H]
-- [ ] **A21** dashboard *(optional)*
+- [x] **A21** dashboard *(optional)* *(Nov 16 on `arva/A21-dashboard`: `streamlit run app/dashboard.py` starts on v1 and shows all 3 parts (ranked table, user risk timeline, reasons for a chosen day); 9 tests, one of them starts the page)* **(Claude)**
 - [ ] **A22** IV-C, IV-D, VI-B [H]
 - [ ] **A23** VIII [H] + README run section
 - [ ] **A24** fresh-clone test + demo ≤ 3 min

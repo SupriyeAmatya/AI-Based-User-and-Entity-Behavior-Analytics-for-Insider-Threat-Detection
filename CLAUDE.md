@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A three-person course project (CSCI 561): a UEBA (User and Entity Behavior Analytics) prototype that scores CERT r4.2 **user-days** for insider-threat risk and compares unsupervised models (Isolation Forest, Autoencoder, optional One-Class SVM) against supervised ones (Random Forest, XGBoost). Deadline: Fri Nov 20, 2026. Every module in the README tree exists except the optional `app/dashboard.py`. Planning lives in `Tasks/` (plan v2, rewritten Nov 5) and is the source of truth for contracts and who owns what:
+A three-person course project (CSCI 561): a UEBA (User and Entity Behavior Analytics) prototype that scores CERT r4.2 **user-days** for insider-threat risk and compares unsupervised models (Isolation Forest, Autoencoder, optional One-Class SVM) against supervised ones (Random Forest, XGBoost). Deadline: Fri Nov 20, 2026. Every module in the README tree exists, including the optional Streamlit dashboard (`streamlit run app/dashboard.py`, A21: ranked table, a user's risk timeline, the reasons for a chosen day; its data functions are tested in `tests/test_dashboard.py` without Streamlit, and one test starts the page with Streamlit's `AppTest`). Planning lives in `Tasks/` (plan v2, rewritten Nov 5) and is the source of truth for contracts and who owns what:
 - `Tasks/TEAM_PLAN.md`: team contracts (2.5), human-only work (2.6), dataset and model facts (2.7), git workflow and reviewer map (3.9, 3.10), reporting protocol (5.4)
 - `Tasks/<Name>.md`: per-person task cards with IDs (`S*` Supriye, `A*` Arva, `Y*` Ayo)
 - `Tasks/PROGRESS.md`: tracker. Mark work Claude did with **(Claude)**.
