@@ -180,3 +180,24 @@ def test_http_cache_without_stamp_is_rebuilt_and_missing_log_is_explained(tmp_pa
     rebuilt = features.http_user_day_domains()
     assert rebuilt["afterhours"].tolist() == [1]
     assert features.cache_work_hours(tmp_path / "http_user_day_domain.parquet") == "7-19"
+
+
+def test_v1_table_contract():
+    """The frozen features_v1.parquet keeps the TEAM_PLAN 2.5.1 contract (v0 has the same check in
+    test_v0_smoke.py): metadata first, one row per user-day, labels consistent with scenarios,
+    every row has a role and department, and the split is by date."""
+    from src.config import PROCESSED_DIR, TRAIN_END, VAL_END
+    from src.features import META_COLUMNS, feature_columns
+    path = PROCESSED_DIR / "features_v1.parquet"
+    if not path.exists():
+        pytest.skip("features_v1.parquet not present")
+    df = pd.read_parquet(path)
+    assert list(df.columns[:len(META_COLUMNS)]) == META_COLUMNS
+    assert len(feature_columns(df)) == 76 and len(df) == 330_268
+    assert not df.duplicated(["user", "date"]).any()
+    assert ((df["label"] == 1) == (df["scenario"] > 0)).all()
+    assert int(df["label"].sum()) == 984
+    assert df[["role", "department"]].notna().all().all()
+    expected = np.where(df["date"] <= pd.Timestamp(TRAIN_END), "train",
+                        np.where(df["date"] <= pd.Timestamp(VAL_END), "val", "test"))
+    assert (df["split"].to_numpy() == expected).all()

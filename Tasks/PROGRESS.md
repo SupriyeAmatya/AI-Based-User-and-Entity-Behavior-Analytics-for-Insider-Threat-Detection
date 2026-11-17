@@ -234,6 +234,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **A21** dashboard *(optional)* *(Nov 16 on `arva/A21-dashboard`: `streamlit run app/dashboard.py` starts on v1 and shows all 3 parts (ranked table, user risk timeline, reasons for a chosen day); 9 tests, one of them starts the page)* **(Claude)**
 - [ ] **A22** IV-C, IV-D, VI-B [H]
 - [ ] **A23** VIII [H] + README run section
+  - [x] **README "Run the prototype"** section (#59, follow-up #61)
+  - [ ] **VIII** Conclusion & Future Work [H]
 - [ ] **A24** fresh-clone test + demo ≤ 3 min
 - [ ] **A25** draft review
 - [ ] **A26** final fixes
@@ -339,9 +341,9 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **`ayo/Y17-comparison`** (Arva) (#48)
 - [ ] **`supriye/notes`, `arva/notes`, `ayo/notes`** (any)
 - [x] **`arva/A18-prototype-cases`** (Ayo) (#35: A18 code only; the outputs and A19 are still to come)
-- [ ] **`ayo/Y18-shap-fpfn`** (Arva)
-- [ ] **`arva/A21-dashboard`** *(optional)* (Supriye)
-- [ ] **`arva/A23-readme-run`** (Supriye)
+- [x] **`ayo/Y18-shap-fpfn`** (Arva) (#53; Y20 merged separately as #55)
+- [x] **`arva/A21-dashboard`** *(optional)* (Supriye) (#63)
+- [x] **`arva/A23-readme-run`** (Supriye) (#59, follow-up #61)
 - [ ] **`arva/A24-fresh-clone-fixes`** *(if needed)* (Supriye)
 - [ ] **`ayo/Y23-verify`** (Supriye)
 - [ ] **`arva/A26-final-fixes`, `ayo/Y25-final-fixes`** *(if needed)* (Supriye)
@@ -417,7 +419,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **Login patterns:** `f_logon_*` family in v1 + feature dictionary
 - [ ] **Authentication failures:** LANL features **or** the gap stated in §III + §VII
 - [x] **File / resource access:** `f_file_*`, `f_usb_*` in v1
-- [ ] **Application usage:** 7 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
+- [ ] **Application usage:** 8 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
 - [x] **Activity times:** after-hours/weekend/duration features in v1; window final with its reason (07:00–19:00, #36/#37)
 - [x] **Deviation from baseline:** `z_user_*`, `z_peer_*`, `new_*`, F3
 - [ ] **Normal-behavior baseline in the paper:** §IV-B
@@ -429,7 +431,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **Precision/recall vs. accuracy:** §V paragraph
 - [x] **Unseen behavior:** T6 (`loso.csv`, #46) *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)*
 - [ ] **FP / FN analysis:** §VI-C + `fp_fn_causes.csv`
-- [ ] **Feature importance:** F6, `feature_importance.csv`, T7
+- [x] **Feature importance:** F6, `feature_importance.csv`, T7 (#53, #51)
 - [ ] **Anomaly explanations:** notebook 05 + §VI-B + F7
 - [ ] **Prototype:** fresh-clone run + README section
 - [ ] **Paper:** IEEE PDF, all T1–T8 / F1–F8 referenced

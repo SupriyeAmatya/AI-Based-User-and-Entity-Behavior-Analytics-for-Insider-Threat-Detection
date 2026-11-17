@@ -79,7 +79,7 @@ Thu Nov 19 – Fri Nov 20 FINISH     read-through, fresh-clone test, tag, archiv
 | M1 | Tue Nov 3 | **Feature table v0** | Supriye | v0 + `get_model_matrix()` load in Arva's and Ayo's code | Open (confirmations) |
 | — | Fri Nov 6 | `explain.py` ready | Ayo | Merged; Arva confirms it for the case studies | Code merged |
 | M2 | Sun Nov 8 | **Feature table v1 frozen** | Supriye | v1 + dictionary on the drive; decisions final; both teammates load it | Built, not shared |
-| — | Tue Nov 10 | Tuned models + scores | Arva, Ayo | Tuned defaults committed; final score files on the drive | — |
+| — | Tue Nov 10 | Tuned models + scores | Arva, Ayo | Tuned defaults and `final` commands merged; score files rebuilt on each laptop (2.5.12) | — |
 | M3 | Wed Nov 11 | **All score files final** | Arva, Ayo | All score files incl. LOSO + timing; `evaluate.py` runs on each | — |
 | — | Sat Nov 14 | Analysis done | All | T5–T8, F4–F8, FP/FN, case studies; walkthrough held | — |
 | M4 | Mon Nov 16 | **All paper sections drafted** | All | Every section in 3.12 is full text in Overleaf | — |
@@ -452,7 +452,7 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 - **The conversion stops after `file.csv`:** the archive is multi-stream bz2. Use `python -m src.data_loader convert`, which handles it; never `tarfile.open(..., "r|bz2")`.
 - **Out of memory on the web log:** always pass `columns=` / `users=` to `load_http`, or use `iter_http_batches()`. The S15 cache (`data/processed/http_user_day_domain.parquet`) avoids re-reading it.
 - **Counts that look inconsistent:** 70 insiders vs. 72 accounts (2 hijacked supervisor accounts); 986 labeled malicious user-days vs. 984 in the feature table (2 days with no logon). Both are expected.
-- **Web features:** v1 has **7** `f_http_*` columns (count, domains, after-hours, job, leak, cloud, hack), not 8.
+- **Web features:** v1 has **8** `f_http_*` columns (count, domains, after-hours, job, leak, cloud, hack, competitor); `competitor` was added Nov 6.
 - **Checksums don't match after unzipping** (`python scripts/data_drop.py verify` lists `CHANGED`/`MISSING`): re-download the zip once; if it still fails, ask Supriye to re-upload. Never send single files around.
 - **The working hours changed but the after-hours web counts didn't:** fixed. The web-log cache records the window it was built with and rebuilds itself (S20b, Nov 5).
 - **A teammate's score file differs slightly from yours:** this is expected for the AE on another CPU. Use the results machine's tables (2.5.12) for the paper.
@@ -464,7 +464,7 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 - **Supervised scores near 1.0 on v1:** an unsaved Nov 5 run gave RF/XGB val PR-AUC ≈ 0.95–0.99 with all 73 inputs. Without the 5 psychometric columns it was still 0.99; with only the raw `f_*` counts it was 0.51 val / 0.38 test. So the baselines drive it. **Re-run, then sanity-check** (ablation S22, SHAP Y18) before claiming it in the paper.
 - **Isolation Forest weak on v1:** the same unsaved run gave IF val PR-AUC ≈ 0.014. Report it honestly, and check the tuned AE and the per-scenario numbers.
 - **One-Class SVM below random on v0** (ROC-AUC 0.26): the implementation was checked. It's optional, so Arva decides whether to keep, tune or drop it.
-- **XGBoost stops at iteration 0 on synthetic data:** val has 24 positives, so val PR-AUC is noisy. On real data it trains 81–221 trees.
+- **XGBoost stops at iteration 0 on synthetic data:** val has 24 positives, so val PR-AUC is noisy. On v0 it trained 81–221 trees; the tuned v1 model early-stops at 545.
 - **Scenario 3 is thin in test:** 4 malicious days. Say so in V and VII, and lean on LOSO.
 
 ### 4.4 Git
@@ -514,7 +514,7 @@ AI agents may write code (as in Weeks 0–1), but **the owner reviews it, runs i
 | Paper | IEEE PDF within the page limit, all T1–T8 and F1–F8 referenced |
 
 ### 5.3 Quality gates
-- **Tests:** `python -m pytest tests` passes on `main` after every merge (83 today; the count only grows).
+- **Tests:** `python -m pytest tests` passes on `main` after every merge (83 on Nov 5, 193 on Nov 17; the count only grows).
 - **Notebooks:** 01–05 run top to bottom; their outputs match `results/tables/`.
 - **Reproducibility:** a fresh clone + `pip install -r requirements.txt` + `ueba_data_v1.zip` runs both `final` commands, the pipeline and `04_evaluation.ipynb`.
 - **Transfers:** exactly one data drop (two if S21 or S24 happens); no score file, model or partial table was ever sent by chat or drive.

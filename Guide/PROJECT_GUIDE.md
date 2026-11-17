@@ -168,7 +168,7 @@ Use **only past data** to compute baselines — never future days (that is data 
 
 ## Phase 5 — Establish Normal Behavior (`src/baseline.py`)
 
-- [ ] Pick a **training period** (the `train` split, TEAM_PLAN 5.3; by default up to Oct 31, 2010) and keep only days with **no** malicious activity — this is your "normal" reference
+- [ ] Pick a **training period** (the `train` split, TEAM_PLAN 2.5.3; up to Oct 31, 2010) and keep only days with **no** malicious activity — this is your "normal" reference
 - [ ] Save per-user and per-peer-group baseline statistics (mean, std, percentiles)
 - [ ] Visualize one user's baseline vs. a day that deviates (good for the paper)
 
@@ -189,7 +189,7 @@ Compare **at least two** models. A strong design compares one unsupervised and o
 **Justify your choice** in the paper: unsupervised models match the real world (labels are rare and attacks change), supervised models show the best-case performance when labels exist.
 
 ### Data splitting — avoid leakage
-- [ ] **Temporal split:** train on earlier months, validate on the next months, test on the last months (never randomly shuffle across time). Each split must contain malicious days from every scenario. Exact rule: [TEAM_PLAN.md §5.3](../Tasks/TEAM_PLAN.md#53-data-split-rule-temporal)
+- [ ] **Temporal split:** train on earlier months, validate on the next months, test on the last months (never randomly shuffle across time). Each split must contain malicious days from every scenario. Exact rule: [TEAM_PLAN.md 2.5.3](../Tasks/TEAM_PLAN.md#253-split-rule-final-decided-by-supriye-on-fri-nov-6)
 - [ ] For the **unseen-anomaly** test, hold out all users of one scenario from training entirely (leave-one-scenario-out), so the model can't memorize those users
 - [ ] Scale features with `StandardScaler` fit on **training data only**
 - [ ] For supervised models, handle imbalance with `class_weight='balanced'` / `scale_pos_weight`, or SMOTE on the **training set only**
