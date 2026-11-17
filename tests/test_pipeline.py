@@ -2,7 +2,7 @@
 import pandas as pd
 import pytest
 
-from src import pipeline
+from src import pipeline, risk_scoring
 from src.synthetic import make_synthetic_features
 
 
@@ -22,7 +22,8 @@ def test_pipeline_ranks_users_with_three_reasons(features_file, tmp_path, model,
     assert len(table) == 10 and table["rank"].tolist() == list(range(1, 11))
     assert table["peak_risk"].is_monotonic_decreasing
     assert "label" not in table.columns and "scenario" not in table.columns   # analyst view
-    assert table["reasons"].str.count("; ").eq(2).all()                        # 3 reasons each
+    # 1 to 3 reasons each: a z-score below MIN_REASON_Z is not a reason (review of #57)
+    assert table["reasons"].str.len().gt(0).all() and table["reasons"].str.count("; ").le(2).all()
     saved = pd.read_csv(tmp_path / "tables" / pipeline.OUTPUT)
     assert saved["user"].tolist() == table["user"].tolist()
     assert pipeline.model_path(model, features_file).exists()
@@ -49,9 +50,67 @@ def test_rank_for_one_day(features_file):
     assert len(table) == 5 and table["reasons"].str.len().gt(0).all()
 
 
+def test_reasons_skip_values_at_baseline_and_empty_email_size():
+    # review of #57: a large autoencoder residual on a feature that sits at its baseline (z = 0),
+    # or on the mean email size of a day with no email, is not a reason
+    cols = ["z_user_http_job", "z_peer_http_job", "z_user_usb_connect", "f_email_size",
+            "f_file_copy", "z_user_logon_count"]
+    df = pd.DataFrame([[0.0, -0.4, 6.2, 0.0, 37.0, float("nan")],
+                       [1.0, 0.99, -3.0, 2048.0, 0.0, 0.2]], columns=cols)
+    contrib = pd.DataFrame([[9.0, 8.0, 5.0, 7.0, 4.0, 6.0],
+                            [9.0, 8.0, 5.0, 7.0, 4.0, 6.0]], columns=cols)
+    reasons = pipeline.alert_reasons(contrib, df)
+    assert reasons[0] == "USB connects 6.2σ above own baseline; 37 files copied"
+    assert reasons[1] == ("job-site visits 1.0σ above own baseline; mean email size (bytes): 2048; "
+                          "USB connects 3.0σ below own baseline")
+    assert pipeline.MIN_REASON_Z > 0
+    assert pipeline.describe("z_user_http_competitor", 3.7) == \
+        "competitor-site visits 3.7σ above own baseline"
+
+
 def test_describe_reasons():
     assert pipeline.describe("z_user_usb_connect", 6.24) == "USB connects 6.2σ above own baseline"
     assert pipeline.describe("z_peer_http_job", -2.0) == "job-site visits 2.0σ below peers"
     assert pipeline.describe("f_file_copy", 37) == "37 files copied"
     assert pipeline.describe("new_leak_site", 1) == "first-ever leak or file-sharing site visit"
     assert pipeline.describe("f_first_logon_hour", 3.5) == "first logon hour: 3.5"
+
+
+# ---------------------------------------------------------------- A18
+def test_prototype_writes_both_tables_precision_and_f8(features_file, tmp_path, monkeypatch):
+    monkeypatch.setattr(risk_scoring, "FIGURES_DIR", tmp_path / "figures")
+    precision, user = pipeline.prototype(features_file, top=10, verbose=False,
+                                         params={"autoencoder": {"epochs": 5}})
+    tables = tmp_path / "tables"
+    assert pipeline.output_name("iforest") == "top_risky_users.csv"
+    for model in pipeline.PROTOTYPE_MODELS:
+        ranked = pd.read_csv(tables / pipeline.output_name(model))
+        assert len(ranked) == 10 and "label" not in ranked.columns
+        assert pipeline.model_path(model, features_file).exists()
+    assert (tables / "top_risky_users_autoencoder.csv").exists()
+    assert pipeline.precision_table_name() == "precision_at_20.csv"
+    assert not (tables / "precision_at_20.csv").exists()            # the name follows `top`
+    saved = pd.read_csv(tables / "precision_at_10.csv")
+    assert saved["model"].tolist() == ["iforest", "autoencoder"] == precision["model"].tolist()
+    # the 3 synthetic test insiders all make each top 10: precision 3/10, insider recall 1
+    assert (saved["k"] == 10).all() and (saved["n_test_insiders"] == 3).all()
+    assert saved["precision_at_k"].tolist() == pytest.approx([0.3, 0.3])
+    assert saved["insider_recall"].tolist() == pytest.approx([1, 1])
+    _, risk = pipeline.run(features_file, "iforest", top=10, verbose=False)
+    assert user == pipeline.f8_user(risk) and user in saved.loc[0, "insiders_listed"].split()
+    for ext in ("png", "pdf"):
+        assert (tmp_path / "figures" / f"F8_risk_timeline.{ext}").exists()
+
+
+def test_prototype_retrains_instead_of_reusing_a_saved_model(features_file, capsys):
+    pipeline.run(features_file, "iforest", top=5)
+    capsys.readouterr()
+    pipeline.prototype(features_file, models=("iforest",), top=5, f8_model=None)
+    assert "trained and saved" in capsys.readouterr().out
+
+
+def test_main_prototype_flag(features_file, monkeypatch):
+    called = {}
+    monkeypatch.setattr(pipeline, "prototype", lambda features, top: called.update(f=features, top=top))
+    pipeline.main(["--features", str(features_file), "--prototype", "--top", "7"])
+    assert called == {"f": str(features_file), "top": 7}

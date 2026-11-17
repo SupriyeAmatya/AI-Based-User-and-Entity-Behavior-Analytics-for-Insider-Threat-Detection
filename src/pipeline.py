@@ -11,6 +11,9 @@ that contributed most on their riskiest day -> results/tables/top_risky_users.cs
 
 The table is what an analyst would see, so it holds no labels. With --date it ranks users for one
 day instead of the whole test period.
+
+The A18 outputs (both models retrained, both ranked tables, precision_at_20.csv and figure F8):
+    python -m src.pipeline --prototype
 """
 import argparse
 import sys
@@ -25,11 +28,17 @@ import pandas as pd
 from src.config import ROOT, TABLES_DIR
 from src.features import NOT_COUNTS, get_model_matrix
 from src.models_unsupervised import DETECTORS, SCORE_KEYS, load_detector, save_detector
-from src.risk_scoring import MEDIUM, HIGH, rank_users, score_risk
+from src.risk_scoring import (MEDIUM, HIGH, f8_user, plot_risk_timeline, precision_at_k, rank_users,
+                              score_risk)
 
 MODELS_DIR = ROOT / "models"
 OUTPUT = "top_risky_users.csv"
 N_REASONS = 3
+# A z-score closer to its baseline than this is never given as a reason (review of #57: the
+# autoencoder named features "0.0σ above own baseline"). PROVISIONAL: Arva sets the floor.
+MIN_REASON_Z = 1.0
+# Non-count features whose 0 means "nothing happened" (no email sent): never a reason at 0.
+ZERO_IS_NOTHING = ("f_email_size",)
 
 # Readable names for the reasons column (A12 step 2), keyed by the feature name without its prefix.
 PHRASES = {
@@ -50,6 +59,7 @@ PHRASES = {
     "http_domains": "distinct web domains", "http_afterhours": "after-hours web visits",
     "http_job": "job-site visits", "http_leak": "leak-site visits",
     "http_cloud": "file-sharing site visits", "http_hack": "keylogger/hacking-site visits",
+    "http_competitor": "competitor-site visits",
     "ctx_O": "openness score", "ctx_C": "conscientiousness score", "ctx_E": "extraversion score",
     "ctx_A": "agreeableness score", "ctx_N": "neuroticism score",
     "usb_user": "first-ever USB use", "pc": "first logon on a new PC",
@@ -104,13 +114,18 @@ def contributions(detector, model_name, X: pd.DataFrame, df: pd.DataFrame) -> pd
 
 def alert_reasons(contrib: pd.DataFrame, df: pd.DataFrame, k=N_REASONS) -> pd.Series:
     """The k largest contributions of each row as readable text, joined with '; '.
-    A count of 0 or a novelty flag that is off is never given as a reason."""
+    Never given as a reason: a count of 0, a novelty flag that is off, a ZERO_IS_NOTHING feature
+    at 0, and a z-score with |z| < MIN_REASON_Z (or missing). A row can so have fewer than k."""
     reasons = {}
     raw = df.loc[contrib.index, contrib.columns]
     zero_count = [c for c in contrib.columns
-                  if (c.startswith("f_") and c not in NOT_COUNTS) or c.startswith("new_")]
+                  if (c.startswith("f_") and c not in NOT_COUNTS) or c.startswith("new_")
+                  or c in ZERO_IS_NOTHING]
+    z_scores = [c for c in contrib.columns if c.startswith(("z_user_", "z_peer_"))]
     contrib = contrib.copy()
     contrib[zero_count] = contrib[zero_count].where(raw[zero_count].to_numpy() != 0, 0.0)
+    contrib[z_scores] = contrib[z_scores].where(
+        raw[z_scores].abs().to_numpy() >= MIN_REASON_Z, 0.0)
     values = contrib.to_numpy()
     for i, idx in enumerate(contrib.index):
         top = np.argsort(-values[i])[:k]
@@ -194,6 +209,49 @@ def run(features_path, model_name="iforest", top=20, date=None, retrain=False, p
     return table, risk
 
 
+# ---------------------------------------------------------------- A18: prototype outputs on v1
+PROTOTYPE_MODELS = ("iforest", "autoencoder")
+
+
+def output_name(model_name) -> str:
+    """top_risky_users.csv for the default model (iforest), top_risky_users_<model>.csv otherwise."""
+    return OUTPUT if model_name == "iforest" else OUTPUT.replace(".csv", f"_{model_name}.csv")
+
+
+def precision_table_name(top=20) -> str:
+    """precision_at_20.csv for the default top 20; the name follows `top`."""
+    return f"precision_at_{top}.csv"
+
+
+def prototype(features_path, models=PROTOTYPE_MODELS, top=20, f8_model="iforest", params=None,
+              verbose=True):
+    """The A18 outputs in one call. Each model is retrained (so no stale saved model is reused),
+    its ranked table is saved (top_risky_users.csv, top_risky_users_autoencoder.csv), and one row
+    per model goes to precision_at_<top>.csv: how many of the listed users are test-period insiders,
+    and what share of all test insiders they are. Figure F8 is the risk timeline of f8_user() from
+    `f8_model`'s risk scores, saved as F8_risk_timeline.png/.pdf.
+
+    params: optional {model: {parameter: value}} overrides (the tests use it to train faster).
+    Returns (precision table, the F8 user).
+    """
+    rows, user = [], None
+    for model in models:
+        table, risk = run(features_path, model, top, retrain=True, params=(params or {}).get(model),
+                          output=output_name(model), verbose=verbose)
+        rows.append({"model": model, **precision_at_k(table, risk, k=top)})
+        if model == f8_model:
+            user = f8_user(risk)
+            plot_risk_timeline(risk, user)
+    precision = pd.DataFrame(rows)
+    path = TABLES_DIR / precision_table_name(top)
+    precision.to_csv(path, index=False)
+    if verbose:
+        print(f"\nprecision@{top} -> {path.relative_to(ROOT)}; "
+              f"F8 user ({f8_model}): {user}")
+        print(precision.drop(columns="insiders_listed").to_string(index=False))
+    return precision, user
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--features", default=str(ROOT / "data/processed/features_v1.parquet"))
@@ -201,8 +259,14 @@ def main(argv=None):
     parser.add_argument("--top", type=int, default=20)
     parser.add_argument("--date", help="rank users for this day instead of the test period")
     parser.add_argument("--retrain", action="store_true", help="ignore a saved model")
+    parser.add_argument("--prototype", action="store_true",
+                        help="A18: retrain iforest and autoencoder, save both ranked tables, "
+                             "precision_at_20.csv and figure F8")
     args = parser.parse_args(argv)
-    run(args.features, args.model, args.top, args.date, args.retrain)
+    if args.prototype:
+        prototype(args.features, top=args.top)
+    else:
+        run(args.features, args.model, args.top, args.date, args.retrain)
 
 
 if __name__ == "__main__":
