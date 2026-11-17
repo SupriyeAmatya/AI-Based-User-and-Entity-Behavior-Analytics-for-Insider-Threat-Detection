@@ -1,45 +1,62 @@
 # Progress Checker (v2)
 
-**Last updated:** Tue Nov 10, 2026 (`main` at `810557b`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
+**Last updated:** Tue Nov 17, 2026 (`main` at `dd84ba8`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
 Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arva.md](Arva.md), [Ayo.md](Ayo.md)
 
 ---
 
 ## 1. Executive Summary
 
-### 1.1 Snapshot (Tue Nov 10, tracker audit against the repo and GitHub)
+### 1.1 Snapshot (Tue Nov 17, checked against the repo and GitHub)
 - **Code:**
-  - **Merged:** PRs #1–#50; 156/156 tests on `main`.
-  - **Supervised models are final on v1:** tuned defaults, `FINAL_SETUP` and the `final` command (Y14, Y15, #41).
-  - **Results on `main`:** `loso.csv` (T6, #46); `model_comparison.csv` (T5), the per-scenario and delay tables, F4, F5 and `T8_timing.csv` (#48).
-  - **Unsupervised models are tuned on v1** (A15, A16, #50). T5, T6, T8, F4 and F5 were regenerated with the tuned defaults on `ayo/Y17-rerun-tuned` (Nov 10).
-  - **Not started or not on `main`:** `unsupervised_extra.csv`, the v1 prototype outputs (`precision_at_20.csv`, F8), SHAP on v1 (F6), FP/FN, notebook 05 (case studies, F7), F2.
+  - **Merged:** PRs #1–#66 except #65 (open); 193/193 tests on `main` (with `data/`).
+  - **Every model is final on v1:** tuned defaults for all five (Y15 #41, A16 #50); every score file is final, tag `m3-all-scores`, M3 ticked (#66).
+  - **Results on `main`:**
+    - T5 `model_comparison.csv`, the per-scenario and delay tables, F4, F5 and T8 (#48, #52);
+    - T6 `loso.csv` (#46, #52) and T7 `ablation.csv` (#51);
+    - F6 and `feature_importance*.csv` (#53), and the FP/FN tables (#55);
+    - `unsupervised_extra.csv` (#66);
+    - the prototype outputs `precision_at_20.csv`, `top_risky_users*.csv` and F8 (#57, #66);
+    - notebook 05 with the 4 case studies and F7 (#58, #66);
+    - the Streamlit dashboard (A21, #63);
+    - the README Results and "Run the prototype" sections (#54, #59, #61).
+  - **Not on `main`:** F2 (the pipeline figure, Arva [H]); `paper/lit_notes/` is empty, and no notes branch is on GitHub.
 - **Data:**
   - **Feature table v1 is frozen:** 330,268 user-days, 76 inputs, tag `m2-features-v1` (Nov 8).
   - **The data drop** is delivered; both teammates load v1.
   - **Bug-fix window** closed Tue Nov 10 12:00 with no feature bug, so there is no `features_v1_1.parquet`.
 - **People:**
-  - **Reviews:** #39–#48 each had an approving review before merge (branch protection since Nov 7). None of #1–#28 has its post-merge review (§3.7), and #29–#38 merged without one.
-  - **Literature:** `paper/lit_notes/` is empty. No notes branch is on GitHub.
-- **Decisions:** Supriye's 5 are final (Nov 6). Ayo's imbalance set-up is recorded in #41. Arva's AE architecture, alert levels and OCSVM (DEC-A) are open, and the course rules (S3-rest) are not confirmed.
-- **Milestones:** M0, M2 and "Tuned models" are done (Y15 #41, A16 #50). M1 lacks the teammates' v0 confirmation. M3 is due Wed Nov 11.
+  - **Reviews:** since #39 every PR had an approving review before merge (branch protection).
+  - **Post-merge reviews (§3.7):** Ayo's 9 are done (#62); Supriye's 5 are in open PR #65; Arva's 13 are open.
+  - **Issue #64** (Arva): CLAUDE.md's PROVISIONAL list misses `MIN_REASON_Z`, and coverage.md's Nov 13 snapshot is out of date.
+  - **Drafts for [H] work:** Claude drafts exist for Y18-H and Y20-H (`fp_fn_causes.csv`). Ayo checks them and ticks.
+- **Decisions:**
+  - **Supriye:** her 5 are final (Nov 6).
+  - **Ayo:** the imbalance set-up is recorded in #41. The DEC-Y reasons and the LOSO justification are not written yet.
+  - **Arva (DEC-A):** the AE architecture reasons, the alert levels (99 / 95), the OCSVM decision and the reasons floor `MIN_REASON_Z` are open.
+  - **Course rules (S3-rest):** page limit, AI-use policy and submission contents are not confirmed in TEAM_PLAN.
+- **Milestones:**
+  - **Done:** M0, the split dates, M2, the tuned models and M3 (tags `m0-setup`, `m2-features-v1`, `m3-all-scores`).
+  - **Open:** M1 (the teammates' v0 confirmations), the `explain.py` confirmation, and "Analysis done" (the walkthrough is not recorded and the A18/A19 [H] parts are open).
+  - **Not visible in the repo:** M4 (all sections drafted, due Mon Nov 16), because the paper is in Overleaf.
+  - **Coming up:** M5 and the code freeze on Wed Nov 18; submission-ready on Thu Nov 19.
 
 ### 1.2 Next three actions each
 | Person | 1 | 2 | 3 |
 |---|---|---|---|
-| **Supriye** | III. Dataset [H] (due Tue Nov 10) | Run the ablation (T7, due Wed); A16 merged in #50 | Overleaf + Zotero, course rules (S2-rest, S3-rest) |
-| **Arva** | Commit `unsupervised_extra.csv` (A17) | DEC-A decisions and reasons, incl. the A16 choice | The v1 prototype outputs (A18) |
-| **Ayo** | SHAP on v1 (Y18, Fri) | Notebook 04 observations [H]; Y17 walkthrough material | Reviews (§3.7) |
+| **Supriye** | Paper sections III, IV-A, IV-B, I, VII [H] and the Abstract (M4 overdue; M5 Wed 18:00) | Course rules, AI-use policy above all (S3-rest), and the S22-H ablation reading [H] | Overleaf + Zotero (S2-rest); then the Thu read-through and fresh-clone test (S33, S34) |
+| **Arva** | IV-C, IV-D, VI-B, VIII [H] and F2 | DEC-A (alert levels, OCSVM, `MIN_REASON_Z`) and the A19-H narratives and verdicts [H] | Issue #64; his 13 post-merge reviews (§3.7); the fresh-clone test (A24) |
+| **Ayo** | IV-C (supervised), V, VI-A, VI-C [H] (Y21, Y22) | Check the Y18-H and Y20-H drafts; DEC-Y reasons; Y23 number check | Post the A3/M1/Y6 confirmations; review #65 |
 
 ### 1.3 Counts
 | Area | Done | Open |
 |---|---:|---:|
-| Supriye lines (§3.4) | 20 | 27: setup leftovers, hand-checks, ablation run, literature, paper, finish |
-| Arva lines (§3.5) | 11 | 25: A15–A26 (code parts of A15–A18 merged), decisions, LIT |
-| Ayo lines (§3.6) | 13 | 27: Y16–Y25 (Y16, Y17 outputs merged), decisions, LIT |
-| Hand-offs (§3.3) | 6 | 10 |
-| Post-merge reviews (§3.7) | 0 / 27 | 27 |
-| Milestones (§3.1) | 5 / 15 | 10 |
+| Supriye lines (§3.4) | 21 | 26: setup leftovers, hand-checks, literature, paper, finish |
+| Arva lines (§3.5) | 14 | 22: decisions, LIT, [H] parts of A17–A19, paper, A24–A26 |
+| Ayo lines (§3.6) | 17 | 23: decisions, LIT, [H] readings, paper, Y23–Y25 |
+| Hand-offs (§3.3) | 8 | 8 |
+| Post-merge reviews (§3.7) | 9 / 27 | 18 (5 of them in #65) |
+| Milestones (§3.1) | 6 / 15 | 9 |
 
 ---
 
