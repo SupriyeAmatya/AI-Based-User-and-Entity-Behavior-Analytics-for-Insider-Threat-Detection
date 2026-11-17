@@ -9,8 +9,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 
 ### 1.1 Snapshot (Tue Nov 17, checked against the repo and GitHub)
 - **Code:**
-  - **Merged:** PRs #1–#66 except #65 (open); 193/193 tests on `main` (with `data/`).
-  - **Every model is final on v1:** tuned defaults for all five (Y15 #41, A16 #50); every score file is final, tag `m3-all-scores`, M3 ticked (#66).
+  - **Merged:** PRs #1–#63 and #66 (#64 is an Issue, #65 is open); 193/193 tests on `main` (with `data/`).
+  - **Every score file is final on v1:** the four main models have tuned defaults (Y15 #41, A16 #50); One-Class SVM runs at its card values (keep or drop is DEC-A). Tag `m3-all-scores`; M3 ticked (#66).
   - **Results on `main`:**
     - T5 `model_comparison.csv`, the per-scenario and delay tables, F4, F5 and T8 (#48, #52);
     - T6 `loso.csv` (#46, #52) and T7 `ablation.csv` (#51);
@@ -33,12 +33,12 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - **Decisions:**
   - **Supriye:** her 5 are final (Nov 6).
   - **Ayo:** the imbalance set-up is recorded in #41. The DEC-Y reasons and the LOSO justification are not written yet.
-  - **Arva (DEC-A):** the AE architecture reasons, the alert levels (99 / 95), the OCSVM decision and the reasons floor `MIN_REASON_Z` are open.
+  - **Arva (DEC-A):** the AE architecture reasons, the alert levels (99 / 95) and the OCSVM decision are open, and so is the reasons floor `MIN_REASON_Z` (an open [H] sub-box of A18).
   - **Course rules (S3-rest):** page limit, AI-use policy and submission contents are not confirmed in TEAM_PLAN.
 - **Milestones:**
-  - **Done:** M0, the split dates, M2, the tuned models and M3 (tags `m0-setup`, `m2-features-v1`, `m3-all-scores`).
-  - **Open:** M1 (the teammates' v0 confirmations), the `explain.py` confirmation, and "Analysis done" (the walkthrough is not recorded and the A18/A19 [H] parts are open).
-  - **Not visible in the repo:** M4 (all sections drafted, due Mon Nov 16), because the paper is in Overleaf.
+  - **Done:** M0, `evaluate.py` ready, the split dates, M2, the tuned models and M3 (tags `m0-setup`, `m2-features-v1`, `m3-all-scores`).
+  - **Open:** the kickoff (status unknown), M1 (the teammates' v0 confirmations), the `explain.py` confirmation, and "Analysis done" (the walkthrough is not recorded and the A18/A19 [H] parts are open).
+  - **Not visible in the repo:** M4 (all sections drafted, due Mon Nov 16). The paper isn't in Git, and the Overleaf set-up (S2-rest) is still open in this tracker.
   - **Coming up:** M5 and the code freeze on Wed Nov 18; submission-ready on Thu Nov 19.
 
 ### 1.2 Next three actions each
@@ -55,7 +55,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | Arva lines (§3.5) | 14 | 22: decisions, LIT, [H] parts of A17–A19, paper, A24–A26 |
 | Ayo lines (§3.6) | 17 | 23: decisions, LIT, [H] readings, paper, Y23–Y25 |
 | Hand-offs (§3.3) | 8 | 8 |
-| Post-merge reviews (§3.7) | 9 / 27 | 18 (5 of them in #65) |
+| Post-merge reviews (§3.7, PR rows) | 9 / 27 | 18 (5 of them in #65; plus the open `coverage.md` first-version line) |
 | Milestones (§3.1) | 6 / 15 | 9 |
 
 ---
