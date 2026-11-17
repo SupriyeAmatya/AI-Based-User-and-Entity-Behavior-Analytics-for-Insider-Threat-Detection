@@ -79,7 +79,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
   - [x] **Y15** merged (#41): tuned `RF_DEFAULTS` / `XGB_DEFAULTS`, `FINAL_SETUP`, `final`
   - [x] **A16** merged (#50): tuned Isolation Forest and autoencoder defaults, `final` (#33)
-- [ ] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all *(tag `m3-all-scores` pushed Nov 13; the box waits for A17's `unsupervised_extra.csv` on `main`)*
+- [x] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all *(tag `m3-all-scores` pushed Nov 13; A17's `unsupervised_extra.csv` on `main` from Ayo's M1 on `ayo/A17-m1-results`, Nov 17)*
 - [ ] **Analysis done** (Sat Nov 14): T5–T8, F4–F8, FP/FN, cases; walkthrough held
 - [ ] **M4 All sections drafted** (Mon Nov 16)
 - [ ] **M5 Full draft** circulated by 18:00 (Wed Nov 18)
@@ -111,7 +111,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | — | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* *(not needed: no feature bug was reported, so `features_v1.parquet` stays the final table and no second data drop happens)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(`final` in #33, tuned defaults in #50 on Nov 10; tick when announced)* | Arva → all (Git) |
 | [x] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` *(#41, Nov 8)* | Ayo → all (Git) |
-| [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV has to be built on Ayo's M1, see A17)* | Arva → Ayo (Git) |
+| [x] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV built on Ayo's M1, on `ayo/A17-m1-results`, Nov 17)* | Arva → Ayo (Git) |
 | [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
 | [x] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` in #51, re-run Nov 11 with one fixed XGBoost tree count)* | Supriye → Ayo (Git) |
 | [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
@@ -217,16 +217,16 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Tuned defaults** merged (#50) (best v1 run by val PR-AUC: IF 100 trees / 256 samples / all features; AE 128-64-16, no dropout, lr 1e-3; the `card` dicts keep the card values for T4); notebook 03a runs `final` and `evaluate_file()` on all 5 files **(Claude)**
   - [x] **Ayo confirms** `final` + `evaluate_file()` run on his laptop (#50 review, Nov 10: 5 files in 82 s on the M1)
   - [ ] **Arva** reads the change and writes the DEC-A reasons [H]
-- [ ] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
+- [x] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
   - [x] **Code:** `results_extra()`, `timing()`, `alerts_per_day()` + tests (#34; restored by #43 after a merge dropped them)
-  - [ ] **`unsupervised_extra.csv`** on `main`, built on Ayo's M1 with `final` then `extra` *(Arva's review of #57, Nov 13: a CSV built on Supriye's Intel laptop gave autoencoder rows and timings that differ from T5/T8, so it was taken out of that PR)*
+  - [x] **`unsupervised_extra.csv`** on `main`, built on Ayo's M1 with `final` then `extra` *(Nov 17, `ayo/A17-m1-results`: rebuilt on `main` after #57/#58, the 5 score files are bit-identical to the Nov 10 run and every result column equals T5; the Nov 10 timings are kept because T8 already uses them)* **(Claude)** *(Arva's review of #57, Nov 13: a CSV built on Supriye's Intel laptop gave autoencoder rows and timings that differ from T5/T8, so it was taken out of that PR)*
 - [ ] **A17-H** interpret it [H]
 - [ ] **A18** pipeline on v1, `precision_at_20.csv`, F8
   - [x] **Code:** `precision_at_k()`, `f8_user()`, `plot_risk_timeline()` (#35); `python -m src.pipeline --prototype` writes every output in one run (#57) **(Claude)**
-  - [x] **Outputs** from the v1 run (Nov 13, #57): `top_risky_users.csv`, `top_risky_users_autoencoder.csv`, `precision_at_20.csv`, `F8_risk_timeline.*`; step 6 (LANL) does not apply, S24 was not agreed **(Claude)**
+  - [x] **Outputs** from the v1 run (Nov 13, #57): `top_risky_users.csv`, `top_risky_users_autoencoder.csv`, `precision_at_20.csv`, `F8_risk_timeline.*`; step 6 (LANL) does not apply, S24 was not agreed **(Claude)** *(re-run on Ayo's M1, Nov 17: the IF table, precision@20 and F8 are unchanged; `top_risky_users_autoencoder.csv` is replaced by the M1 run)*
   - [ ] **F8 model** (Isolation Forest, as drawn, or the autoencoder) and the reasons floor `MIN_REASON_Z` chosen by Arva [H]; Arva runs `prototype()` himself
 - [ ] **A19** notebook 05: 4 cases × parts 1–4, F7
-  - [x] **Notebook 05** on `arva/A19-case-studies` (Nov 13): the 4 picks by the card rule (`pick_cases()`), context, baseline vs. the day, F7 (IF SHAP waterfall + AE feature errors, `F7_case<1-4>_*`), raw evidence incl. web domains; `case_studies.csv`; helper tests **(Claude)**
+  - [x] **Notebook 05** on `arva/A19-case-studies` (Nov 13): the 4 picks by the card rule (`pick_cases()`), context, baseline vs. the day, F7 (IF SHAP waterfall + AE feature errors, `F7_case<1-4>_*`), raw evidence incl. web domains; `case_studies.csv`; helper tests **(Claude)** *(re-run on Ayo's M1, Nov 17: the picks and IF outputs are unchanged; the AE risk, AE reasons and the 4 AE error figures now come from the results machine)*
   - [ ] **Arva confirms the picks** [H] and presents 2 cases at the Sat walkthrough
 - [ ] **A19-H** narratives + verdicts [H]
 - [ ] **A14-rest** F2 [H]; IV-C/IV-D notes [H]; `arva/notes` merged
