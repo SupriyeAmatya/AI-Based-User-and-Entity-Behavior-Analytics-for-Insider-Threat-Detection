@@ -202,7 +202,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 **Open:**
 - [ ] **A1-rest** environment installed; `arva/notes` pushed
 - [ ] **A2** kickoff *(missed; replaced by the Fri Nov 6 check)*
-- [ ] **REV-A** read own code [H]; `explain.py` confirmed; reviews done (§3.7)
+- [ ] **REV-A** read own code [H]; `explain.py` confirmed; reviews done (§3.7) *(reviews done Nov 13: post-merge review comments on #3, #4, #5, #6, #11, #12, #16, #17, #18, #24, #25, #26, #28, plus #31, after `python -m pytest tests` on `main` at `0729548`; issues worth opening were named in #3, #17, #18, #24 and #28. Reading the code [H] and the `explain.py` confirmation are still open)* **(Claude)**
 - [ ] **DEC-A** AE architecture + grids [H]
 - [ ] **DEC-A** alert levels [H]
 - [ ] **DEC-A** keep/drop OCSVM [H]
@@ -297,32 +297,32 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 |---|---|---|---|---|
 | [x] | #1 | S2 setup | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #2 | Plans + tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #3 | Y3–Y6 `evaluate.py` | Supriye for Ayo (Claude) | Arva |
-| [ ] | #4 | S4–S5 data loader | Supriye (Claude) | Arva |
-| [ ] | #5 | S6–S8 labels, EDA | Supriye (Claude) | Arva |
-| [ ] | #6 | S9 v0 | Supriye (Claude) | Arva |
+| [x] | #3 | Y3–Y6 `evaluate.py` | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #4 | S4–S5 data loader | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #5 | S6–S8 labels, EDA | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #6 | S9 v0 | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | — | #7 | Catch-up merge of #3–#6 | Supriye (Claude) | (covered by #3–#6) |
 | [x] | #8 | Tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #9 | `CLAUDE.md` | Arva | Supriye |
 | [x] | #10 | A3 synthetic | Arva | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #11 | Review fixes | Supriye (Claude) | Arva |
-| [ ] | #12 | Cross-check, split counts | Supriye (Claude) | Arva |
+| [x] | #11 | Review fixes | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #12 | Cross-check, split counts | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #13 | A3 rename | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #14 | A4–A6 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #15 | A7 risk scoring | Supriye for Arva (Claude) | Supriye |
-| [ ] | #16 | Tracker audit | Supriye (Claude) | Arva |
-| [ ] | #17 | S10–S16 features | Supriye (Claude) | Arva |
-| [ ] | #18 | S17–S20 baselines | Supriye (Claude) | Arva |
+| [x] | #16 | Tracker audit | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #17 | S10–S16 features | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #18 | S17–S20 baselines | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #19 | A8 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #20 | A9–A10 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #21 | A11–A12 pipeline | Supriye for Arva (Claude) | Supriye |
 | [x] | #22 | A13–A14 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [ ] | #23 | Y7–Y10 | Supriye for Ayo (Claude) | Supriye |
-| [ ] | #24 | Y11 `explain.py` | Supriye for Ayo (Claude) | Arva |
-| [ ] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva |
-| [ ] | #26 | Tracker | Supriye (Claude) | Arva |
+| [x] | #24 | Y11 `explain.py` | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #26 | Tracker | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [ ] | #27 | Coverage refresh | Arva | Supriye |
-| [ ] | #28 | S15 web-count fix | Supriye (Claude) | Arva |
+| [x] | #28 | S15 web-count fix | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 
 - [ ] **`docs/coverage.md` first version** (pushed straight to `main` without a PR): read by a teammate.
 
