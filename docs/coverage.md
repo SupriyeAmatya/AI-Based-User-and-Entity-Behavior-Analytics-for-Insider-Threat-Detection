@@ -1,26 +1,26 @@
 # UEBA assignment coverage
 
-> **Snapshot from Fri Nov 13, 2026** (repo at `0729548`). This file does not update itself. [`Tasks/PROGRESS.md`](../Tasks/PROGRESS.md) is still the tracker of record.
+> **Snapshot from Tue Nov 17, 2026** (repo at `dd84ba8`). This file does not update itself. [`Tasks/PROGRESS.md`](../Tasks/PROGRESS.md) is still the tracker of record.
 
 It maps each requirement in the CSCI 561 assignment brief to how it's measured, the deliverable, the proof that it's met, and where it stands. It's built from the brief, `Tasks/TEAM_PLAN.md`, `Tasks/PROGRESS.md` and the code on `main`. Tests weren't re-run for this snapshot. Work still on a branch is mentioned where it matters but doesn't count as met.
 
-**7 days left to Fri Nov 20 · 10 of 25 requirements fully met**
+**3 days left to Fri Nov 20 · 10 of 25 requirements fully met**
 
 ## Where the requirements stand
 
 | Status | Count | Meaning |
 |---|---:|---|
 | Gap | 2 | The current plan can’t fully meet it. |
-| Overdue | 0 | Past its due date, with nothing on main. |
+| Overdue | 4 | Past its due date, with nothing on main. |
 | Partial | 9 | Some of it exists; the rest is still due. |
-| Not started | 4 | Nothing yet, and not due yet. |
+| Not started | 0 | Nothing yet, and not due yet. |
 | Done | 10 | Met, with proof in the repo or the paper. |
 
 A requirement counts as met only when its proof exists. For most of them that includes paper text, so only 10 are fully met so far.
 
 ## Schedule
 
-Milestones from TEAM_PLAN 1.5. Of the eight due by today, five are done (M0, `evaluate.py`, the split dates, M2 and the tuned models); M1, the `explain.py` check and M3 are still open.
+Milestones from TEAM_PLAN 1.5. Of the ten due by today, six are done (M0, `evaluate.py`, the split dates, M2, the tuned models and M3); M1, the `explain.py` check, Analysis done and M4 are still open.
 
 | Date | Milestone | State | Note |
 |---|---|---|---|
@@ -31,11 +31,11 @@ Milestones from TEAM_PLAN 1.5. Of the eight due by today, five are done (M0, `ev
 | Fri, Nov 6 | explain.py ready | Open, past due | Code merged Nov 5; Arva still has to confirm it for the case studies. |
 | Sun, Nov 8 | **M2** Feature table v1 | Done | Tagged `m2-features-v1` Nov 8 (#45). |
 | Tue, Nov 10 | Tuned models + `final` commands | Done | Supervised (#41) and unsupervised (#50) tuned defaults merged. |
-| Wed, Nov 11 | **M3** All score files | Open, past due | `m3-all-scores` is tagged (#56); the box waits for `unsupervised_extra.csv`, which is in open PR #57. |
-| Sat, Nov 14 | Analysis done | Upcoming | T5–T8, F4–F6 and the FP/FN tables are merged; F7 and F8 are in #57 and #58. Walkthrough on Sat. |
-| Mon, Nov 16 | **M4** All sections drafted | Upcoming | No section is drafted yet, and Overleaf isn’t set up. |
-| Wed, Nov 18 | **M5** Full paper draft | Upcoming |  |
-| Thu, Nov 19 | Submission-ready | Upcoming |  |
+| Wed, Nov 11 | **M3** All score files | Done | Tagged `m3-all-scores`; ticked once `unsupervised_extra.csv` landed from the M1 (#66). |
+| Sat, Nov 14 | Analysis done | Open, past due | T5–T8 and F4–F8 are on `main`. The walkthrough isn’t recorded, and the case narratives and A17/A18 readings [H] are open. |
+| Mon, Nov 16 | **M4** All sections drafted | Open, past due | Not visible in the repo: the paper isn’t in Git, and Overleaf is still open in the tracker. |
+| Wed, Nov 18 | **M5** Full paper draft | Upcoming | Circulated by 18:00. Code freeze is the same day. |
+| Thu, Nov 19 | Submission-ready | Upcoming | Fresh-clone test and the `final-submission` tag. |
 | Fri, Nov 20 | Submit | Upcoming |  |
 
 ## Requirements
@@ -46,9 +46,9 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
-| Study insider threats, compromised accounts, behavioral anomalies and UEBA | All four topics covered and cited in the background | Paper §I Introduction and §II Related Work | Section text with citations | **Not started**<br>§I and the Related Work paragraphs are due today (Nov 13). Overleaf isn’t set up yet (S2-rest). | Everyone · S25–S26, A20, Y19 |
-| Review at least 5 recent papers from IEEE, Springer, Elsevier or ACM | 5 or more papers, each recent and from one of those publishers, covering UEBA, insider threat, behavioral anomaly, compromised accounts and AI/ML | `paper/lit_notes/<ID>.md` per paper, table T1 | 5+ note files; T1 lists venue and year | **Gap**<br>`paper/lit_notes/` is still empty, and neither `arva/notes` nor `ayo/notes` is on GitHub. Every reading is past due (Arva Nov 7, Ayo Nov 8, Supriye Nov 12). Only 3 planned papers are from 2022–2026. | Everyone · S-LIT, A-LIT, Y-LIT |
-| Choose a suitable dataset | Named and justified, with ground-truth labels | CERT r4.2 + answers; paper §III Dataset | Checksums match; `dataset_files.csv` | **Partial**<br>Data done. §III was due Nov 10 (S23a) and isn’t ticked. | Supriye · S1, S23a |
+| Study insider threats, compromised accounts, behavioral anomalies and UEBA | All four topics covered and cited in the background | Paper §I Introduction and §II Related Work | Section text with citations | **Overdue**<br>§I and the Related Work paragraphs were due Nov 13. The paper isn’t in Git, and the tracker still lists Overleaf as not set up (S2-rest), so this can’t be checked from the repo. | Everyone · S25–S26, A20, Y19 |
+| Review at least 5 recent papers from IEEE, Springer, Elsevier or ACM | 5 or more papers, each recent and from one of those publishers, covering UEBA, insider threat, behavioral anomaly, compromised accounts and AI/ML | `paper/lit_notes/<ID>.md` per paper, table T1 | 5+ note files; T1 lists venue and year | **Gap**<br>`paper/lit_notes/` on `main` is still empty. `arva/notes` exists since Nov 17 with empty note files; no `ayo/notes`. Every reading is past due. Only 3 planned papers are from 2022–2026. | Everyone · S-LIT, A-LIT, Y-LIT |
+| Choose a suitable dataset | Named and justified, with ground-truth labels | CERT r4.2 + answers; paper §III Dataset | Checksums match; `dataset_files.csv` | **Partial**<br>Data done. §III was due Nov 10. The paper isn’t in Git, and the tracker still lists Overleaf as not set up (S2-rest), so this can’t be checked from the repo. | Supriye · S1, S23a |
 | Preprocess the data | Every log loads, removed rows are counted, and the date-based split has every scenario in every split | `data_loader.py`, `labels.py` | `cleaning_report.csv`, `split_check.csv`, tests | **Done**<br>Code and checks done. The split dates and the scenario-3 labels were decided Nov 6 (#36), with the reasons in TEAM_PLAN 2.5.3 and the feature dictionary (#37, #38). | Supriye · S4–S8 |
 
 ### Behavioral features
@@ -66,10 +66,10 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
-| Establish normal behavior | Per-user and peer baselines; unsupervised models train on normal training days only | `src/baseline.py`, paper §IV-B | Figure F3: one user’s baseline next to a day that deviates | **Partial**<br>`baseline.py` and F3 are merged, and every unsupervised model trains on normal training days only. §IV-B was due Nov 12 (S23b) and isn’t ticked. | Supriye, Arva · S17, S23b, A5 |
+| Establish normal behavior | Per-user and peer baselines; unsupervised models train on normal training days only | `src/baseline.py`, paper §IV-B | Figure F3: one user’s baseline next to a day that deviates | **Partial**<br>`baseline.py` and F3 are merged, and every unsupervised model trains on normal training days only. §IV-B was due Nov 12. The paper isn’t in Git, and the tracker still lists Overleaf as not set up (S2-rest), so this can’t be checked from the repo. | Supriye, Arva · S17, S23b, A5 |
 | Develop and compare at least 2 models | 2 or more score files in the agreed format; 5 are built (IF, AE, OCSVM, RF, XGB) | `models_unsupervised.py`, `models_supervised.py`, `results/scores/*.parquet` | Comparison table T5 from `compare_files()` | **Done**<br>All five are tuned on v1 and compared on the test split at both operating points in T5 (`model_comparison.csv`, #48, re-run with the tuned unsupervised defaults in #52). The README shows T5 (#54). | Arva, Ayo · A4–A6, A9–A10, A13, A15–A16, Y7–Y9, Y14–Y15 |
-| Justify the models chosen | A reason for each model; hyperparameters listed | Paper §IV-C, table T4 | Paper text | **Partial**<br>T4 has the v1-tuned values for both families (#41, #50). The reasons are still only in TEAM_PLAN 2.7.3; Arva’s DEC-A reasons are open, and Ayo’s imbalance set-up is recorded in #41. §IV-C due Nov 15. | Arva, Ayo · A14, A22, DEC-A, Y13, Y21, DEC-Y |
-| Assign a risk score to suspicious behavior | 0–100 daily risk (percentile of normal training scores), 7-day user risk, alert levels, top-3 reasons per alert | `src/risk_scoring.py` | Ranked user table; F8 risk timeline for one insider | **Partial**<br>`risk_scoring.py` and `pipeline.py` are merged. The v1 ranked tables, precision@20 and F8 are in open PR #57. Alert levels still PROVISIONAL (DEC-A, due Nov 8). §IV-D due Nov 15. | Arva · A7, A11–A12, A18 |
+| Justify the models chosen | A reason for each model; hyperparameters listed | Paper §IV-C, table T4 | Paper text | **Partial**<br>T4 has the v1-tuned values for both families. Arva decided DEC-A on Nov 17: keep the 128-64-16 autoencoder and leave the One-Class SVM out of the paper’s comparison (#70; the reasons go in `paper/notes_arva.md`). Ayo’s imbalance set-up is in #41; the DEC-Y reasons are open. §IV-C was due Nov 15. | Arva, Ayo · A14, A22, DEC-A, Y13, Y21, DEC-Y |
+| Assign a risk score to suspicious behavior | 0–100 daily risk (percentile of normal training scores), 7-day user risk, alert levels, top-3 reasons per alert | `src/risk_scoring.py` | Ranked user table; F8 risk timeline for one insider | **Partial**<br>The v1 ranked tables, precision@20 and F8 are on `main` (#57, #66). Arva kept the alert levels at 99 / 95 and F8 on the Isolation Forest (DEC-A, #70). §IV-D was due Nov 15. | Arva · A7, A11–A12, A18 |
 
 ### Evaluation
 
@@ -84,18 +84,18 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
-| Analyze false positives and false negatives | Top false positives grouped by root cause; each missed test insider explained | Paper §VI-C | Case tables | **Partial**<br>The FP/FN tables are on `main` (`fp_breakdown.csv`, `fp_top10.csv`, `fn_by_insider.csv`, #55). The causes (`fp_fn_causes.csv`) are marked as drafts for Ayo to check [H]. §VI-C due Nov 16. | Ayo · Y20 |
+| Analyze false positives and false negatives | Top false positives grouped by root cause; each missed test insider explained | Paper §VI-C | Case tables | **Partial**<br>The FP/FN tables are on `main` (#55). The causes (`fp_fn_causes.csv`) are Claude drafts for Ayo to check [H]. §VI-C was due Nov 16. | Ayo · Y20 |
 | Find the features that drive detection | SHAP for RF and XGB, per-feature reconstruction error for the autoencoder, feature-group ablation | `explain.py`, `feature_importance.csv` | F6 SHAP plot, T7 ablation table | **Done**<br>F6 and `feature_importance.csv` (with per-scenario importance) are on `main` (#53), and so is the T7 ablation (`ablation.csv`, #51). Interpreting them is human-only. | Ayo, Arva, Supriye · Y11, Y18, A8, S22 |
-| Investigate detected anomalies | 2–4 case studies, each saying why the system flagged it | `notebooks/05_anomaly_investigation.ipynb`, paper §VI-B | F7 explanation plots and written cases | **Partial**<br>Notebook 05 with 4 cases, their raw evidence and the F7 figures is in open PR #58. The narratives and verdicts are Arva’s [H]; 2 cases go to the Sat Nov 14 walkthrough. | Arva · A19 |
+| Investigate detected anomalies | 2–4 case studies, each saying why the system flagged it | `notebooks/05_anomaly_investigation.ipynb`, paper §VI-B | F7 explanation plots and written cases | **Partial**<br>Notebook 05 with 4 cases, their raw evidence and the F7 figures is on `main` (#58, re-run on the M1 in #66). The picks to confirm, the narratives and the verdicts are Arva’s [H]. §VI-B was due Nov 15. | Arva · A19 |
 
 ### Prototype and paper
 
 | Goal | How it's measured | Deliverable | Proof | Status | Owner · tasks |
 |---|---|---|---|---|---|
-| UEBA prototype | One command goes from features to ranked alerts with reasons, and it runs from a fresh clone | `src/pipeline.py`, README “Run the prototype” | Fresh-clone run; top-20 users with precision@20 | **Partial**<br>`src/pipeline.py` ranks users with 3 reasons each. The v1 outputs and precision@20 are in open PR #57, and the README “Run the prototype” section in #59. The fresh-clone test is due Nov 17. | Arva · A11, A18, A23, A24 |
-| Research paper | Every planned section drafted (dataset, features, models, experiments, results, limitations) with all 16 figures and tables | IEEE-format PDF | The PDF | **Not started**<br>No section is drafted, and Overleaf isn’t set up (S2-rest); all sections are due Mon Nov 16 (M4). On file: F1 and F3–F6, T2–T8 data; F7 and F8 are in open PRs; F2 isn’t drawn. | Everyone · M4, M5 |
-| Limitations | Covers the missing failed logins, label-filtered training, synthetic data and the thin test set | Paper §VII | Section text | **Not started**<br>Due today (Nov 13). | Supriye · S27 |
-| Answer the research question | How well the models detect (PR-AUC, LOSO) and which features and models are most reliable (SHAP, ablation, T5) | Paper §VIII Conclusion | A conclusion backed by numbers | **Not started**<br>Human-only. Agreed at the Sat Nov 14 results walkthrough; Arva writes §VIII by Nov 16. | Everyone · S28, A23 |
+| UEBA prototype | One command goes from features to ranked alerts with reasons, and it runs from a fresh clone | `src/pipeline.py`, README “Run the prototype” | Fresh-clone run; top-20 users with precision@20 | **Partial**<br>`src/pipeline.py`, the README “Run the prototype” section (#59, #61), precision@20 (#57) and the Streamlit dashboard (#63) are merged. The fresh-clone test and 3-minute demo (A24) are due today. | Arva · A11, A18, A23, A24 |
+| Research paper | Every planned section drafted (dataset, features, models, experiments, results, limitations) with all 16 figures and tables | IEEE-format PDF | The PDF | **Overdue**<br>M4 (all sections drafted) was due Mon Nov 16 and M5 (full draft) is due Wed Nov 18 18:00. The paper isn’t in Git, and the tracker still lists Overleaf as not set up (S2-rest), so this can’t be checked from the repo. On file: F1, F3–F8 and T2–T8 data; F2 isn’t drawn. | Everyone · M4, M5 |
+| Limitations | Covers the missing failed logins, label-filtered training, synthetic data and the thin test set | Paper §VII | Section text | **Overdue**<br>Due Nov 13. The paper isn’t in Git, and the tracker still lists Overleaf as not set up (S2-rest), so this can’t be checked from the repo. | Supriye · S27 |
+| Answer the research question | How well the models detect (PR-AUC, LOSO) and which features and models are most reliable (SHAP, ablation, T5) | Paper §VIII Conclusion | A conclusion backed by numbers | **Overdue**<br>Human-only. The Sat Nov 14 results walkthrough isn’t recorded in the tracker, and §VIII (Arva) was due Nov 16. | Everyone · S28, A23 |
 
 ## What's missing
 
@@ -106,58 +106,59 @@ Owner and task IDs refer to the task cards in `Tasks/`.
 - **"Recent" papers.** The plan counts 11+ papers, but only L9a, L10a and L11a are from 2022–2026. L7 is from 2021 and the rest from 2013–2020. If the instructor reads "recent" as the last five years, that's 3 or 4. Plan v2 marks L9b, L10b and L11b as strongly recommended (TEAM_PLAN 3.14). Making them required, or confirming the meaning with the instructor, would close the gap.
 - **Compromised accounts.** Without LANL, the only compromised-account evidence is scenario 3, where the system administrator logs in as their supervisor. On Nov 6 Supriye decided to keep those 20 days labeled malicious on the supervisor accounts, `FAW0032` (16 days) and `FBA0348` (4), which don't count as insiders (S6, #36, #38).
 
-### Still to do (for M4, Mon Nov 16)
+### Still to do (M5 Wed Nov 18 18:00, code freeze the same day)
 
 - **Arva:**
-  - **Code in review:**
-    - #57 (A17 `unsupervised_extra.csv`, A18 v1 outputs and F8) and #58 (A19 notebook 05, F7), both written by Claude at Supriye's request, in Arva's files;
-    - #59 (A23 README run section).
-  - **Overdue [H]:**
-    - DEC-A (autoencoder architecture and grid reasons, alert levels, OCSVM, F8 model);
-    - REV-A (13 merged PRs plus #31);
-    - A-LIT1–4;
+  - **Done since Nov 13:**
+    - 16 reviews: changes requested on #57 and #58 (fixed and merged), and 14 post-merge comments (ticked in #71);
+    - DEC-A decided (#70);
+    - `arva/notes` started with empty note files and a DEC-A worksheet.
+  - **Code done for Arva by teammates' Claude:** A17–A19 and the A21 dashboard (#57, #58, #63, #66).
+  - **Open [H]:**
+    - the DEC-A reasons in `paper/notes_arva.md`;
+    - A-LIT1–4 and the Related Work paragraphs (A20);
     - F2 and the IV-C/IV-D notes (A14-rest);
-    - confirming `explain.py`.
-  - **Due today:** A20 Related Work paragraphs (L4, L5, L10a).
-  - **Next [H]:**
-    - A19 narratives and verdicts, and 2 cases at the Sat Nov 14 walkthrough;
-    - A22 IV-C, IV-D and VI-B (Sun Nov 15);
-    - A23 VIII (Mon Nov 16).
-  - **After M4:** A24 fresh-clone test and demo (Tue Nov 17). A21 dashboard is optional.
+    - the 4 case narratives and verdicts (A19-H);
+    - IV-C, IV-D and VI-B (A22) and VIII (A23);
+    - reading your own code, and confirming `explain.py` (needs the data on your Mac).
+  - **Next:**
+    - the fresh-clone test and 3-minute demo (A24, today);
+    - reviewing the full draft (A25, Wed);
+    - the final read-through (A26, Thu).
+  - **PRs waiting on a reviewer:** #70 (DEC-A) and #71 (REV-A ticks).
 - **Ayo:**
-  - **Merged:** T5–T8, F4–F6, LOSO, SHAP and the FP/FN tables (#46, #48, #52, #53, #55).
-  - **Open [H]:** checking the Claude-drafted readings and causes (Y16-H, Y18-H, Y20-H), the LOSO justification (DEC-Y), Y-LIT1–4 and `ayo/notes`, REV-Y.
-  - **Due today:** Y19 Related Work paragraphs.
-  - **Next [H]:** Y21 IV-C (supervised) and V (Sun Nov 15); Y22 VI-A, VI-C and the P/R paragraph (Mon Nov 16).
+  - **Done:** the M1 re-run of the A17–A19 outputs (#66), and Ayo's 9 post-merge reviews (#62).
+  - **Open [H]:**
+    - checking the Claude drafts for Y18-H and Y20-H;
+    - the DEC-Y reasons and LOSO justification;
+    - Y-LIT1–4;
+    - IV-C (supervised), V, VI-A, VI-C and the P/R paragraph (Y21, Y22).
+  - **Next:** Y23, checking every number in the paper against `results/tables/`. Ayo is also asked to review #65.
 - **Supriye:**
-  - **Merged:** the T7 ablation (#51) and the README results table (#54). `m3-all-scores` is tagged (#56 records it).
-  - **Open:**
-    - Overleaf and Zotero (S2-rest), which every section needs;
-    - the course rules (S3-rest);
+  - **Open [H]:**
+    - III, IV-A, IV-B, I, VII and the Abstract;
+    - the course rules, AI-use policy above all (S3-rest);
+    - the ablation reading (S22-H);
     - the hand-checks (S6-H, S19-H) and EDA observations (S7-H);
-    - interpreting the ablation (S22-H);
-    - REV-S.
-  - **Overdue [H]:** S-LIT1–3 (Nov 12), III. Dataset (Nov 10), IV-A and IV-B (Nov 12).
-  - **Due today [H]:** I. Introduction, Related Work paragraphs, VII. Limitations.
-  - **Next:** the results walkthrough and merging II (Sat Nov 14), then assembling M4 (Nov 15–16).
-- **Not started anywhere:** F2, Overleaf, and any paper text.
+    - Overleaf and Zotero (S2-rest).
+  - **Next:** assemble and circulate M5 (Wed 18:00), then the Thursday read-through and fresh-clone test.
+  - **PRs open:** #65 (REV-S ticks), #67 (tracker snapshot), #69 (review fixes).
+- **Not done anywhere:** F2, and any paper text that the repo can see.
 
 ### Blockers and loose ends
 
-- **No paper yet.** M4 (Mon Nov 16) needs every section drafted in Overleaf. Overleaf isn't set up, and no section is ticked. All the writing is human-only (TEAM_PLAN 2.6).
-- **No literature notes.** Nothing is in `paper/lit_notes/`, and II, T1 and the ≥ 5 recent papers depend on them.
-- **DEC-A is still open.** `HIGH`/`MEDIUM` are PROVISIONAL, and they drive `top_risky_users*.csv`, F8 and IV-D.
-- **Course rules unconfirmed (S3-rest).** The page limit and the AI-use policy aren't confirmed, and much of the code and several readings were drafted by Claude.
-- **Alert reasons in #57.** `src/pipeline.py` `PHRASES` has no wording for `http_competitor`, so reasons read "http competitor 3.7σ above own baseline".
-- **Old PRs are unreviewed.** None of #1–#38 has an approving review (#29 has a comment from Arva), so the post-merge reviews in PROGRESS §3.7 are all open. Every PR since #39 was approved before merging.
+- **The paper isn't visible.** M4 (Nov 16) has passed, and M5 is tomorrow at 18:00. No section is ticked in the tracker, and Overleaf is still listed as not set up. All the writing is human-only (TEAM_PLAN 2.6).
+- **No literature notes.** Nothing is merged in `paper/lit_notes/`. II, T1 and the ≥ 5 recent papers depend on them.
+- **Course rules unconfirmed (S3-rest).** The page limit and the AI-use policy aren't confirmed. Much of the code, and several [H] drafts, were written by Claude.
+- **Code freeze is Wed Nov 18.** Open code PRs (#69, #70) need to merge before then.
 - **Scenario 3 is thin.** The test split has 1 real insider (`JLM0364`) with 2 days, plus 2 days on the hijacked account `FBA0348`. Its per-scenario and LOSO results rest on very few rows, so say so in Limitations.
 
 ### Already covered
 
 - **Data:** CERT r4.2 downloaded, checksum-verified, converted to Parquet and cleaned: 32.8M rows, none removed. The one data drop is on the shared drive (Nov 8).
 - **Labels and split:** labels, insider timeline and split check; every split has malicious days from every scenario. The counts are 70 insiders (30/30/10), 72 accounts with malicious days, 984 malicious user-days.
-- **Decisions:** all five data decisions are final with written reasons (#36–#38).
-- **Feature table v1, frozen:** 1,000 users, 330,268 user-days, 76 model inputs (42 `f_*`, 15 `z_user_*`, 15 `z_peer_*`, 4 `new_*`), with [`docs/feature_dictionary.md`](feature_dictionary.md). Leakage checks 1, 2, 3 and 5 pass. No bug fix was needed (S21).
+- **Decisions:** all five of Supriye's data decisions, with reasons (#36–#38). Ayo's imbalance set-up (#41). Arva's DEC-A outcomes (#70).
+- **Feature table v1, frozen:** 1,000 users, 330,268 user-days, 76 model inputs (42 `f_*`, 15 `z_user_*`, 15 `z_peer_*`, 4 `new_*`), with [`docs/feature_dictionary.md`](feature_dictionary.md). Leakage checks 1, 2, 3 and 5 pass.
 - **Models:** all five tuned on v1, with tuned defaults and `final` commands (#41, #50). T4 covers both families.
 - **Results:**
   - T5, the per-scenario and delay tables, F4, F5 and T8 (#48, #52);
@@ -165,7 +166,12 @@ Owner and task IDs refer to the task cards in `Tasks/`.
   - F6 and feature importance (#53);
   - T7 ablation (#51);
   - FP/FN tables (#55);
-  - the README results table, generated from T5 (#54).
+  - `unsupervised_extra.csv` (#66).
+- **Prototype:**
+  - `pipeline.py` with 3 reasons per alert;
+  - the v1 ranked tables, precision@20 and F8 (#57, #66);
+  - notebook 05 with 4 cases and F7 (#58, #66);
+  - the Streamlit dashboard (#63);
+  - the README "Run the prototype" and Results sections (#54, #59, #61).
 - **Milestone tags:** `m0-setup`, `m2-features-v1` and `m3-all-scores`.
-- **Explanations and prototype:** `explain.py` (SHAP), the autoencoder's per-feature error, and `pipeline.py` with 3 reasons per alert. `precision_at_k()`, the F8 user rule and the risk-timeline plot (#35).
-- **Evaluation:** `evaluate.py` computes every metric the assignment lists, plus PR-AUC, detection delay and user-level recall.
+- **Reviews:** every PR since #39 was approved before merging. Post-merge reviews: Ayo's 9 (#62), Supriye's 5 (#65, open), Arva's 13 (#71, open).
