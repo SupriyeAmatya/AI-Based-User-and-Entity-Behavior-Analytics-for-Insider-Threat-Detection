@@ -26,9 +26,10 @@ Questions your reason should answer:
 - Is the gain (0.092 to 0.109 on val) worth the larger network?
 -->
 
-**Decision:**
+**Decision:** Keep the tuned default 76-128-64-16-64-128-76 (no dropout, lr 1e-3) and the grids as run in #50 (decided Nov 17).
 
 **Reason:**
+<!-- What you said in chat on Nov 17, to turn into your reason: you first proposed 128-64-32, citing L4 (Tuor et al.: DNN and LSTM with 1-6 hidden layers, 20-500 units per layer, tanh, Adam; the DNN retrained daily, the LSTM with a per-user state). You then kept 128-64-16, the v1 grid winner by val PR-AUC, because T5-T8, the FP/FN tables and the case studies were all built from it on the M1, and a bottleneck of 32 was never tested. -->
 
 ### 2. Alert levels (`HIGH`, `MEDIUM` in `src/risk_scoring.py`, now 99 / 95)
 
@@ -45,9 +46,10 @@ Questions your reason should answer:
 - Does the same level suit every model, given they're percentiles of each model's own normal scores?
 -->
 
-**Decision:**
+**Decision:** Keep HIGH = 99 and MEDIUM = 95 (decided Nov 17).
 
 **Reason:**
+<!-- What you said in chat on Nov 17: 95 gives more false positives and 99 is less sensitive. You considered High = 98 (between the two), then kept 99 / 95 because 99 is already used in the code, tests and outputs. -->
 
 ### 3. Keep or drop the One-Class SVM
 
@@ -64,9 +66,10 @@ Questions your reason should answer:
 - If you keep it, what does IV-C say about it? If you drop it, which files, tables and figures lose a row?
 -->
 
-**Decision:**
+**Decision:** Leave the One-Class SVM out of the paper's comparison; report the Isolation Forest and the autoencoder. Its code and the committed tables stay as they are (decided Nov 17).
 
 **Reason:**
+<!-- What you said in chat on Nov 17: it catches about 5% of malicious days and adds noise, and both L4 (Tuor et al.) and L5 (Lu & Wong) compare against an SVM and report it doing worse than their LSTM. Check both claims against your L4 and L5 notes before citing them. -->
 
 ### 4. Which model F8 uses
 
@@ -81,9 +84,10 @@ Questions your reason should answer:
 - Which gives the clearer picture of one insider over time?
 -->
 
-**Decision:**
+**Decision:** Keep the Isolation Forest risk for F8 (user MAR0955) (decided Nov 17).
 
 **Reason:**
+<!-- What you said in chat on Nov 17: keep it as is. (It is also the prototype's default model, used by the README run section and the dashboard.) -->
 
 ### 5. Alert-reason cutoff (`MIN_REASON_Z = 1.0` in `src/pipeline.py`)
 
@@ -97,9 +101,10 @@ Questions your reason should answer:
 - What does a higher or lower cutoff hide or show?
 -->
 
-**Decision:**
+**Decision:** Keep MIN_REASON_Z = 1.0 (decided Nov 17).
 
 **Reason:**
+<!-- What you said in chat on Nov 17: keep the threshold. -->
 
 ## IV-C notes: unsupervised models (A14-rest)
 
