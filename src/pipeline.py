@@ -35,7 +35,7 @@ MODELS_DIR = ROOT / "models"
 OUTPUT = "top_risky_users.csv"
 N_REASONS = 3
 # A z-score closer to its baseline than this is never given as a reason (review of #57: the
-# autoencoder named features "0.0σ above own baseline"). PROVISIONAL: Arva sets the floor.
+# autoencoder named features "0.0σ above own baseline"). Kept at 1.0 by Arva, Nov 17 (DEC-A).
 MIN_REASON_Z = 1.0
 # Non-count features whose 0 means "nothing happened" (no email sent): never a reason at 0.
 ZERO_IS_NOTHING = ("f_email_size",)
