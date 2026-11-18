@@ -32,9 +32,9 @@ Each user-day (or user-session) gets an **anomaly/risk score**. Suspicious cases
 | **CERT Insider Threat Dataset (r4.2)** — *primary* | Synthetic enterprise logs: logon, device (USB), file, email, HTTP, LDAP, psychometric | Malicious insiders listed per scenario | Insider-threat detection |
 | **LANL Comprehensive Cyber Security Events** — *stretch goal* | Real (de-identified) authentication, process, flow, DNS logs | Red-team compromise events | Compromised-account detection, authentication failures |
 
-CERT has no failed-login records, so authentication failures are only available through LANL; see [TEAM_PLAN.md §6](Tasks/TEAM_PLAN.md#6-dataset-facts-everyone-should-know).
+CERT has no failed-login records, so authentication failures are only available through LANL; see [TEAM_PLAN.md 2.7](Tasks/TEAM_PLAN.md#27-dataset-and-model-facts).
 
-Raw data is **not** committed to this repository (it is several GB). See [TEAM_PLAN.md §6](Tasks/TEAM_PLAN.md#6-dataset-facts-everyone-should-know) for download links and where to place the files.
+Raw data is **not** committed to this repository (it is several GB). Teammates get it from the one data drop (`ueba_data_v1.zip`, TEAM_PLAN 2.5.12); see [TEAM_PLAN.md 2.5.11](Tasks/TEAM_PLAN.md#2511-rebuilding-the-data-if-the-drive-copy-is-missing) to rebuild it from the raw archive.
 
 ## Models
 
@@ -81,7 +81,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 ├── notebooks/
 │   ├── 01_eda.ipynb          # Done (S7)
 │   ├── 02_feature_engineering.ipynb  # Done (S17–S19): F3 + validation checks
-│   ├── 03a_unsupervised_models.ipynb # Done on v0 (A9–A10): tuning log
+│   ├── 03a_unsupervised_models.ipynb # Unsupervised tuning on v0 and v1 (A9–A10, A15–A16)
 │   ├── 03b_supervised_models.ipynb   # Done on v0 (Y8–Y10): tuning log, imbalance
 │   ├── 04_evaluation.ipynb
 │   └── 05_anomaly_investigation.ipynb
@@ -93,7 +93,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── synthetic.py          # Synthetic feature table for testing        (done)
 │   ├── evaluate.py           # Metrics, plots, detection delay            (done)
 │   ├── baseline.py           # Per-user / peer-group baselines, new_* flags (done)
-│   ├── ablation.py           # Feature-group ablation (T7) + data time (T8) (code done)
+│   ├── ablation.py           # Feature-group ablation (T7) + data time (T8)
 │   ├── models_unsupervised.py# Isolation Forest, Autoencoder (+ tuning)    (done)
 │   ├── models_supervised.py  # Random Forest, XGBoost (+ tuning, imbalance) (done)
 │   ├── risk_scoring.py       # Convert model output to a 0–100 risk score (done)
@@ -106,7 +106,7 @@ Because malicious activity is a tiny fraction of the data, **accuracy is mislead
 │   ├── scores/               # One score file per model (not committed)
 │   ├── figures/              # ROC/PR curves, confusion matrices, SHAP plots
 │   └── tables/               # Metric tables for the paper
-└── paper/                    # Research paper (IEEE format) and references
+└── paper/                    # Literature notes (the paper itself is written in Overleaf)
 ```
 
 ## Getting Started
@@ -129,13 +129,13 @@ pip install -r requirements.txt
 
 Run everything from the repo root with that environment active, e.g. `python -m pytest tests`.
 
-**Data (not in Git):** `bash scripts/download_cert.sh` downloads CERT r4.2 (4.8 GB, resumable), and `python -m src.data_loader convert` converts it to Parquet. Or copy `data/` from the team's shared drive.
+**Data (not in Git):** `bash scripts/download_cert.sh` downloads CERT r4.2 (4.8 GB, resumable), and `python -m src.data_loader convert` converts it to Parquet. Or unzip the data drop `ueba_data_v1.zip` from the team drive in the repo root and check it with `python scripts/data_drop.py verify`.
 
 ```bash
 jupyter notebook
 ```
 
-Then run the notebooks in order (`01` → `05`).
+Then run the notebooks in order (`01` → `05`). Notebooks `01` and `02` read the raw logs, `http.parquet` and LDAP, which only a full rebuild has (TEAM_PLAN 2.5.11); `03a` to `05` run on the data drop.
 
 ## Run the prototype
 

@@ -68,7 +68,7 @@ Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tic
    - **M1:** `get_model_matrix(pd.read_parquet('data/processed/features_v0.parquet'), split='train')` works;
    - **Y6:** `evaluate_file()` imports and runs.
 4. **Review** on `main` the PRs assigned to you: Supriye's #1, #2, #8, and Arva's #10, #13, #14, #19, #20, #22. Run each "How to test" step.
-5. **Open** a GitHub Issue for the owner for anything that needs changing, and tick each review in PROGRESS §7.
+5. **Open** a GitHub Issue for the owner for anything that needs changing, and tick each review in PROGRESS §3.7.
 
 **Done when:** every review assigned to you is ticked, and the three confirmations are posted in chat.
 
@@ -208,7 +208,7 @@ Branch: `ayo/Y23-verify` (reviewer Supriye).
 | Task | Verified by |
 |---|---|
 | Y1 | Tests pass on your laptop; `ayo/notes` on GitHub |
-| REV-Y | Your reviews ticked in PROGRESS §7; Y3 hand-check written; A3/M1/Y6 confirmations posted |
+| REV-Y | Your reviews ticked in PROGRESS §3.7; Y3 hand-check written; A3/M1/Y6 confirmations posted |
 | DEC-Y | Imbalance choice and LOSO justification in `paper/notes_ayo.md` |
 | Y14 | v1 rows (with `setup`) in the tuning log, v0 rows kept; `imbalance.csv` has v0 + v1; T4 shows the v1 best |
 | Y15 | Tuned defaults + `FINAL_SETUP` + `final` merged; `timing_supervised.csv` (3-run means + CPU/RAM); `evaluate_file()` runs on all 7 files |

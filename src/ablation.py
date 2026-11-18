@@ -182,6 +182,8 @@ def data_processing_time(repeats=3, save=True) -> pd.DataFrame:
     estimate (`measured` = False): it was not timed on Nov 3 and is not re-run here."""
     from src import features, labels
 
+    if repeats < 1:
+        raise ValueError("repeats must be at least 1")
     if not (PARQUET_DIR / "http.parquet").is_file():
         raise FileNotFoundError("data/parquet/http.parquet is needed (Supriye's machine only)")
     totals = {"labels (S6)": 0.0, "web-log pass, 28.4M rows (S15)": 0.0,

@@ -64,7 +64,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Repo cloned + installed:** Ayo (Y1) *(his PRs #41, #46 and #48 report the full test suite and the v1 runs on his laptop)*
   - [x] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20) *(confirmed by Supriye Nov 8)*
 - [x] **`evaluate.py` ready** (Sun Nov 1): merged Nov 3 (#3 via #7)
-- [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request*
+- [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
 - [ ] **M1 Feature table v0** (Tue Nov 3)
   - [x] **v0 + `get_model_matrix()` merged** (#6 via #7, sampler fix #11)
   - [ ] **Arva and Ayo confirm** v0 loads in their code
@@ -141,11 +141,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Branch protection** on `main` *(Nov 7, after Supriye made the repo public; GitHub offers it on private repos only with Pro)*: a PR with 1 approval is required, admins included; no force-push or deletion. Checked by reading the rule back from the GitHub API, not by test-pushing to `main` **(Claude)**
   - [ ] **Overleaf** project (IEEE conference template) and **Zotero** group library created; Arva and Ayo invited and joined
 - [ ] **S3-rest** page limit, AI policy, submission contents confirmed
-- [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S14** decide the email-count rule [H] *Decided by Supriye Nov 6: count all emails incl. webmail (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S15** check the web keyword lists (7 `f_http_*` features built) [H] *Decided by Supriye Nov 6: the lists as built + a `competitor` category (5 defense contractors; added after the review) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S6** decide the hijacked-account labels [H] *Decided by Supriye Nov 6: keep the 20 days on FAW0032/FBA0348 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S14** decide the email-count rule [H] *Decided by Supriye Nov 6: count all emails incl. webmail (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S15** check the web keyword lists (7 `f_http_*` features built; 8 since `competitor` was added Nov 6) [H] *Decided by Supriye Nov 6: the lists as built + a `competitor` category (5 defense contractors; added after the review) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S6** decide the hijacked-account labels [H] *Decided by Supriye Nov 6: keep the 20 days on FAW0032/FBA0348 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
 - [x] **S20b** rebuild labels/v0/v1 + notebooks 01–02 if a value changed *(Done when met on `main` at `e5dc881`: tests pass, notebooks 01–02 ran top to bottom with no errors, the split is valid, every v1 check passes, no PROVISIONAL left in Supriye's files. `tests/test_rebuild_outputs.py` now checks all of these on the committed outputs)* **(Claude)**
   - [x] **Tooling:** `bash scripts/rebuild_data.sh` runs labels → v0 → v1 → notebooks 01–02 → tests → a final check that stops (exit 1) on an invalid split or a failed v1 check (run Nov 5: same counts, all pass). The web-log cache now rebuilds itself when the working hours change, or when it has no working-hours stamp on `supriye/S20-rebuild-data-drop` **(Claude)**
   - [x] **Run** it after the S8 decisions and commit the regenerated tables, figures and notebooks *(Nov 6, after adding `competitor`: v1 now 76 inputs; every check passes)* **(Claude)**
@@ -234,6 +234,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **A21** dashboard *(optional)* *(Nov 16 on `arva/A21-dashboard`: `streamlit run app/dashboard.py` starts on v1 and shows all 3 parts (ranked table, user risk timeline, reasons for a chosen day); 9 tests, one of them starts the page)* **(Claude)**
 - [ ] **A22** IV-C, IV-D, VI-B [H]
 - [ ] **A23** VIII [H] + README run section
+  - [x] **README "Run the prototype"** section (#59, follow-up #61)
+  - [ ] **VIII** Conclusion & Future Work [H]
 - [ ] **A24** fresh-clone test + demo ≤ 3 min
 - [ ] **A25** draft review
 - [ ] **A26** final fixes
@@ -339,9 +341,9 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **`ayo/Y17-comparison`** (Arva) (#48)
 - [ ] **`supriye/notes`, `arva/notes`, `ayo/notes`** (any)
 - [x] **`arva/A18-prototype-cases`** (Ayo) (#35: A18 code only; the outputs and A19 are still to come)
-- [ ] **`ayo/Y18-shap-fpfn`** (Arva)
-- [ ] **`arva/A21-dashboard`** *(optional)* (Supriye)
-- [ ] **`arva/A23-readme-run`** (Supriye)
+- [x] **`ayo/Y18-shap-fpfn`** (Arva) (#53; Y20 merged separately as #55)
+- [x] **`arva/A21-dashboard`** *(optional)* (Supriye) (#63)
+- [x] **`arva/A23-readme-run`** (Supriye) (#59, follow-up #61)
 - [ ] **`arva/A24-fresh-clone-fixes`** *(if needed)* (Supriye)
 - [ ] **`ayo/Y23-verify`** (Supriye)
 - [ ] **`arva/A26-final-fixes`, `ayo/Y25-final-fixes`** *(if needed)* (Supriye)
@@ -417,7 +419,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **Login patterns:** `f_logon_*` family in v1 + feature dictionary
 - [ ] **Authentication failures:** LANL features **or** the gap stated in §III + §VII
 - [x] **File / resource access:** `f_file_*`, `f_usb_*` in v1
-- [ ] **Application usage:** 7 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
+- [ ] **Application usage:** 8 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
 - [x] **Activity times:** after-hours/weekend/duration features in v1; window final with its reason (07:00–19:00, #36/#37)
 - [x] **Deviation from baseline:** `z_user_*`, `z_peer_*`, `new_*`, F3
 - [ ] **Normal-behavior baseline in the paper:** §IV-B
@@ -429,7 +431,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **Precision/recall vs. accuracy:** §V paragraph
 - [x] **Unseen behavior:** T6 (`loso.csv`, #46) *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)*
 - [ ] **FP / FN analysis:** §VI-C + `fp_fn_causes.csv`
-- [ ] **Feature importance:** F6, `feature_importance.csv`, T7
+- [x] **Feature importance:** F6, `feature_importance.csv`, T7 (#53, #51)
 - [ ] **Anomaly explanations:** notebook 05 + §VI-B + F7
 - [ ] **Prototype:** fresh-clone run + README section
 - [ ] **Paper:** IEEE PDF, all T1–T8 / F1–F8 referenced

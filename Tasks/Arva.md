@@ -1,6 +1,6 @@
 # Arva: Unsupervised Models, Risk Scoring & Prototype Lead (v2, from Thu Nov 5)
 
-Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tick progress in [PROGRESS.md](PROGRESS.md) §5.
+Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tick progress in [PROGRESS.md](PROGRESS.md) §3.5.
 **[H]** = human-only (TEAM_PLAN 2.6): do it yourself; an AI agent must not do it or tick it.
 
 ---
@@ -62,7 +62,7 @@ Team rules, contracts and the shared schedule: [TEAM_PLAN.md](TEAM_PLAN.md). Tic
 2. **Confirm** `src/explain.py` works for your case studies: run `python -m src.explain demo` (Y11 hand-off).
 3. **Review** on `main` the PRs assigned to you: Supriye's #4, #5, #6, #11, #12, #16, #17, #18, #26, #28 and Ayo's #3, #24, #25. Run each "How to test" step.
 4. **Open** a GitHub Issue for the owner for anything that needs changing.
-5. **Tick** each review in PROGRESS §7.
+5. **Tick** each review in PROGRESS §3.7.
 
 **Done when:** every review assigned to you is ticked, and you've told Ayo whether `explain.py` works for A19.
 
@@ -217,7 +217,7 @@ Branch: `arva/A21-dashboard` (reviewer Supriye).
 | Task | Verified by |
 |---|---|
 | A1-rest | Tests pass on your laptop; `arva/notes` on GitHub |
-| REV-A | Every review assigned to you ticked in PROGRESS §7; you can explain your 4 modules |
+| REV-A | Every review assigned to you ticked in PROGRESS §3.7; you can explain your 4 modules |
 | DEC-A | No PROVISIONAL in `risk_scoring.py`; reasons in `paper/notes_arva.md` |
 | COV-A | `coverage.md` fixes merged |
 | A15 | v1 rows in `tuning_log_unsupervised.csv` (v0 rows kept); T4 shows the v1 best |

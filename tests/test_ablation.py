@@ -131,3 +131,8 @@ def test_committed_ablation_table_is_the_tuned_v1_run():
 def test_unknown_model_is_refused():
     with pytest.raises(ValueError, match="unknown model"):
         ablation.run_ablation(make_synthetic_features(), models=("lstm",), save=False)
+
+
+def test_data_processing_time_needs_at_least_one_run():
+    with pytest.raises(ValueError, match="repeats"):
+        ablation.data_processing_time(repeats=0, save=False)

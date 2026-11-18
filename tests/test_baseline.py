@@ -47,6 +47,21 @@ def test_peer_group_falls_back_to_department():
     assert z.iloc[5] == 0                                  # same as the peer mean
 
 
+def test_peer_fallback_uses_the_departments_small_roles_only():
+    """A small role falls back to `dept:<department>`, which holds only that department's users whose
+    own role is also below the minimum that day; the department's big roles keep their role group
+    (as documented in docs/feature_dictionary.md, z_peer)."""
+    df = pd.concat([_user([0.0], user=f"B{i}", role="Big", dept="D1") for i in range(6)]
+                   + [_user([5.0], user=f"S{i}", role="Small", dept="D1") for i in range(2)],
+                   ignore_index=True)
+    df["f_usb_connect"] = [0.0] * 6 + [5.0, 5.0]
+    groups = peer_groups(df, min_users=5)
+    assert set(groups[df["role"] == "Big"]) == {"Big"}
+    assert set(groups[df["role"] == "Small"]) == {"dept:D1"}  # only the 2 small-role users
+    z = peer_baselines(df, COLS, min_users=5)["z_peer_usb_connect"]
+    assert (z[df["role"] == "Small"] == 0).all()           # equal to their own 2-user group mean
+
+
 def test_novelty_flags_first_time_from_past_only():
     df = _user([2, 0, 0, 3, 4])
     df["f_http_cloud"] = [0, 0, 1, 1, 0]
