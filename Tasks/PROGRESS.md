@@ -172,6 +172,8 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Tooling:** `python scripts/data_drop.py make` builds `data/ueba_data_v1.zip` (10 files, ~360 MB, `CHECKSUMS.txt` + `DROP_INFO.txt` with the commit and decisions); `make` refuses a web-log cache not built with the current working hours; `verify` lets Arva and Ayo check the files after unzipping and warns if their `src/config.py` differs from the drop's decisions on `supriye/S20-rebuild-data-drop` **(Claude)**
   - [x] **Build** the zip after S8/S20b, upload it to the drive and post the link *(built from `e5dc881` by Claude; uploaded by Supriye; both teammates loaded v1, confirmed Nov 8)*
 - [ ] **REV-S** read own code [H]; reviews done (§3.7)
+  - [x] **Reviews done (§3.7):** post-merge review comments on #9, #15, #21, #23 and #27 (Nov 17), after each PR's "How to test" step on `main` at `9294d27`; one Issue for Arva (#64: CLAUDE.md's PROVISIONAL list misses `MIN_REASON_Z`, coverage.md's M3 row is stale) **(Claude)**
+  - [ ] **Read own code** (`data_loader.py`, `labels.py`, `features.py`, `baseline.py`) until you can explain each function [H]
 - [ ] **S20-tag** `m0-setup`, `m1-features-v0`, `m2-features-v1`
   - [x] **`m2-features-v1`** tagged and pushed (Nov 8) **(Claude)**
   - [x] **`m0-setup`** tagged and pushed (Nov 10) **(Claude)**
@@ -322,25 +324,25 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 | [x] | #6 | S9 v0 | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | — | #7 | Catch-up merge of #3–#6 | Supriye (Claude) | (covered by #3–#6) |
 | [x] | #8 | Tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #9 | `CLAUDE.md` | Arva | Supriye |
+| [x] | #9 | `CLAUDE.md` | Arva | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #10 | A3 synthetic | Arva | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #11 | Review fixes | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #12 | Cross-check, split counts | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #13 | A3 rename | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #14 | A4–A6 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #15 | A7 risk scoring | Supriye for Arva (Claude) | Supriye |
+| [x] | #15 | A7 risk scoring | Supriye for Arva (Claude) | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #16 | Tracker audit | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #17 | S10–S16 features | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #18 | S17–S20 baselines | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #19 | A8 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #20 | A9–A10 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #21 | A11–A12 pipeline | Supriye for Arva (Claude) | Supriye |
+| [x] | #21 | A11–A12 pipeline | Supriye for Arva (Claude) | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #22 | A13–A14 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #23 | Y7–Y10 | Supriye for Ayo (Claude) | Supriye |
+| [x] | #23 | Y7–Y10 | Supriye for Ayo (Claude) | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #24 | Y11 `explain.py` | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #26 | Tracker | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
-| [ ] | #27 | Coverage refresh | Arva | Supriye |
+| [x] | #27 | Coverage refresh | Arva | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #28 | S15 web-count fix | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 
 - [ ] **`docs/coverage.md` first version** (pushed straight to `main` without a PR): read by a teammate.
