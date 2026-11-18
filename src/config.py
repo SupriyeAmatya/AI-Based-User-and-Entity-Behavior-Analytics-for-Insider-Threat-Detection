@@ -66,7 +66,7 @@ EMAIL_COUNT_PERSONAL = True
 # drafted by Claude from all 475 domains in data/processed/http_domain_counts.csv and confirmed by
 # Supriye. `competitor` = the five defense contractors: together they appear on 65.6% of
 # scenario-2 malicious user-days vs 14.7% of normal ones (scenario 2 contacts a competitor).
-# Left out on purpose: linkedin.com (727 of 1,000 users, 30% of normal user-days), freelance sites
+# Left out on purpose: linkedin.com (738 of 1,000 users, 30% of normal user-days), freelance sites
 # (elance, odesk, freelancer, fiverr: gig work, not job search), torrent indexes (not cloud storage)
 # and download.cnet.com (a general download site).
 HTTP_CATEGORIES = {

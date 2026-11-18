@@ -1,45 +1,62 @@
 # Progress Checker (v2)
 
-**Last updated:** Tue Nov 10, 2026 (`main` at `810557b`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
+**Last updated:** Tue Nov 17, 2026 (`main` at `dd84ba8`) · **Submit:** Fri Nov 20 (ready Thu Nov 19)
 Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arva.md](Arva.md), [Ayo.md](Ayo.md)
 
 ---
 
 ## 1. Executive Summary
 
-### 1.1 Snapshot (Tue Nov 10, tracker audit against the repo and GitHub)
+### 1.1 Snapshot (Tue Nov 17, checked against the repo and GitHub)
 - **Code:**
-  - **Merged:** PRs #1–#50; 156/156 tests on `main`.
-  - **Supervised models are final on v1:** tuned defaults, `FINAL_SETUP` and the `final` command (Y14, Y15, #41).
-  - **Results on `main`:** `loso.csv` (T6, #46); `model_comparison.csv` (T5), the per-scenario and delay tables, F4, F5 and `T8_timing.csv` (#48).
-  - **Unsupervised models are tuned on v1** (A15, A16, #50). T5, T6, T8, F4 and F5 were regenerated with the tuned defaults on `ayo/Y17-rerun-tuned` (Nov 10).
-  - **Not started or not on `main`:** `unsupervised_extra.csv`, the v1 prototype outputs (`precision_at_20.csv`, F8), SHAP on v1 (F6), FP/FN, notebook 05 (case studies, F7), F2.
+  - **Merged:** PRs #1–#63 and #66 (#64 is an Issue, #65 is open); 193/193 tests on `main` (with `data/`).
+  - **Every score file is final on v1:** the four main models have tuned defaults (Y15 #41, A16 #50); One-Class SVM runs at its card values (keep or drop is DEC-A). Tag `m3-all-scores`; M3 ticked (#66).
+  - **Results on `main`:**
+    - T5 `model_comparison.csv`, the per-scenario and delay tables, F4, F5 and T8 (#48, #52);
+    - T6 `loso.csv` (#46, #52) and T7 `ablation.csv` (#51);
+    - F6 and `feature_importance*.csv` (#53), and the FP/FN tables (#55);
+    - `unsupervised_extra.csv` (#66);
+    - the prototype outputs `precision_at_20.csv`, `top_risky_users*.csv` and F8 (#57, #66);
+    - notebook 05 with the 4 case studies and F7 (#58, #66);
+    - the Streamlit dashboard (A21, #63);
+    - the README Results and "Run the prototype" sections (#54, #59, #61).
+  - **Not on `main`:** F2 (the pipeline figure, Arva [H]); `paper/lit_notes/` is empty, and no notes branch is on GitHub.
 - **Data:**
   - **Feature table v1 is frozen:** 330,268 user-days, 76 inputs, tag `m2-features-v1` (Nov 8).
   - **The data drop** is delivered; both teammates load v1.
   - **Bug-fix window** closed Tue Nov 10 12:00 with no feature bug, so there is no `features_v1_1.parquet`.
 - **People:**
-  - **Reviews:** #39–#48 each had an approving review before merge (branch protection since Nov 7). None of #1–#28 has its post-merge review (§3.7), and #29–#38 merged without one.
-  - **Literature:** `paper/lit_notes/` is empty. No notes branch is on GitHub.
-- **Decisions:** Supriye's 5 are final (Nov 6). Ayo's imbalance set-up is recorded in #41. Arva's AE architecture, alert levels and OCSVM (DEC-A) are open, and the course rules (S3-rest) are not confirmed.
-- **Milestones:** M0, M2 and "Tuned models" are done (Y15 #41, A16 #50). M1 lacks the teammates' v0 confirmation. M3 is due Wed Nov 11.
+  - **Reviews:** since #39 every PR had an approving review before merge (branch protection).
+  - **Post-merge reviews (§3.7):** Ayo's 9 are done (#62); Supriye's 5 are in open PR #65; Arva's 13 are open.
+  - **Issue #64** (Arva): CLAUDE.md's PROVISIONAL list misses `MIN_REASON_Z`, and coverage.md's Nov 13 snapshot is out of date.
+  - **Drafts for [H] work:** Claude drafts exist for Y18-H and Y20-H (`fp_fn_causes.csv`). Ayo checks them and ticks.
+- **Decisions:**
+  - **Supriye:** her 5 are final (Nov 6).
+  - **Ayo:** the imbalance set-up is recorded in #41. The DEC-Y reasons and the LOSO justification are not written yet.
+  - **Arva (DEC-A):** the AE architecture reasons, the alert levels (99 / 95) and the OCSVM decision are open, and so is the reasons floor `MIN_REASON_Z` (an open [H] sub-box of A18).
+  - **Course rules (S3-rest):** page limit, AI-use policy and submission contents are not confirmed in TEAM_PLAN.
+- **Milestones:**
+  - **Done:** M0, `evaluate.py` ready, the split dates, M2, the tuned models and M3 (tags `m0-setup`, `m2-features-v1`, `m3-all-scores`).
+  - **Open:** the kickoff (status unknown), M1 (the teammates' v0 confirmations), the `explain.py` confirmation, and "Analysis done" (the walkthrough is not recorded and the A18/A19 [H] parts are open).
+  - **Not visible in the repo:** M4 (all sections drafted, due Mon Nov 16). The paper isn't in Git, and the Overleaf set-up (S2-rest) is still open in this tracker.
+  - **Coming up:** M5 and the code freeze on Wed Nov 18; submission-ready on Thu Nov 19.
 
 ### 1.2 Next three actions each
 | Person | 1 | 2 | 3 |
 |---|---|---|---|
-| **Supriye** | III. Dataset [H] (due Tue Nov 10) | Run the ablation (T7, due Wed); A16 merged in #50 | Overleaf + Zotero, course rules (S2-rest, S3-rest) |
-| **Arva** | Commit `unsupervised_extra.csv` (A17) | DEC-A decisions and reasons, incl. the A16 choice | The v1 prototype outputs (A18) |
-| **Ayo** | SHAP on v1 (Y18, Fri) | Notebook 04 observations [H]; Y17 walkthrough material | Reviews (§3.7) |
+| **Supriye** | Paper sections III, IV-A, IV-B, I, VII [H] and the Abstract (M4 overdue; M5 Wed 18:00) | Course rules, AI-use policy above all (S3-rest), and the S22-H ablation reading [H] | Overleaf + Zotero (S2-rest); then the Thu read-through and fresh-clone test (S33, S34) |
+| **Arva** | IV-C, IV-D, VI-B, VIII [H] and F2 | DEC-A (alert levels, OCSVM, `MIN_REASON_Z`) and the A19-H narratives and verdicts [H] | Issue #64; his 13 post-merge reviews (§3.7); the fresh-clone test (A24) |
+| **Ayo** | IV-C (supervised), V, VI-A, VI-C [H] (Y21, Y22) | Check the Y18-H and Y20-H drafts; DEC-Y reasons; Y23 number check | Post the A3/M1/Y6 confirmations; review #65 |
 
 ### 1.3 Counts
 | Area | Done | Open |
 |---|---:|---:|
-| Supriye lines (§3.4) | 20 | 27: setup leftovers, hand-checks, ablation run, literature, paper, finish |
-| Arva lines (§3.5) | 11 | 25: A15–A26 (code parts of A15–A18 merged), decisions, LIT |
-| Ayo lines (§3.6) | 13 | 27: Y16–Y25 (Y16, Y17 outputs merged), decisions, LIT |
-| Hand-offs (§3.3) | 6 | 10 |
-| Post-merge reviews (§3.7) | 0 / 27 | 27 |
-| Milestones (§3.1) | 5 / 15 | 10 |
+| Supriye lines (§3.4) | 21 | 26: setup leftovers, hand-checks, literature, paper, finish |
+| Arva lines (§3.5) | 14 | 22: decisions, LIT, [H] parts of A17–A19, paper, A24–A26 |
+| Ayo lines (§3.6) | 17 | 23: decisions, LIT, [H] readings, paper, Y23–Y25 |
+| Hand-offs (§3.3) | 8 | 8 |
+| Post-merge reviews (§3.7, PR rows) | 9 / 27 | 18 (5 of them in #65; plus the open `coverage.md` first-version line) |
+| Milestones (§3.1) | 6 / 15 | 9 |
 
 ---
 
@@ -64,7 +81,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Repo cloned + installed:** Ayo (Y1) *(his PRs #41, #46 and #48 report the full test suite and the v1 runs on his laptop)*
   - [x] **Data on the drive:** the one data drop `ueba_data_v1.zip` (S4/S20) *(confirmed by Supriye Nov 8)*
 - [x] **`evaluate.py` ready** (Sun Nov 1): merged Nov 3 (#3 via #7)
-- [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request*
+- [x] **Split dates final** (Mon Nov 2): in TEAM_PLAN 2.5.3 (S8) [H] *Done Nov 6 (#36); reason drafted by Claude at Supriye's request* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
 - [ ] **M1 Feature table v0** (Tue Nov 3)
   - [x] **v0 + `get_model_matrix()` merged** (#6 via #7, sampler fix #11)
   - [ ] **Arva and Ayo confirm** v0 loads in their code
@@ -79,7 +96,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 - [x] **Tuned models + `final` commands** (Tue Nov 10): A16 and Y15 merged
   - [x] **Y15** merged (#41): tuned `RF_DEFAULTS` / `XGB_DEFAULTS`, `FINAL_SETUP`, `final`
   - [x] **A16** merged (#50): tuned Isolation Forest and autoencoder defaults, `final` (#33)
-- [ ] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all *(tag `m3-all-scores` pushed Nov 13; the box waits for A17's `unsupervised_extra.csv` on `main`)*
+- [x] **M3 All score files final** (Wed Nov 11): A17, Y16 merged; `evaluate_file()` runs on all *(tag `m3-all-scores` pushed Nov 13; A17's `unsupervised_extra.csv` on `main` from Ayo's M1 on `ayo/A17-m1-results`, Nov 17)*
 - [ ] **Analysis done** (Sat Nov 14): T5–T8, F4–F8, FP/FN, cases; walkthrough held
 - [ ] **M4 All sections drafted** (Mon Nov 16)
 - [ ] **M5 Full draft** circulated by 18:00 (Wed Nov 18)
@@ -111,7 +128,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 | — | Tue Nov 10 12:00 | `features_v1_1.parquet` *(only if needed)* *(not needed: no feature bug was reported, so `features_v1.parquet` stays the final table and no second data drop happens)* | Supriye → Arva, Ayo |
 | [ ] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_unsupervised final` *(`final` in #33, tuned defaults in #50 on Nov 10; tick when announced)* | Arva → all (Git) |
 | [x] | Tue Nov 10 | Merged tuned defaults + `python -m src.models_supervised final` + `timing_supervised.csv` *(#41, Nov 8)* | Ayo → all (Git) |
-| [ ] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV has to be built on Ayo's M1, see A17)* | Arva → Ayo (Git) |
+| [x] | Wed Nov 11 | `unsupervised_extra.csv` *(code merged in #34/#43; the CSV built on Ayo's M1, on `ayo/A17-m1-results`, Nov 17)* | Arva → Ayo (Git) |
 | [x] | Wed Nov 11 | `loso.csv` (T6) *(#46, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
 | [x] | Wed Nov 11 | `ablation.csv` (T7) + `data_processing_time.csv` *(the time table is on `main` since #32 and in T8 since #48; `ablation.csv` in #51, re-run Nov 11 with one fixed XGBoost tree count)* | Supriye → Ayo (Git) |
 | [x] | Thu Nov 12 | T5, F4, F5, `T8_timing.csv` *(#48, Nov 10)* *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)* | Ayo → all (Git) |
@@ -141,11 +158,11 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Branch protection** on `main` *(Nov 7, after Supriye made the repo public; GitHub offers it on private repos only with Pro)*: a PR with 1 approval is required, admins included; no force-push or deletion. Checked by reading the rule back from the GitHub API, not by test-pushing to `main` **(Claude)**
   - [ ] **Overleaf** project (IEEE conference template) and **Zotero** group library created; Arva and Ayo invited and joined
 - [ ] **S3-rest** page limit, AI policy, submission contents confirmed
-- [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S14** decide the email-count rule [H] *Decided by Supriye Nov 6: count all emails incl. webmail (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S15** check the web keyword lists (7 `f_http_*` features built) [H] *Decided by Supriye Nov 6: the lists as built + a `competitor` category (5 defense contractors; added after the review) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
-- [x] **S6** decide the hijacked-account labels [H] *Decided by Supriye Nov 6: keep the 20 days on FAW0032/FBA0348 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.*
+- [x] **S8** decide split dates (2.5.3) [H] *Decided by Supriye Nov 6: 2010-10-31 / 2011-01-31 (#36); reason in TEAM_PLAN 2.5.3, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S11** decide the after-hours window + write the reason [H] *Decided by Supriye Nov 6: 07:00–19:00 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S14** decide the email-count rule [H] *Decided by Supriye Nov 6: count all emails incl. webmail (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S15** check the web keyword lists (7 `f_http_*` features built; 8 since `competitor` was added Nov 6) [H] *Decided by Supriye Nov 6: the lists as built + a `competitor` category (5 defense contractors; added after the review) (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
+- [x] **S6** decide the hijacked-account labels [H] *Decided by Supriye Nov 6: keep the 20 days on FAW0032/FBA0348 (#36); reason in the feature dictionary, drafted by Claude at Supriye's request **(Claude)**.* *Supriye read the Claude-drafted reasons and adopted them as her own (Nov 17, after the whole-project review flagged the ticks).*
 - [x] **S20b** rebuild labels/v0/v1 + notebooks 01–02 if a value changed *(Done when met on `main` at `e5dc881`: tests pass, notebooks 01–02 ran top to bottom with no errors, the split is valid, every v1 check passes, no PROVISIONAL left in Supriye's files. `tests/test_rebuild_outputs.py` now checks all of these on the committed outputs)* **(Claude)**
   - [x] **Tooling:** `bash scripts/rebuild_data.sh` runs labels → v0 → v1 → notebooks 01–02 → tests → a final check that stops (exit 1) on an invalid split or a failed v1 check (run Nov 5: same counts, all pass). The web-log cache now rebuilds itself when the working hours change, or when it has no working-hours stamp on `supriye/S20-rebuild-data-drop` **(Claude)**
   - [x] **Run** it after the S8 decisions and commit the regenerated tables, figures and notebooks *(Nov 6, after adding `competitor`: v1 now 76 inputs; every check passes)* **(Claude)**
@@ -204,7 +221,7 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
 **Open:**
 - [ ] **A1-rest** environment installed; `arva/notes` pushed
 - [ ] **A2** kickoff *(missed; replaced by the Fri Nov 6 check)*
-- [ ] **REV-A** read own code [H]; `explain.py` confirmed; reviews done (§3.7)
+- [ ] **REV-A** read own code [H]; `explain.py` confirmed; reviews done (§3.7) *(reviews done Nov 13: post-merge review comments on #3, #4, #5, #6, #11, #12, #16, #17, #18, #24, #25, #26, #28, plus #31, after `python -m pytest tests` on `main` at `0729548`; issues worth opening were named in #3, #17, #18, #24 and #28. Reading the code [H] and the `explain.py` confirmation are still open)* **(Claude)**
 - [ ] **DEC-A** AE architecture + grids [H]
 - [ ] **DEC-A** alert levels [H]
 - [ ] **DEC-A** keep/drop OCSVM [H]
@@ -219,23 +236,25 @@ Plan: [TEAM_PLAN.md](TEAM_PLAN.md) · Task cards: [Supriye.md](Supriye.md), [Arv
   - [x] **Tuned defaults** merged (#50) (best v1 run by val PR-AUC: IF 100 trees / 256 samples / all features; AE 128-64-16, no dropout, lr 1e-3; the `card` dicts keep the card values for T4); notebook 03a runs `final` and `evaluate_file()` on all 5 files **(Claude)**
   - [x] **Ayo confirms** `final` + `evaluate_file()` run on his laptop (#50 review, Nov 10: 5 files in 82 s on the M1)
   - [ ] **Arva** reads the change and writes the DEC-A reasons [H]
-- [ ] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
+- [x] **A17** `unsupervised_extra.csv` (per scenario, contamination, alerts/day, timing)
   - [x] **Code:** `results_extra()`, `timing()`, `alerts_per_day()` + tests (#34; restored by #43 after a merge dropped them)
-  - [ ] **`unsupervised_extra.csv`** on `main`, built on Ayo's M1 with `final` then `extra` *(Arva's review of #57, Nov 13: a CSV built on Supriye's Intel laptop gave autoencoder rows and timings that differ from T5/T8, so it was taken out of that PR)*
+  - [x] **`unsupervised_extra.csv`** on `main`, built on Ayo's M1 with `final` then `extra` *(Nov 17, `ayo/A17-m1-results`: rebuilt on `main` after #57/#58, the 5 score files are bit-identical to the Nov 10 run and every result column equals T5; the Nov 10 timings are kept because T8 already uses them)* **(Claude)** *(Arva's review of #57, Nov 13: a CSV built on Supriye's Intel laptop gave autoencoder rows and timings that differ from T5/T8, so it was taken out of that PR)*
 - [ ] **A17-H** interpret it [H]
 - [ ] **A18** pipeline on v1, `precision_at_20.csv`, F8
   - [x] **Code:** `precision_at_k()`, `f8_user()`, `plot_risk_timeline()` (#35); `python -m src.pipeline --prototype` writes every output in one run (#57) **(Claude)**
-  - [x] **Outputs** from the v1 run (Nov 13, #57): `top_risky_users.csv`, `top_risky_users_autoencoder.csv`, `precision_at_20.csv`, `F8_risk_timeline.*`; step 6 (LANL) does not apply, S24 was not agreed **(Claude)**
+  - [x] **Outputs** from the v1 run (Nov 13, #57): `top_risky_users.csv`, `top_risky_users_autoencoder.csv`, `precision_at_20.csv`, `F8_risk_timeline.*`; step 6 (LANL) does not apply, S24 was not agreed **(Claude)** *(re-run on Ayo's M1, Nov 17: the IF table, precision@20 and F8 are unchanged; `top_risky_users_autoencoder.csv` is replaced by the M1 run)*
   - [ ] **F8 model** (Isolation Forest, as drawn, or the autoencoder) and the reasons floor `MIN_REASON_Z` chosen by Arva [H]; Arva runs `prototype()` himself
 - [ ] **A19** notebook 05: 4 cases × parts 1–4, F7
-  - [x] **Notebook 05** on `arva/A19-case-studies` (Nov 13): the 4 picks by the card rule (`pick_cases()`), context, baseline vs. the day, F7 (IF SHAP waterfall + AE feature errors, `F7_case<1-4>_*`), raw evidence incl. web domains; `case_studies.csv`; helper tests **(Claude)**
+  - [x] **Notebook 05** on `arva/A19-case-studies` (Nov 13): the 4 picks by the card rule (`pick_cases()`), context, baseline vs. the day, F7 (IF SHAP waterfall + AE feature errors, `F7_case<1-4>_*`), raw evidence incl. web domains; `case_studies.csv`; helper tests **(Claude)** *(re-run on Ayo's M1, Nov 17: the picks and IF outputs are unchanged; the AE risk, AE reasons and the 4 AE error figures now come from the results machine)*
   - [ ] **Arva confirms the picks** [H] and presents 2 cases at the Sat walkthrough
 - [ ] **A19-H** narratives + verdicts [H]
 - [ ] **A14-rest** F2 [H]; IV-C/IV-D notes [H]; `arva/notes` merged
 - [ ] **A20** Related Work paragraphs [H]
-- [ ] **A21** dashboard *(optional)*
+- [x] **A21** dashboard *(optional)* *(Nov 16 on `arva/A21-dashboard`: `streamlit run app/dashboard.py` starts on v1 and shows all 3 parts (ranked table, user risk timeline, reasons for a chosen day); 9 tests, one of them starts the page)* **(Claude)**
 - [ ] **A22** IV-C, IV-D, VI-B [H]
 - [ ] **A23** VIII [H] + README run section
+  - [x] **README "Run the prototype"** section (#59, follow-up #61)
+  - [ ] **VIII** Conclusion & Future Work [H]
 - [ ] **A24** fresh-clone test + demo ≤ 3 min
 - [ ] **A25** draft review
 - [ ] **A26** final fixes
@@ -299,32 +318,32 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 |---|---|---|---|---|
 | [x] | #1 | S2 setup | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #2 | Plans + tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #3 | Y3–Y6 `evaluate.py` | Supriye for Ayo (Claude) | Arva |
-| [ ] | #4 | S4–S5 data loader | Supriye (Claude) | Arva |
-| [ ] | #5 | S6–S8 labels, EDA | Supriye (Claude) | Arva |
-| [ ] | #6 | S9 v0 | Supriye (Claude) | Arva |
+| [x] | #3 | Y3–Y6 `evaluate.py` | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #4 | S4–S5 data loader | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #5 | S6–S8 labels, EDA | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #6 | S9 v0 | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | — | #7 | Catch-up merge of #3–#6 | Supriye (Claude) | (covered by #3–#6) |
 | [x] | #8 | Tracker | Supriye (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #9 | `CLAUDE.md` | Arva | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #10 | A3 synthetic | Arva | Ayo *(comment, Nov 16)* **(Claude)** |
-| [ ] | #11 | Review fixes | Supriye (Claude) | Arva |
-| [ ] | #12 | Cross-check, split counts | Supriye (Claude) | Arva |
+| [x] | #11 | Review fixes | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #12 | Cross-check, split counts | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #13 | A3 rename | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #14 | A4–A6 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #15 | A7 risk scoring | Supriye for Arva (Claude) | Supriye *(comment, Nov 17)* **(Claude)** |
-| [ ] | #16 | Tracker audit | Supriye (Claude) | Arva |
-| [ ] | #17 | S10–S16 features | Supriye (Claude) | Arva |
-| [ ] | #18 | S17–S20 baselines | Supriye (Claude) | Arva |
+| [x] | #16 | Tracker audit | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #17 | S10–S16 features | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #18 | S17–S20 baselines | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #19 | A8 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #20 | A9–A10 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #21 | A11–A12 pipeline | Supriye for Arva (Claude) | Supriye *(comment, Nov 17)* **(Claude)** |
 | [x] | #22 | A13–A14 | Supriye for Arva (Claude) | Ayo *(comment, Nov 16)* **(Claude)** |
 | [x] | #23 | Y7–Y10 | Supriye for Ayo (Claude) | Supriye *(comment, Nov 17)* **(Claude)** |
-| [ ] | #24 | Y11 `explain.py` | Supriye for Ayo (Claude) | Arva |
-| [ ] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva |
-| [ ] | #26 | Tracker | Supriye (Claude) | Arva |
+| [x] | #24 | Y11 `explain.py` | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #25 | Y12 LOSO | Supriye for Ayo (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
+| [x] | #26 | Tracker | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 | [x] | #27 | Coverage refresh | Arva | Supriye *(comment, Nov 17)* **(Claude)** |
-| [ ] | #28 | S15 web-count fix | Supriye (Claude) | Arva |
+| [x] | #28 | S15 web-count fix | Supriye (Claude) | Arva *(comment, Nov 13)* **(Claude)** |
 
 - [ ] **`docs/coverage.md` first version** (pushed straight to `main` without a PR): read by a teammate.
 
@@ -341,9 +360,9 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **`ayo/Y17-comparison`** (Arva) (#48)
 - [ ] **`supriye/notes`, `arva/notes`, `ayo/notes`** (any)
 - [x] **`arva/A18-prototype-cases`** (Ayo) (#35: A18 code only; the outputs and A19 are still to come)
-- [ ] **`ayo/Y18-shap-fpfn`** (Arva)
-- [ ] **`arva/A21-dashboard`** *(optional)* (Supriye)
-- [ ] **`arva/A23-readme-run`** (Supriye)
+- [x] **`ayo/Y18-shap-fpfn`** (Arva) (#53; Y20 merged separately as #55)
+- [x] **`arva/A21-dashboard`** *(optional)* (Supriye) (#63)
+- [x] **`arva/A23-readme-run`** (Supriye) (#59, follow-up #61)
 - [ ] **`arva/A24-fresh-clone-fixes`** *(if needed)* (Supriye)
 - [ ] **`ayo/Y23-verify`** (Supriye)
 - [ ] **`arva/A26-final-fixes`, `ayo/Y25-final-fixes`** *(if needed)* (Supriye)
@@ -419,7 +438,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [x] **Login patterns:** `f_logon_*` family in v1 + feature dictionary
 - [ ] **Authentication failures:** LANL features **or** the gap stated in §III + §VII
 - [x] **File / resource access:** `f_file_*`, `f_usb_*` in v1
-- [ ] **Application usage:** 7 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
+- [ ] **Application usage:** 8 `f_http_*` + 8 `f_email_*` in v1; keyword lists final; stand-in stated in §III
 - [x] **Activity times:** after-hours/weekend/duration features in v1; window final with its reason (07:00–19:00, #36/#37)
 - [x] **Deviation from baseline:** `z_user_*`, `z_peer_*`, `new_*`, F3
 - [ ] **Normal-behavior baseline in the paper:** §IV-B
@@ -431,7 +450,7 @@ Review on `main`, run the PR's "How to test" step, then tick. Fixes go in a new 
 - [ ] **Precision/recall vs. accuracy:** §V paragraph
 - [x] **Unseen behavior:** T6 (`loso.csv`, #46) *(regenerated Nov 10 with the tuned Isolation Forest and autoencoder on `ayo/Y17-rerun-tuned`)*
 - [ ] **FP / FN analysis:** §VI-C + `fp_fn_causes.csv`
-- [ ] **Feature importance:** F6, `feature_importance.csv`, T7
+- [x] **Feature importance:** F6, `feature_importance.csv`, T7 (#53, #51)
 - [ ] **Anomaly explanations:** notebook 05 + §VI-B + F7
 - [ ] **Prototype:** fresh-clone run + README section
 - [ ] **Paper:** IEEE PDF, all T1–T8 / F1–F8 referenced

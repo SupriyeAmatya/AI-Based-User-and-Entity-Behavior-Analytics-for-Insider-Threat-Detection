@@ -113,9 +113,9 @@ Branch: `supriye/S8-decisions` (reviewer Arva).
 1. **Read** `data_loader.py`, `labels.py`, `features.py` and `baseline.py` until you can explain each function [H].
 2. **Review** on `main` the PRs assigned to you: Arva's #9 (`CLAUDE.md`), #15 (A7), #21 (A11–A12) and #27 (coverage), and Ayo's #23 (Y7–Y10). Run each "How to test" step.
 3. **Open** a GitHub Issue for the owner for anything that needs changing (TEAM_PLAN 2.5.8).
-4. **Tick** each review in PROGRESS §7.
+4. **Tick** each review in PROGRESS §3.7.
 
-**Done when:** every review assigned to you in PROGRESS §7 is ticked.
+**Done when:** every review assigned to you in PROGRESS §3.7 is ticked.
 
 #### S20-tag · Sun Nov 8 · Freeze v1 → M2
 1. **Tag** `m0-setup` and `m1-features-v0` if their conditions are met (PROGRESS §8).
@@ -280,7 +280,7 @@ Branch: `supriye/S22-ablation`, from `main` **after** `arva/A15-final-models` an
 | S2-rest, S3-rest | Protection rule active; Overleaf/Zotero joined; course answers in TEAM_PLAN |
 | S8 + S20b | No PROVISIONAL tags; tests pass; notebooks 01–02 re-run; checks PASS |
 | Data drop | One `ueba_data_v1.zip`; both teammates' checksums pass and v1 loads |
-| Reviews | Every review assigned to you ticked in PROGRESS §7 |
+| Reviews | Every review assigned to you ticked in PROGRESS §3.7 |
 | M2 | `m2-features-v1` tag pushed |
 | S21 | No undecided feature issue at Tue 12:00 |
 | S22 | `ablation.csv` (20 rows) + `data_processing_time.csv` on `main`; tests pass |

@@ -25,8 +25,8 @@ import pandas as pd
 
 from src.config import FIGURES_DIR
 
-# PROVISIONAL (A7, Arva decides and justifies them in IV-D): the card's suggested levels.
-# High = top 1% of normal training behaviour, matching the TEAM_PLAN 5.6 alert budget.
+# Decided by Arva, Nov 17 (DEC-A): keep the card's levels. High = more unusual than 99% of normal
+# training days, matching the top-1% alert budget (TEAM_PLAN 2.5.6). The reason is in paper/notes_arva.md.
 HIGH = 99.0
 MEDIUM = 95.0
 WINDOW_DAYS = 7
