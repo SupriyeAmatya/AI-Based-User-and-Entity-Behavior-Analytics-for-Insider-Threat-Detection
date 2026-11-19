@@ -28,6 +28,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 import pandas as pd
 import shap
@@ -38,6 +39,9 @@ from src.config import FIGURES_DIR, PROCESSED_DIR, RANDOM_STATE, TABLES_DIR
 N_NEGATIVES = 5000
 SHAP_MODELS = ("xgboost", "random_forest", "iforest")
 F6_MODEL = "xgboost"                                  # the paper figure; the others are backups
+SINGLE_COLUMN = 3.5                                   # IEEE column width in inches (Y23)
+SHAP_UNITS = {"xgboost": "SHAP value (log-odds)", "random_forest": "SHAP value (probability)",
+              "iforest": "SHAP value (negated path length)"}
 IMPORTANCE_TABLE = "feature_importance.csv"
 PER_SCENARIO_TABLE = "feature_importance_per_scenario.csv"
 OVERLAP_TABLE = "feature_importance_top10_overlap.csv"
@@ -101,14 +105,26 @@ def _save(fig, name):
         fig.savefig(FIGURES_DIR / f"{name}.{ext}", dpi=300, bbox_inches="tight")
 
 
-def plot_summary(shap_values: shap.Explanation, X=None, name="shap_summary", max_display=15):
-    """Beeswarm plot of global importance (Y11 step 3), saved as PNG and PDF."""
+def plot_summary(shap_values: shap.Explanation, X=None, name="shap_summary", max_display=15,
+                 width=None, fontsize=8, xlabel=None):
+    """Beeswarm plot of global importance (Y11 step 3), saved as PNG and PDF.
+    width: if given (inches, e.g. SINGLE_COLUMN), the figure is resized to it and every text set
+    to `fontsize` pt, so it stays readable at that column width in the paper (Y23).
+    xlabel: replaces shap's x-axis label (e.g. to name the units of the model's output)."""
     if X is not None:
         shap_values = shap.Explanation(shap_values.values, shap_values.base_values,
                                        data=np.asarray(X), feature_names=list(X.columns))
     plt.figure()
-    shap.plots.beeswarm(shap_values, max_display=max_display, show=False)
+    shap.plots.beeswarm(shap_values, max_display=max_display, show=False,
+                        plot_size=None if width is None else (width, 0.26 * (max_display + 1) + 0.7))
     fig = plt.gcf()
+    if width is not None:
+        for text in fig.findobj(matplotlib.text.Text):
+            text.set_fontsize(fontsize)
+        fig.axes[0].xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
+        fig.tight_layout()
+    if xlabel is not None:
+        fig.axes[0].set_xlabel(xlabel)
     _save(fig, name)
     plt.close(fig)
     return fig
@@ -224,7 +240,7 @@ def shap_analysis(features_path=None, df=None, models=SHAP_MODELS, n_negatives=N
         values[model] = sv
         name = f"F6_shap_summary_{model}" if model == F6_MODEL else f"shap_summary_{model}"
         if save:
-            plot_summary(sv, X, name=name)
+            plot_summary(sv, X, name=name, width=SINGLE_COLUMN, xlabel=SHAP_UNITS[model])
         per_scenario.append(per_scenario_importance(sv, rows).assign(model=model))
         print(f"{model:14s} {setups[model]}  -> {name}")
     importance = importance_table(values)
