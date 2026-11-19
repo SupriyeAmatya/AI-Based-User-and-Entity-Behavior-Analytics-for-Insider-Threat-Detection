@@ -5,13 +5,13 @@ Usage:
     results = evaluate_file("results/scores/iforest.parquet")
     table = compare_files(["results/scores/iforest.parquet", "results/scores/xgboost.parquet"])
 
-A score file follows TEAM_PLAN 5.2: one row per user-day with the columns
+A score file follows TEAM_PLAN 2.5.2: one row per user-day with the columns
 user, date, split, label, scenario, score  (higher score = more suspicious).
 
-Thresholds follow TEAM_PLAN 5.6:
+Thresholds follow TEAM_PLAN 2.5.6:
     best_f1   - the threshold that maximises F1 on the val split, applied unchanged to test
     top_1pct  - flag the top 1% of test user-days (fixed analyst alert budget)
-All reported numbers are on the test split (TEAM_PLAN 10.2).
+All reported numbers are on the test split (TEAM_PLAN 5.4).
 
 Y17 tables and figures from the score files in results/scores/:
     python -m src.evaluate report   # T5, model_per_scenario, detection_delay, F4, F5, T8
@@ -112,16 +112,18 @@ def threshold_top_k(test_df: pd.DataFrame, k: float = 0.01) -> float:
 
 # ---------------------------------------------------------------- insider-level metrics (Y6)
 def detection_delay(test_df: pd.DataFrame, threshold: float) -> dict:
-    """Days from each test insider's first malicious day to their first alert on or after it.
+    """Days from each test insider's first malicious day to their first flagged malicious day.
 
-    An insider is any user with at least one label == 1 row in test_df.
+    An insider is any account with at least one label == 1 row in test_df (so the hijacked
+    supervisor account FBA0348 counts as one). Only alerts on malicious days count as a
+    detection (Ayo's rule, Issue #73): an alert on a normal day, before or after the attack,
+    does not. So n_detected / n_insiders always equals user_level_recall().
     """
     rows = []
     malicious = test_df[test_df["label"] == 1]
     for user, mal in malicious.groupby("user"):
         d0 = mal["date"].min()
-        user_rows = test_df[(test_df["user"] == user) & (test_df["date"] >= d0)]
-        alerts = user_rows.loc[user_rows["score"] >= threshold, "date"]
+        alerts = mal.loc[mal["score"] >= threshold, "date"]
         delay = (alerts.min() - d0).days if len(alerts) else None
         rows.append({"user": user, "scenario": int(mal["scenario"].iloc[0]),
                      "first_malicious_day": d0, "delay_days": delay})
@@ -151,13 +153,13 @@ def load_scores(path) -> pd.DataFrame:
     df = pd.read_parquet(path)
     missing = set(SCORE_COLUMNS) - set(df.columns)
     if missing:
-        raise ValueError(f"{path} is missing columns {sorted(missing)} (TEAM_PLAN 5.2)")
+        raise ValueError(f"{path} is missing columns {sorted(missing)} (TEAM_PLAN 2.5.2)")
     df["date"] = pd.to_datetime(df["date"])
     return df
 
 
 def evaluate_df(df: pd.DataFrame, k: float = 0.01) -> dict:
-    """Evaluate one model's scores (TEAM_PLAN 5.2 format) following TEAM_PLAN 10.2."""
+    """Evaluate one model's scores (TEAM_PLAN 2.5.2 format) following TEAM_PLAN 5.4."""
     val, test = df[df["split"] == "val"], df[df["split"] == "test"]
     if test.empty:
         raise ValueError("score file has no test rows")
@@ -325,8 +327,8 @@ def per_scenario_table(paths, k: float = 0.01, save=True) -> pd.DataFrame:
 
 def delay_table(paths, k: float = 0.01, save=True) -> pd.DataFrame:
     """Y17 step 5: per model x operating point, the detection delay (days from an insider's first
-    malicious test day to their first alert), user-level recall and the missed insiders.
-    Saved as detection_delay.csv."""
+    malicious test day to their first flagged malicious day, see detection_delay()), user-level
+    recall and the missed insiders. n_insiders counts accounts. Saved as detection_delay.csv."""
     rows = []
     for path in paths:
         r = evaluate_file(path, k)
@@ -376,7 +378,8 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
     (timing_supervised.csv from models_supervised; the timing columns of unsupervised_extra.csv
     from models_unsupervised) and the best-F1 detection delay (`delay`, a delay_table() frame,
     default detection_delay.csv), then one row per data-processing step
-    (data_processing_time.csv from ablation). Missing source files are skipped."""
+    (data_processing_time.csv from ablation). Missing source files are skipped. `measured` is
+    False for a step that was estimated rather than timed (e.g. the one-off archive conversion)."""
     parts = []
     unsupervised = _read("unsupervised_extra.csv")
     if unsupervised is not None:
@@ -385,7 +388,7 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
             "fit_seconds": unsupervised["fit_seconds"], "fit_seconds_std": np.nan,
             "inference_seconds_per_1000": unsupervised["score_seconds_per_1000"],
             "inference_seconds_per_1000_std": np.nan, "runs": unsupervised["timing_runs"],
-            "cpu": unsupervised["cpu"], "threads": unsupervised["threads"],
+            "measured": True, "cpu": unsupervised["cpu"], "threads": unsupervised["threads"],
             "ram_gb": unsupervised["ram_gb"]}))
     supervised = _read("timing_supervised.csv")
     if supervised is not None:
@@ -395,7 +398,7 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
             "fit_seconds_std": supervised["fit_seconds_std"],
             "inference_seconds_per_1000": supervised["score_seconds_per_1000_mean"],
             "inference_seconds_per_1000_std": supervised["score_seconds_per_1000_std"],
-            "runs": supervised["repeats"], "cpu": supervised["cpu"],
+            "runs": supervised["repeats"], "measured": True, "cpu": supervised["cpu"],
             "threads": supervised["threads"], "ram_gb": supervised["ram_gb"]}))
     processing = _read("data_processing_time.csv")
     if processing is not None:
@@ -403,7 +406,9 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
             "kind": "data processing", "component": processing["step"],
             "seconds": processing["seconds"],
             "seconds_per_1000_user_days": processing["seconds_per_1000_user_days"],
-            "runs": processing["runs"], "cpu": processing["cpu"],
+            "runs": processing["runs"], "measured": (processing["measured"].astype(bool)
+                                                         if "measured" in processing else True),
+            "cpu": processing["cpu"],
             "threads": processing["threads"], "ram_gb": processing["ram_gb"]}))
     if not parts:
         return pd.DataFrame()
@@ -419,8 +424,8 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
         table["mean_delay_days_best_f1"] = table["component"].map(best["mean_delay_days"])
     columns = ["kind", "component", "fit_seconds", "fit_seconds_std", "inference_seconds_per_1000",
                "inference_seconds_per_1000_std", "seconds", "seconds_per_1000_user_days",
-               "median_delay_days_best_f1", "mean_delay_days_best_f1", "runs", "cpu", "threads",
-               "ram_gb"]
+               "median_delay_days_best_f1", "mean_delay_days_best_f1", "runs", "measured", "cpu",
+               "threads", "ram_gb"]
     table = table[[c for c in columns if c in table]]
     return _save_table(table, T8_TABLE, save)
 
@@ -572,7 +577,7 @@ def fpfn_analysis(features_path=None, features: pd.DataFrame = None, t5: pd.Data
 
 # ---------------------------------------------------------------- synthetic scores for testing (Y3 step 1)
 def make_synthetic_scores(n_users=50, n_days=200, seed=RANDOM_STATE) -> pd.DataFrame:
-    """~10,000 user-days in TEAM_PLAN 5.2 format with ~0.5% malicious rows.
+    """~10,000 user-days in TEAM_PLAN 2.5.2 format with ~0.5% malicious rows.
 
     Nine insiders (three per scenario) each have one run of 5-6 malicious days, placed so that
     train, val and test all contain every scenario. score = noise + 1.5 * label.

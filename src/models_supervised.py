@@ -2,15 +2,15 @@
 
 Usage:
     from src.models_supervised import train_and_score_supervised
-    scores, info = train_and_score_supervised(df, "random_forest")    # df = feature table (TEAM_PLAN 5.1)
+    scores, info = train_and_score_supervised(df, "random_forest")    # df = feature table (TEAM_PLAN 2.5.1)
     scores, info = train_and_score_supervised(df, "xgboost")
 
 Same inputs and outputs as Arva's train_and_score():
-- inputs come from get_model_matrix() (TEAM_PLAN 5.5), inside a Pipeline whose StandardScaler is
+- inputs come from get_model_matrix() (TEAM_PLAN 2.5.5), inside a Pipeline whose StandardScaler is
   fitted on the training rows only (trees don't need scaling; it is kept for consistency);
-- it trains on **all** split == "train" rows, malicious ones included (TEAM_PLAN 5.4);
+- it trains on **all** split == "train" rows, malicious ones included (TEAM_PLAN 2.5.4);
 - it scores every row with P(malicious), higher = more suspicious, and saves
-  results/scores/<model_name>.parquet with user, date, split, label, scenario, score (TEAM_PLAN 5.2).
+  results/scores/<model_name>.parquet with user, date, split, label, scenario, score (TEAM_PLAN 2.5.2).
 XGBoost stops early on the val rows (eval_metric="aucpr", 50 rounds).
 
 Tuning (Y9) and the imbalance experiment (Y10) evaluate on val only and log to results/tables/:
