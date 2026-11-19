@@ -322,6 +322,9 @@ def plot_score_distribution(path):
 
 # ---------------------------------------------------------------- Y17: master comparison
 MAIN_MODELS = ["iforest", "autoencoder", "ocsvm", "random_forest", "xgboost"]
+# The paper's comparison figures (F4, F5) leave the One-Class SVM out (Arva's DEC-A, Nov 17); its
+# score file stays and T5 still lists it.
+PAPER_MODELS = ["iforest", "autoencoder", "random_forest", "xgboost"]
 ALL_MODELS = MAIN_MODELS[:3] + ["iforest_contam", "autoencoder_contam"] + MAIN_MODELS[3:]
 T5_TABLE = "model_comparison.csv"
 PER_SCENARIO_TABLE = "model_per_scenario.csv"
@@ -464,8 +467,8 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
     return _save_table(table, T8_TABLE, save)
 
 
-def report(models=ALL_MODELS, main=MAIN_MODELS):
-    """Y17: T5, the per-scenario and delay tables, F4 and F5 (main models) and T8, from the score
+def report(models=ALL_MODELS, main=PAPER_MODELS):
+    """Y17: T5, the per-scenario and delay tables, F4 and F5 (PAPER_MODELS) and T8, from the score
     files in results/scores/. Run: python -m src.evaluate report"""
     paths, main_paths = score_paths(models), score_paths(main)
     t5 = model_comparison(paths)
