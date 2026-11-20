@@ -117,6 +117,11 @@ class AutoencoderDetector(UnsupervisedDetector):
 
     Trained with MSE and Adam; early stopping on the validation normal rows (patience 5) keeps
     the best epoch. score() = mean squared reconstruction error per row.
+
+    Deterministic per machine only (#74): with seed 42 one machine always gives the same scores,
+    but another CPU gives slightly different ones (test PR-AUC 0.0833 on an Intel laptop, 0.0930
+    on Ayo's M1; the contaminated variant 0.0402 vs 0.0413). Isolation Forest and the One-Class
+    SVM are bit-identical across machines. The paper's numbers come from the results machine (M1).
     """
 
     name = "autoencoder"
