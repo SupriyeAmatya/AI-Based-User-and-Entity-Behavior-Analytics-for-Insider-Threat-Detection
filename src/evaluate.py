@@ -47,6 +47,17 @@ MODEL_COLORS = {
     "iforest_contam": "#aec7e8",
     "autoencoder_contam": "#ffbb78",
 }
+# Readable model names for the figures (the file stems stay the model ids).
+MODEL_LABELS = {
+    "iforest": "Isolation Forest", "autoencoder": "Autoencoder", "ocsvm": "One-Class SVM",
+    "random_forest": "Random Forest", "xgboost": "XGBoost",
+    "iforest_contam": "Isolation Forest (contam.)", "autoencoder_contam": "Autoencoder (contam.)",
+}
+# Y23 figure polish: IEEE column widths (inches) and text sizes, so that every paper figure keeps
+# all its text at 8 pt or more when placed at its column width.
+SINGLE_COLUMN, DOUBLE_COLUMN = 3.5, 7.16
+PAPER_STYLE = {"font.size": 8, "axes.titlesize": 9, "axes.labelsize": 8, "xtick.labelsize": 8,
+               "ytick.labelsize": 8, "legend.fontsize": 8, "figure.titlesize": 9}
 OPERATING_POINTS = ["best_f1", "top_1pct"]
 SCORE_COLUMNS = ["user", "date", "split", "label", "scenario", "score"]
 
@@ -219,36 +230,61 @@ def _color(model):
     return MODEL_COLORS.get(model)
 
 
+def _label(model):
+    return MODEL_LABELS.get(model, model)
+
+
+def smallest_text_pt(fig, column_width=SINGLE_COLUMN) -> float:
+    """Y23: the smallest text size (pt) in `fig` once the saved figure (bbox_inches="tight", as
+    _save writes it) is scaled to `column_width` inches in the paper. Paper figures need >= 8."""
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    if not hasattr(fig.canvas, "get_renderer"):            # a closed figure has lost its canvas
+        FigureCanvasAgg(fig)
+    fig.canvas.draw()
+    width = fig.get_tightbbox(fig.canvas.get_renderer()).width
+    sizes = [t.get_fontsize() for t in fig.findobj(matplotlib.text.Text)
+             if t.get_visible() and t.get_text().strip()]
+    return min(sizes) * column_width / width
+
+
 def plot_roc(paths, name="roc_curves"):
-    fig, ax = plt.subplots(figsize=(4.5, 4))
-    for path in paths:
-        test = load_scores(path).query("split == 'test'")
-        fpr, tpr, _ = roc_curve(test["label"], test["score"])
-        model = Path(path).stem
-        auc = roc_auc_score(test["label"], test["score"])
-        ax.plot(fpr, tpr, color=_color(model), label=f"{model} (AUC {auc:.3f})")
-    ax.plot([0, 1], [0, 1], "k--", lw=0.8, label="random")
-    ax.set(xlabel="False positive rate", ylabel="True positive rate", title="ROC (test)")
-    ax.legend(fontsize=8)
-    _save(fig, name)
+    """F4 (ROC, test split), sized for one IEEE column; the caption, not a title, names it."""
+    with plt.rc_context(PAPER_STYLE):
+        fig, ax = plt.subplots(figsize=(SINGLE_COLUMN, 3.0))
+        for path in paths:
+            test = load_scores(path).query("split == 'test'")
+            fpr, tpr, _ = roc_curve(test["label"], test["score"])
+            model = Path(path).stem
+            auc = roc_auc_score(test["label"], test["score"])
+            ax.plot(fpr, tpr, color=_color(model), lw=1.2, label=f"{_label(model)} ({auc:.3f})")
+        ax.plot([0, 1], [0, 1], "k--", lw=0.8, label="Random (0.500)")
+        ax.set(xlabel="False positive rate", ylabel="True positive rate")
+        ax.legend(title="Model (ROC-AUC)", loc="lower right", frameon=False)
+        fig.tight_layout()
+        _save(fig, name)
     return fig
 
 
 def plot_pr(paths, name="pr_curves"):
-    fig, ax = plt.subplots(figsize=(4.5, 4))
-    base_rate = None
-    for path in paths:
-        test = load_scores(path).query("split == 'test'")
-        precision, recall, _ = precision_recall_curve(test["label"], test["score"])
-        model = Path(path).stem
-        ap = average_precision_score(test["label"], test["score"])
-        ax.plot(recall, precision, color=_color(model), label=f"{model} (PR-AUC {ap:.3f})")
-        base_rate = test["label"].mean()
-    if base_rate is not None:
-        ax.axhline(base_rate, color="k", ls="--", lw=0.8, label=f"random ({base_rate:.4f})")
-    ax.set(xlabel="Recall", ylabel="Precision", title="Precision-recall (test)")
-    ax.legend(fontsize=8)
-    _save(fig, name)
+    """F4 (precision-recall, test split), sized for one IEEE column."""
+    with plt.rc_context(PAPER_STYLE):
+        fig, ax = plt.subplots(figsize=(SINGLE_COLUMN, 3.0))
+        base_rate = None
+        for path in paths:
+            test = load_scores(path).query("split == 'test'")
+            precision, recall, _ = precision_recall_curve(test["label"], test["score"])
+            model = Path(path).stem
+            ap = average_precision_score(test["label"], test["score"])
+            ax.plot(recall, precision, color=_color(model), lw=1.2,
+                    label=f"{_label(model)} ({ap:.3f})")
+            base_rate = test["label"].mean()
+        if base_rate is not None:
+            ax.axhline(base_rate, color="k", ls="--", lw=0.8, label=f"Random ({base_rate:.4f})")
+        ax.set(xlabel="Recall", ylabel="Precision")
+        # the middle of a PR plot is empty: curves hug the left, top and bottom edges
+        ax.legend(title="Model (PR-AUC)", loc="center", bbox_to_anchor=(0.55, 0.5), frameon=False)
+        fig.tight_layout()
+        _save(fig, name)
     return fig
 
 
@@ -286,6 +322,9 @@ def plot_score_distribution(path):
 
 # ---------------------------------------------------------------- Y17: master comparison
 MAIN_MODELS = ["iforest", "autoencoder", "ocsvm", "random_forest", "xgboost"]
+# The paper's comparison figures (F4, F5) leave the One-Class SVM out (Arva's DEC-A, Nov 17); its
+# score file stays and T5 still lists it.
+PAPER_MODELS = ["iforest", "autoencoder", "random_forest", "xgboost"]
 ALL_MODELS = MAIN_MODELS[:3] + ["iforest_contam", "autoencoder_contam"] + MAIN_MODELS[3:]
 T5_TABLE = "model_comparison.csv"
 PER_SCENARIO_TABLE = "model_per_scenario.csv"
@@ -344,22 +383,25 @@ def delay_table(paths, k: float = 0.01, save=True) -> pd.DataFrame:
 
 
 def plot_confusion_grid(paths, threshold_type="best_f1", name=None):
-    """F5 (Y17 step 4): one confusion-matrix panel per model at `threshold_type`, test split."""
-    fig, axes = plt.subplots(1, len(paths), figsize=(2.6 * len(paths), 2.8), squeeze=False)
-    for ax, path in zip(axes[0], paths):
-        m = evaluate_file(path)["operating_points"][threshold_type]
-        matrix = np.array([[m["tn"], m["fp"]], [m["fn"], m["tp"]]])
-        ax.imshow(np.log1p(matrix), cmap="Blues")          # log scale: TN dwarfs the other cells
-        for (i, j), v in np.ndenumerate(matrix):
-            ax.text(j, i, f"{v:,}", ha="center", va="center", fontsize=8,
-                    color="white" if np.log1p(v) > np.log1p(matrix.max()) / 2 else "black")
-        ax.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["normal", "malicious"],
-               yticklabels=["normal", "malicious"], xlabel="Predicted", title=Path(path).stem)
-        ax.tick_params(labelsize=7)
-    axes[0][0].set_ylabel("Actual")
-    fig.suptitle(f"Confusion matrices at {threshold_type} (test)", fontsize=10)
-    fig.tight_layout()
-    _save(fig, name or f"F5_confusion_{threshold_type}")
+    """F5 (Y17 step 4): one confusion-matrix panel per model at `threshold_type`, test split,
+    in one row across both IEEE columns (the y labels only on the first panel)."""
+    with plt.rc_context(PAPER_STYLE):
+        fig, axes = plt.subplots(1, len(paths), figsize=(DOUBLE_COLUMN, 1.9), squeeze=False)
+        for n, (ax, path) in enumerate(zip(axes[0], paths)):
+            m = evaluate_file(path)["operating_points"][threshold_type]
+            matrix = np.array([[m["tn"], m["fp"]], [m["fn"], m["tp"]]])
+            ax.imshow(np.log1p(matrix), cmap="Blues")      # log scale: TN dwarfs the other cells
+            for (i, j), v in np.ndenumerate(matrix):
+                ax.text(j, i, f"{v:,}", ha="center", va="center",
+                        color="white" if np.log1p(v) > np.log1p(matrix.max()) / 2 else "black")
+            ax.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["Normal", "Malicious"],
+                   yticklabels=["Normal", "Malicious"] if n == 0 else [],
+                   title=_label(Path(path).stem))
+            ax.tick_params(length=0)
+        axes[0][0].set_ylabel("Actual")
+        fig.supxlabel("Predicted", fontsize=PAPER_STYLE["axes.labelsize"])
+        fig.tight_layout(w_pad=0.6)
+        _save(fig, name or f"F5_confusion_{threshold_type}")
     return fig
 
 
@@ -425,8 +467,8 @@ def timing_table(delay=None, save=True) -> pd.DataFrame:
     return _save_table(table, T8_TABLE, save)
 
 
-def report(models=ALL_MODELS, main=MAIN_MODELS):
-    """Y17: T5, the per-scenario and delay tables, F4 and F5 (main models) and T8, from the score
+def report(models=ALL_MODELS, main=PAPER_MODELS):
+    """Y17: T5, the per-scenario and delay tables, F4 and F5 (PAPER_MODELS) and T8, from the score
     files in results/scores/. Run: python -m src.evaluate report"""
     paths, main_paths = score_paths(models), score_paths(main)
     t5 = model_comparison(paths)

@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from src import explain
+from src.evaluate import smallest_text_pt
 from src.features import get_model_matrix
 from src.models_supervised import train_and_score_supervised
 from src.models_unsupervised import train_and_score
@@ -72,6 +73,11 @@ def test_top_features_and_plots(data, tmp_figures):
     explain.plot_waterfall(sv, X, X.index[1], name="waterfall_by_label")
     for name in ("summary", "waterfall", "waterfall_by_label"):
         assert (tmp_figures / f"{name}.png").exists() and (tmp_figures / f"{name}.pdf").exists()
+    # Y23: the paper version (F6) fits one IEEE column with 8 pt text and a named x unit
+    fig = explain.plot_summary(sv, X, name="summary_paper", width=explain.SINGLE_COLUMN,
+                               xlabel="SHAP value (log-odds)")
+    assert fig.axes[0].get_xlabel() == "SHAP value (log-odds)"
+    assert smallest_text_pt(fig, explain.SINGLE_COLUMN) >= 8
 
 
 # ---------------------------------------------------------------- Y18

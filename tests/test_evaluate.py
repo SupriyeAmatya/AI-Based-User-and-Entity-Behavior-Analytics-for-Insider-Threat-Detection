@@ -132,6 +132,14 @@ def test_delay_table_lists_missed_insiders(two_files, tmp_path):
     assert (tmp_path / "tables" / ev.DELAY_TABLE).exists()
 
 
+def test_paper_figures_keep_text_at_8pt(two_files):
+    # Y23: F4 at one IEEE column, F5 across both, all text >= 8 pt once printed at that width
+    assert ev.smallest_text_pt(ev.plot_roc(two_files), ev.SINGLE_COLUMN) >= 8
+    assert ev.smallest_text_pt(ev.plot_pr(two_files), ev.SINGLE_COLUMN) >= 8
+    panels = (two_files * 2)[:len(ev.PAPER_MODELS)]     # F5 has one panel per paper model
+    assert ev.smallest_text_pt(ev.plot_confusion_grid(panels), ev.DOUBLE_COLUMN) >= 8
+
+
 def test_confusion_grid_writes_f5(two_files, tmp_path):
     fig = ev.plot_confusion_grid(two_files)
     assert len(fig.axes) == 2
