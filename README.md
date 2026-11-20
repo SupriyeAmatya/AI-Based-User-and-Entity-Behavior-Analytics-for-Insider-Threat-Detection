@@ -195,7 +195,7 @@ python -m src.evaluate report             # T5 and the other result tables
 Model comparison on the **test** split (Feb 1 – May 17, 2011: 65,007 user-days, 170 malicious, on 15 accounts: 14 insiders and the hijacked supervisor account `FBA0348`), from `results/tables/model_comparison.csv` (T5). The numbers come from the results machine (TEAM_PLAN 2.5.12); rebuild them with the two `final` commands and `python -m src.evaluate report`.
 
 - **Operating points:** *best-F1* uses the threshold that maximises F1 on the validation split, applied unchanged to test; *top 1%* flags the 1% highest-scoring test user-days (651).
-- **Columns:** FPR and FNR are the false-positive and false-negative rates; *user recall* is the share of those 15 accounts flagged on at least one malicious day; *median delay* is the days from an account's first malicious test day to its first alert.
+- **Columns:** FPR and FNR are the false-positive and false-negative rates; *user recall* is the share of those 15 accounts flagged on at least one malicious day; *median delay* is the days from an account's first malicious test day to its first flagged malicious day (alerts on normal days don't count, #73).
 - **"All train rows":** the `_contam` variants train on every train row, malicious ones included; the other unsupervised models train on normal rows only.
 - **More results:** per scenario `model_per_scenario.csv`, unseen scenarios `loso.csv` (T6), feature groups `ablation.csv` (T7), timing `T8_timing.csv` (T8), feature importance `feature_importance.csv` (F6).
 
@@ -203,13 +203,13 @@ Model comparison on the **test** split (Feb 1 – May 17, 2011: 65,007 user-days
 | Model | Operating point | Precision | Recall | F1 | FPR | FNR | ROC-AUC | PR-AUC | User recall | Median delay (days) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Isolation Forest | best-F1 | 0.012 | 0.524 | 0.023 | 0.1159 | 0.476 | 0.879 | 0.012 | 0.933 | 0.0 |
-| Isolation Forest | top 1% | 0.014 | 0.053 | 0.022 | 0.0099 | 0.947 | 0.879 | 0.012 | 0.267 | 2.0 |
+| Isolation Forest | top 1% | 0.014 | 0.053 | 0.022 | 0.0099 | 0.947 | 0.879 | 0.012 | 0.267 | 0.0 |
 | Autoencoder | best-F1 | 0.072 | 0.165 | 0.100 | 0.0056 | 0.835 | 0.916 | 0.093 | 0.667 | 0.0 |
 | Autoencoder | top 1% | 0.048 | 0.182 | 0.076 | 0.0096 | 0.818 | 0.916 | 0.093 | 0.733 | 0.0 |
 | One-Class SVM | best-F1 | 0.818 | 0.053 | 0.099 | 0.0000 | 0.947 | 0.741 | 0.057 | 0.400 | 0.0 |
 | One-Class SVM | top 1% | 0.038 | 0.147 | 0.061 | 0.0097 | 0.853 | 0.741 | 0.057 | 0.667 | 0.0 |
 | Isolation Forest, all train rows | best-F1 | 0.011 | 0.712 | 0.021 | 0.1712 | 0.288 | 0.861 | 0.010 | 1.000 | 0.0 |
-| Isolation Forest, all train rows | top 1% | 0.014 | 0.053 | 0.022 | 0.0099 | 0.947 | 0.861 | 0.010 | 0.200 | 3.0 |
+| Isolation Forest, all train rows | top 1% | 0.014 | 0.053 | 0.022 | 0.0099 | 0.947 | 0.861 | 0.010 | 0.200 | 0.0 |
 | Autoencoder, all train rows | best-F1 | 0.102 | 0.059 | 0.075 | 0.0014 | 0.941 | 0.902 | 0.041 | 0.467 | 0.0 |
 | Autoencoder, all train rows | top 1% | 0.034 | 0.129 | 0.054 | 0.0097 | 0.871 | 0.902 | 0.041 | 0.733 | 0.0 |
 | Random Forest | best-F1 | 0.937 | 0.876 | 0.906 | 0.0002 | 0.124 | 1.000 | 0.966 | 0.933 | 0.0 |
