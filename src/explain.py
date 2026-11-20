@@ -20,9 +20,10 @@ Y18 (F6 and the importance tables) in one command, with the tuned defaults and F
     python -m src.explain shap [features path]   # features_v1 by default
 
 Sign convention: a positive SHAP value always pushes a user-day towards "malicious / anomalous".
-For RF the values are for class 1 (probability), for XGBoost they are in log-odds, and for
-Isolation Forest they explain the anomaly score (-decision_function), so the sign of shap's raw
-path-length values is flipped.
+For RF the values are for class 1 (probability), for XGBoost they are in log-odds. For Isolation
+Forest, shap explains the mean path length; its sign is flipped, so the values explain the negated
+path length. That moves in the same direction as the anomaly score (-decision_function), but the
+values do not add up to it, because the score is a non-linear function of the path length.
 """
 import matplotlib
 

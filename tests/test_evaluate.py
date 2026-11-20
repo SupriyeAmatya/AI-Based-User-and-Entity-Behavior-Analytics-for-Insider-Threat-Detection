@@ -58,6 +58,26 @@ def test_detection_delay_and_user_recall():
     assert ev.user_level_recall(test, 0.5) == pytest.approx(0.5)
 
 
+def test_detection_delay_ignores_alerts_on_normal_days():
+    # Issue #73: C's only malicious day (Jan 2) is missed; the Jan 6 alert after the attack and
+    # the Jan 3 alert between D's malicious days are on normal days, so neither counts.
+    d = pd.to_datetime
+    test = pd.DataFrame({
+        "user": ["C"] * 3 + ["D"] * 3,
+        "date": d(["2011-01-02", "2011-01-06", "2011-01-07",
+                   "2011-01-02", "2011-01-03", "2011-01-05"]),
+        "label": [1, 0, 0, 1, 0, 1],
+        "scenario": [1, 0, 0, 2, 0, 2],
+        "score": [0.1, 0.9, 0.2, 0.1, 0.9, 0.7],
+    })
+    delay = ev.detection_delay(test, 0.5)
+    per_user = delay["per_user"].set_index("user")["delay_days"]
+    assert pd.isna(per_user["C"])        # flagged only after the attack -> missed
+    assert per_user["D"] == 3             # Jan 2 -> Jan 5, not Jan 3 (a normal day)
+    assert delay["n_detected"] == 1 and delay["n_missed"] == 1
+    assert delay["n_detected"] / delay["n_insiders"] == ev.user_level_recall(test, 0.5)
+
+
 def test_evaluate_and_compare_on_synthetic(tmp_path, monkeypatch):
     monkeypatch.setattr(ev, "FIGURES_DIR", tmp_path / "figures")
     df = ev.make_synthetic_scores()
@@ -118,6 +138,46 @@ def test_per_scenario_table_matches_evaluate_file(two_files, tmp_path):
     assert (tmp_path / "tables" / ev.PER_SCENARIO_TABLE).exists()
 
 
+def test_per_scenario_hand_example():
+    # #73: worked by hand. val gives best_f1 threshold 0.5. Test: 4 normal days, one s1 day
+    # (0.9) and one s2 day (0.4). Subset "scenario 0 + s1" ranks the s1 day first -> PR-AUC 1;
+    # subset "0 + s2" ranks one normal day (0.6) above it -> AP = 1/2. top 1% of all 6 test
+    # days flags only 0.9.
+    df = pd.DataFrame({
+        "user": list("vvNNNNAB"), "date": pd.to_datetime(["2011-01-01"] * 8),
+        "split": ["val"] * 2 + ["test"] * 6,
+        "label": [0, 1, 0, 0, 0, 0, 1, 1],
+        "scenario": [0, 1, 0, 0, 0, 0, 1, 2],
+        "score": [0.2, 0.5, 0.1, 0.2, 0.3, 0.6, 0.9, 0.4],
+    })
+    r = ev.evaluate_df(df)
+    assert r["thresholds"]["best_f1"] == pytest.approx(0.5)
+    s1, s2 = r["per_scenario"][1], r["per_scenario"][2]
+    assert s1["n_malicious_days"] == 1 and s2["n_malicious_days"] == 1
+    assert s1["pr_auc"] == pytest.approx(1.0) and s2["pr_auc"] == pytest.approx(0.5)
+    assert (s1["recall_best_f1"], s2["recall_best_f1"]) == (1, 0)    # 0.9 >= 0.5; 0.4 < 0.5
+    assert (s1["recall_top_1pct"], s2["recall_top_1pct"]) == (1, 0)
+
+
+def test_thresholds_ignore_test_labels():
+    # #73: best_f1 comes from val only and top_1pct from test scores only, so shuffling the
+    # test labels changes no threshold.
+    df = ev.make_synthetic_scores()
+    test = df["split"] == "test"
+    shuffled = df.copy()
+    shuffled.loc[test, "label"] = np.random.default_rng(0).permutation(df.loc[test, "label"])
+    assert ev.evaluate_df(df)["thresholds"] == ev.evaluate_df(shuffled)["thresholds"]
+
+
+def test_top_k_flags_every_tie_at_the_cutoff():
+    # #73: the rule is score >= threshold, so user-days tied at the top-k cutoff are all
+    # flagged and the flagged share can exceed k. 95 scores of 0 and 5 of 1, k = 1%:
+    # the cutoff is 1, which flags all 5 tied days (5%).
+    test = pd.DataFrame({"score": [0.0] * 95 + [1.0] * 5})
+    t = ev.threshold_top_k(test, 0.01)
+    assert t == 1.0 and (test["score"] >= t).sum() == 5
+
+
 def test_delay_table_lists_missed_insiders(two_files, tmp_path):
     table = ev.delay_table(two_files)
     assert len(table) == 4
@@ -129,6 +189,7 @@ def test_delay_table_lists_missed_insiders(two_files, tmp_path):
         missed = sorted(per_user.loc[per_user["delay_days"].isna(), "user"])
         assert row["missed_insiders"] == ";".join(missed)
         assert row["n_detected"] + row["n_missed"] == row["n_insiders"]
+        assert row["n_detected"] == round(row["user_recall"] * row["n_insiders"])  # #73
     assert (tmp_path / "tables" / ev.DELAY_TABLE).exists()
 
 
@@ -158,14 +219,16 @@ def test_timing_table_merges_every_source(two_files, tmp_path):
                   "score_seconds_per_1000": [0.002], "timing_runs": [3], "cpu": ["Apple M1"],
                   "cores": [8], "threads": [8], "ram_gb": [8.0]}
                  ).to_csv(tables / "unsupervised_extra.csv", index=False)
-    pd.DataFrame({"step": ["labels (S6)"], "seconds": [0.07], "runs": [3], "measured": [True],
-                  "user_days": [330268], "seconds_per_1000_user_days": [0.0002],
-                  "cpu": ["Intel"], "threads": [24], "ram_gb": [31.4]}
+    pd.DataFrame({"step": ["labels (S6)", "conversion (estimate)"], "seconds": [0.07, 600.0],
+                  "runs": [3, 0], "measured": [True, False], "user_days": [330268, 330268],
+                  "seconds_per_1000_user_days": [0.0002, 1.8], "cpu": ["Intel"] * 2,
+                  "threads": [24] * 2, "ram_gb": [31.4] * 2}
                  ).to_csv(tables / "data_processing_time.csv", index=False)
     delay = ev.delay_table(two_files)
     t8 = ev.timing_table(delay=delay)
-    assert list(t8["component"]) == ["iforest", "xgboost", "labels (S6)"]
-    assert list(t8["kind"]) == ["model", "model", "data processing"]
+    assert list(t8["component"]) == ["iforest", "xgboost", "labels (S6)", "conversion (estimate)"]
+    assert list(t8["kind"]) == ["model", "model", "data processing", "data processing"]
+    assert list(t8["measured"]) == [True, True, True, False]      # #73: the estimate stays marked
     rows = t8.set_index("component")
     assert rows.loc["xgboost", "fit_seconds"] == 11.0 and rows.loc["xgboost", "fit_seconds_std"] == 0.5
     assert rows.loc["iforest", "inference_seconds_per_1000"] == 0.002
