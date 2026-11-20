@@ -7,7 +7,9 @@ One command shows the whole flow, from the repo root:
 Steps: load the feature table -> get_model_matrix() -> load the trained model from models/ (train
 and save it if it is missing or was trained on other features) -> score every user-day -> daily
 risk -> 7-day user risk -> alert levels -> top-N users of the test period, each with the 3 features
-that contributed most on their riskiest day -> results/tables/top_risky_users.csv (and printed).
+that contributed most on their riskiest day -> printed, and saved to
+results/scores/runs/top_risky_users_<model>[_<date>].csv (gitignored, so trying options never
+overwrites the committed tables; #68) or to --output.
 
 The table is what an analyst would see, so it holds no labels. With --date it ranks users for one
 day instead of the whole test period.
@@ -28,17 +30,22 @@ import pandas as pd
 from src.config import ROOT, TABLES_DIR
 from src.features import NOT_COUNTS, get_model_matrix
 from src.models_unsupervised import DETECTORS, SCORE_KEYS, load_detector, save_detector
-from src.risk_scoring import (MEDIUM, HIGH, f8_user, plot_risk_timeline, precision_at_k, rank_users,
-                              score_risk)
+from src.risk_scoring import (MEDIUM, HIGH, WINDOW_DAYS, f8_user, plot_risk_timeline, precision_at_k,
+                              rank_users, score_risk)
 
 MODELS_DIR = ROOT / "models"
 OUTPUT = "top_risky_users.csv"
+# Ad-hoc command-line runs save here: under results/scores/, so gitignored (#68).
+RUNS_DIR = ROOT / "results" / "scores" / "runs"
 N_REASONS = 3
 # A z-score closer to its baseline than this is never given as a reason (review of #57: the
 # autoencoder named features "0.0σ above own baseline"). Kept at 1.0 by Arva, Nov 17 (DEC-A).
 MIN_REASON_Z = 1.0
 # Non-count features whose 0 means "nothing happened" (no email sent): never a reason at 0.
 ZERO_IS_NOTHING = ("f_email_size",)
+# Per-user constants (the personality scores) can't explain why one day is risky: never a reason
+# (#74: the autoencoder gave "neuroticism score: 28" as a reason).
+STATIC_PREFIXES = ("f_ctx_",)
 
 # Readable names for the reasons column (A12 step 2), keyed by the feature name without its prefix.
 PHRASES = {
@@ -115,7 +122,10 @@ def contributions(detector, model_name, X: pd.DataFrame, df: pd.DataFrame) -> pd
 def alert_reasons(contrib: pd.DataFrame, df: pd.DataFrame, k=N_REASONS) -> pd.Series:
     """The k largest contributions of each row as readable text, joined with '; '.
     Never given as a reason: a count of 0, a novelty flag that is off, a ZERO_IS_NOTHING feature
-    at 0, and a z-score with |z| < MIN_REASON_Z (or missing). A row can so have fewer than k."""
+    at 0, a z-score with |z| < MIN_REASON_Z (or missing), a per-user constant (STATIC_PREFIXES),
+    a raw f_ value whose own-baseline twin z_user_* has |z| < MIN_REASON_Z (the value is normal
+    for this user), and a non-count f_ value with no such twin (an hour or a ratio says nothing
+    on its own). A row can so have fewer than k."""
     reasons = {}
     raw = df.loc[contrib.index, contrib.columns]
     zero_count = [c for c in contrib.columns
@@ -126,6 +136,15 @@ def alert_reasons(contrib: pd.DataFrame, df: pd.DataFrame, k=N_REASONS) -> pd.Se
     contrib[zero_count] = contrib[zero_count].where(raw[zero_count].to_numpy() != 0, 0.0)
     contrib[z_scores] = contrib[z_scores].where(
         raw[z_scores].abs().to_numpy() >= MIN_REASON_Z, 0.0)
+    for c in contrib.columns:
+        if not c.startswith("f_"):
+            continue
+        twin = f"z_user_{c[len('f_'):]}"
+        if c.startswith(STATIC_PREFIXES) or (twin not in df and c in NOT_COUNTS):
+            contrib[c] = 0.0
+        elif twin in df:
+            usual = df.loc[contrib.index, twin].abs().fillna(0).to_numpy() < MIN_REASON_Z
+            contrib.loc[usual, c] = 0.0
     values = contrib.to_numpy()
     for i, idx in enumerate(contrib.index):
         top = np.argsort(-values[i])[:k]
@@ -278,12 +297,14 @@ def model_path(model_name, features_path) -> Path:
 
 def get_detector(df, model_name, features_path, params=None, retrain=False):
     """Load the saved detector, or train it on the normal training rows and save it (A11 step 3).
-    A saved model trained on different feature columns is retrained."""
+    A saved model trained on different feature columns or with other `params` is retrained."""
     X, _, names = get_model_matrix(df)
     path = model_path(model_name, features_path)
     if path.exists() and not retrain:
         detector = load_detector(path)
-        if getattr(detector, "feature_names", None) == names:
+        saved = getattr(detector, "params", {})
+        if (getattr(detector, "feature_names", None) == names
+                and all(saved.get(k) == v for k, v in (params or {}).items())):
             return detector, path, False
     detector = DETECTORS[model_name](**(params or {}))
     train = (df["split"] == "train") & (df["label"] == 0)
@@ -293,6 +314,19 @@ def get_detector(df, model_name, features_path, params=None, retrain=False):
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     save_detector(detector, path)
     return detector, path, True
+
+
+def _shown(path) -> str:
+    """A path relative to the repo when it is inside it, else as given."""
+    path = Path(path)
+    return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+
+
+def run_output_path(model_name, date=None) -> Path:
+    """Where an ad-hoc command-line run saves its table (#68): gitignored, one file per model and
+    date, so trying options never overwrites the committed top_risky_users*.csv."""
+    day = f"_{pd.Timestamp(date).date()}" if date else ""
+    return RUNS_DIR / f"top_risky_users_{model_name}{day}.csv"
 
 
 def top_users(risk: pd.DataFrame, top=20) -> pd.DataFrame:
@@ -328,18 +362,24 @@ def run(features_path, model_name="iforest", top=20, date=None, retrain=False, p
     else:
         table = rank_users(risk, date, top)
         day = pd.Timestamp(date).normalize()
-        window = risk[(risk["date"] > day - pd.Timedelta(days=7)) & (risk["date"] <= day)]
-    # each listed user's riskiest day in the window is the alert row to explain (A12)
-    alert_rows = window.groupby("user")["daily_risk"].idxmax().reindex(table["user"]).to_numpy()
-    contrib = contributions(detector, model_name, X.loc[alert_rows], df)
-    table["reasons"] = alert_reasons(contrib, df).reindex(alert_rows).to_numpy()
-    TABLES_DIR.mkdir(parents=True, exist_ok=True)
-    table.to_csv(TABLES_DIR / output, index=False)
+        window = risk[(risk["date"] > day - pd.Timedelta(days=WINDOW_DAYS)) & (risk["date"] <= day)]
+    if table.empty or window.empty:          # e.g. a --date with no activity (#74)
+        table = table.assign(reasons=pd.Series(dtype=object))
+    else:
+        # each listed user's riskiest day in the window is the alert row to explain (A12)
+        alert_rows = window.groupby("user")["daily_risk"].idxmax().reindex(table["user"]).to_numpy()
+        contrib = contributions(detector, model_name, X.loc[alert_rows], df)
+        table["reasons"] = alert_reasons(contrib, df).reindex(alert_rows).to_numpy()
+    out_path = TABLES_DIR / output
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    table.to_csv(out_path, index=False)
     if verbose:
         how = "trained and saved" if trained else "loaded"
-        print(f"{model_name}: {how} {path.relative_to(ROOT)}")
+        print(f"{model_name}: {how} {_shown(path)}")
         period = f"on {pd.Timestamp(date).date()}" if date else "over the test period"
-        print(f"Top {len(table)} users {period} -> {(TABLES_DIR / output).relative_to(ROOT)}")
+        print(f"Top {len(table)} users {period} -> {_shown(out_path)}")
+        if table.empty:
+            print("(no user-days in that window)")
         with pd.option_context("display.max_colwidth", 120, "display.width", 200):
             print(table.to_string(index=False))
     return table, risk
@@ -395,14 +435,21 @@ def main(argv=None):
     parser.add_argument("--top", type=int, default=20)
     parser.add_argument("--date", help="rank users for this day instead of the test period")
     parser.add_argument("--retrain", action="store_true", help="ignore a saved model")
+    parser.add_argument("--output", help="where to save the ranked table (default: "
+                                         "results/scores/runs/top_risky_users_<model>[_<date>].csv)")
     parser.add_argument("--prototype", action="store_true",
                         help="A18: retrain iforest and autoencoder, save both ranked tables, "
                              "precision_at_20.csv and figure F8")
     args = parser.parse_args(argv)
+    # The reasons print "σ": on a Windows console that isn't UTF-8 (Git Bash, `| tee`, `> file`)
+    # print() would raise UnicodeEncodeError (#74).
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if args.prototype:
         prototype(args.features, top=args.top)
     else:
-        run(args.features, args.model, args.top, args.date, args.retrain)
+        output = Path(args.output).resolve() if args.output else run_output_path(args.model, args.date)
+        run(args.features, args.model, args.top, args.date, args.retrain, output=str(output))
 
 
 if __name__ == "__main__":

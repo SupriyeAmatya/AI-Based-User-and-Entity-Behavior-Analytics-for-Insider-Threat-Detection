@@ -153,20 +153,33 @@ The prototype goes from the frozen feature table to a ranked list of the riskies
    python src/pipeline.py
    ```
 
-   The first run trains the model and saves it in `models/`; later runs load it. The table is printed and saved to `results/tables/top_risky_users.csv`. A saved model is reused whenever its feature columns match, so after the detector defaults change (as with the tuning in #50), run once with `--retrain` or delete `models/`.
+   The first run trains the model and saves it in `models/`; later runs load it. The table is printed and saved to `results/scores/runs/top_risky_users_<model>.csv` (with `_<date>` for `--date`). That folder is gitignored, so trying options never overwrites the committed tables. A saved model is reused when its feature columns and settings match, so after the detector defaults change (as with the tuning in #50), run once with `--retrain` or delete `models/`.
 
 3. **Options:**
    - `--model autoencoder` (or `ocsvm`) ranks with another detector;
    - `--date 2011-03-22` ranks users by their risk over the 7 days ending that day, instead of the whole test period;
    - `--top 50` lists more users, and `--retrain` ignores a saved model;
-   - `--features data/processed/features_v0.parquet` runs on the 100-user sample.
+   - `--features data/processed/features_v0.parquet` runs on the 100-user sample;
+   - `--output my_table.csv` saves the table somewhere else.
+
+4. **The paper's prototype outputs** (both models retrained; `results/tables/top_risky_users.csv`, `top_risky_users_autoencoder.csv`, `precision_at_20.csv` and figure F8):
+
+   ```bash
+   python -m src.pipeline --prototype
+   ```
+
+5. **The dashboard** (ranked table, a user's risk timeline, and the reasons for a chosen day):
+
+   ```bash
+   streamlit run app/dashboard.py
+   ```
 
 **Reading the table** (one row per user):
 - `peak_date`, `peak_risk`: the user's riskiest day and its daily risk. Daily risk (0–100) is the percentile of that day's score among the normal training days.
 - `high_days`, `medium_days`: test days at the High level, and at Medium but below High (levels in `src/risk_scoring.py`).
 - `active_days`: test days with activity. `first_alert`: the first day at Medium or above.
 - `alert_level`: High, Medium or Low, from `peak_risk`.
-- `reasons`: the three features that contributed most on `peak_date`, e.g. "24 files copied; 9 USB connects; 1 after-hours logons".
+- `reasons`: up to three features that contributed most on `peak_date`, e.g. "first logon on a new PC; after-hours events 1.8σ above own baseline; email recipients 1.4σ above own baseline". A feature is only given as a reason when it is unusual for that user (at least 1σ from their own baseline, or a first-time event); personality scores never are.
 - With `--date`, the table has `user_risk` (the highest daily risk in the 7 days ending that day), `active_days` (days with activity in that window), `last_active`, `alert_level` (from `user_risk`) and `reasons` (for the riskiest day in the window) instead.
 
 The table holds no labels, as an analyst would see it. To rebuild every score file for the evaluation (not needed for the pipeline):

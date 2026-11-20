@@ -43,6 +43,35 @@ def test_saved_model_is_reused_and_retrained_on_new_columns(features_file, capsy
     assert "trained and saved" in capsys.readouterr().out         # other columns -> retrain
 
 
+def test_changed_params_retrain_the_saved_model(features_file, capsys):
+    # #74: a cached model trained with other settings is not reused
+    pipeline.run(features_file, "iforest", top=5)
+    pipeline.run(features_file, "iforest", top=5, params={"n_estimators": 7})
+    assert capsys.readouterr().out.count("trained and saved") == 2
+    pipeline.run(features_file, "iforest", top=5, params={"n_estimators": 7})
+    assert "loaded" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("model, params", [("iforest", None), ("autoencoder", {"epochs": 2})])
+def test_a_date_with_no_activity_gives_an_empty_table(features_file, model, params):
+    # #74: the autoencoder raised "Found array with 0 sample(s)"
+    table, _ = pipeline.run(features_file, model, top=5, date="1990-01-01", params=params,
+                            verbose=False)
+    assert table.empty and "reasons" in table.columns
+
+
+def test_command_line_runs_never_overwrite_the_committed_tables(features_file, tmp_path,
+                                                                monkeypatch):
+    # #68: ad-hoc runs go to the gitignored runs folder (one file per model), or to --output
+    monkeypatch.setattr(pipeline, "RUNS_DIR", tmp_path / "runs")
+    pipeline.main(["--features", str(features_file), "--model", "iforest", "--top", "3"])
+    assert (tmp_path / "runs" / "top_risky_users_iforest.csv").exists()
+    assert not (tmp_path / "tables" / pipeline.OUTPUT).exists()
+    target = tmp_path / "mine.csv"
+    pipeline.main(["--features", str(features_file), "--top", "3", "--output", str(target)])
+    assert len(pd.read_csv(target)) == 3
+
+
 def test_rank_for_one_day(features_file):
     df = pd.read_parquet(features_file)
     day = df.loc[(df["split"] == "test") & (df["label"] == 1), "date"].max()
@@ -61,11 +90,21 @@ def test_reasons_skip_values_at_baseline_and_empty_email_size():
                             [9.0, 8.0, 5.0, 7.0, 4.0, 6.0]], columns=cols)
     reasons = pipeline.alert_reasons(contrib, df)
     assert reasons[0] == "USB connects 6.2σ above own baseline; 37 files copied"
-    assert reasons[1] == ("job-site visits 1.0σ above own baseline; mean email size (bytes): 2048; "
-                          "USB connects 3.0σ below own baseline")
+    # #74: the mean email size has no own-baseline twin, so on its own it is no longer a reason
+    assert reasons[1] == "job-site visits 1.0σ above own baseline; USB connects 3.0σ below own baseline"
     assert pipeline.MIN_REASON_Z > 0
     assert pipeline.describe("z_user_http_competitor", 3.7) == \
         "competitor-site visits 3.7σ above own baseline"
+
+
+def test_reasons_drop_personality_and_values_normal_for_the_user():
+    # #74: a personality score is a per-user constant; a raw value is a reason only when its own
+    # baseline twin says it is unusual for this user; an hour with no twin says nothing alone
+    cols = ["f_ctx_N", "f_first_logon_hour", "f_file_copy", "f_last_logoff_hour", "f_usb_connect",
+            "z_user_first_logon_hour", "z_user_file_copy"]
+    df = pd.DataFrame([[28.0, 7.1, 37.0, 23.0, 4.0, 0.3, 2.5]], columns=cols)
+    contrib = pd.DataFrame([[9.0, 8.0, 7.0, 6.0, 5.0, 0.0, 0.0]], columns=cols)
+    assert pipeline.alert_reasons(contrib, df)[0] == "37 files copied; 4 USB connects"
 
 
 def test_describe_reasons():

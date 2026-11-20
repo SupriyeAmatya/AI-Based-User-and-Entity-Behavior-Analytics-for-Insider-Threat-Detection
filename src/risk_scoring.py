@@ -166,7 +166,9 @@ def plot_risk_timeline(risk: pd.DataFrame, user, name="F8_risk_timeline"):
     ax.legend(fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.3), ncol=3)  # below the plot
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
-        fig.savefig(FIGURES_DIR / f"{name}.{ext}", dpi=300, bbox_inches="tight")
+        # no creation date in the PDF, so re-running doesn't change the file's bytes (#74)
+        fig.savefig(FIGURES_DIR / f"{name}.{ext}", dpi=300, bbox_inches="tight",
+                    metadata={"CreationDate": None} if ext == "pdf" else None)
     return fig
 
 
