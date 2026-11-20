@@ -135,7 +135,7 @@ Run everything from the repo root with that environment active, e.g. `python -m 
 jupyter notebook
 ```
 
-Then run the notebooks in order (`01` → `05`). Notebooks `01` and `02` read the raw logs, `http.parquet` and LDAP, which only a full rebuild has (TEAM_PLAN 2.5.11); `03a` to `05` run on the data drop.
+Then run the notebooks in order (`01` → `05`). Notebooks `01` and `02` read the raw logs, `http.parquet` and LDAP, which only a full rebuild has (TEAM_PLAN 2.5.11); `03a` to `05` run on the data drop. Score files are not in the repo, so before notebook `04` run `python -m src.models_unsupervised final`, `python -m src.models_supervised final` and `python -m src.models_supervised loso` (about 6 minutes in all). Notebooks `03a` and `03b` re-run the full tuning grids, which takes hours; their committed outputs show the tuning results.
 
 ## Run the prototype
 
